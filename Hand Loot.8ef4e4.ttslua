@@ -55,7 +55,7 @@ end
 
 function resetClickCounter()
     if clickCounter == 1 then
-        lootdeck = getDeckFromZone(LOOT_DECK_ZONE)
+        lootdeck = Global.call("getDeckFromZone",LOOT_DECK_ZONE)
         lootdeck.deal(1, owner.color)
     end
     clickCounter = 0
@@ -91,12 +91,4 @@ end
 function isPlayerAuthorized(color)
     player = Player[color]
     return player == owner or player.admin
-end
-
-function getDeckFromZone(zoneGuid)
-  local zone = getObjectFromGUID(zoneGuid)
-  for _, obj in pairs(zone.getObjects()) do
-    if obj.tag == "Deck" then return obj end
-  end
-  return nil
 end
