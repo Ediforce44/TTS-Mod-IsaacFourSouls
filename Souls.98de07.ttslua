@@ -10,7 +10,6 @@ function onObjectEnterScriptingZone(zone, object)
 end
 
 function getSoulsCountInZone()
-  print("test")
   local counter = 0
   local zone = getObjectFromGUID(zone_guid)
   local objInZone = zone.getObjects()
