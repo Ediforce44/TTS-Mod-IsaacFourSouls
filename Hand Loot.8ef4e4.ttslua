@@ -1,5 +1,8 @@
 --- Hand counter by Schokolabbi
 
+--- Edited by Ediforce44
+LOOT_DECK_ZONE_GUID = "c413a5"
+
 --- Click delay time in seconds
 options = {["clickDelay"] = 0.3}
 
@@ -54,7 +57,21 @@ function onClick(object, color)
 end
 
 function resetClickCounter()
+    if clickCounter == 1 then
+        dealLootCard()    --EbyE44
+    end
     clickCounter = 0
+end
+
+function dealLootCard()    --EbyE44\n
+    local zone = getObjectFromGUID(LOOT_DECK_ZONE_GUID)
+    for _, obj in pairs(zone.getObjects()) do
+        if obj.tag == "Deck" or obj.tag == "Card" then
+            obj.deal(1, owner.color)
+            return
+        end
+    end
+    printToAll("[fdd835][WARNING][-] Can't find the Loot deck. Place the Loot deck on its starting position.")
 end
 
 function isDoubleClick()
