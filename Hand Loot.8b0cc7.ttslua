@@ -37,7 +37,7 @@ function update()
 end
 
 function findOwner(color)
-    if not isPlayerAuthorized(color) then return end
+    if not Global.call("isPlayerAuthorized", {playerColor = color}) then return end         --EbyE44
     if clickCounter == 0 then
         Timer.create(doubleClickParameters)
     end
@@ -103,9 +103,4 @@ function setOwner(color)
         position={0,0.05,0}, height=650, width=1000; font_size=1000, font_color={1,1,1,95},
         color={0,0,0,0}
     })
-end
-
-function isPlayerAuthorized(color)
-    player = Player[color]
-    return player == owner or player.admin
 end

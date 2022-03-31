@@ -48,3 +48,102 @@ function onPlayerTurn(color)
      end
    end
 end
+
+---------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------- Edited by Ediforce44 --------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------
+ZONE_GUIDS = {
+    MONSTER_DECK = "52e22c",
+    HAPPEN_DECK = "61e7b7",
+    TREASURE_DECK = "190cda",
+    LOOT_DECK = "c413a5",
+    BONUS_SOUL_DECK = "979776",
+    FLOOR_DECK = "096e94",
+    SOULS_BLUE = "c0bd67",
+    SOULS_RED = "8515c8",
+    SOULS_GREEN = "f95f84",
+    SOULS_YELLOW = "92610d"
+}
+
+function table.copy(t)
+    local tableCopy = {}
+    for key, value in pairs(t) do
+        tableCopy[key] = value
+    end
+    return tableCopy
+end
+
+function getZoneGUIDS()
+    --return copy(ZONE_GUID)
+    return table.copy(ZONE_GUIDS)
+end
+
+function isPlayerAuthorized(params)
+    local player
+    if params.playerColor ~= nil then
+        player = Player[params.playerColor]
+    elseif params.player ~= nil then
+        player = params.player
+    else
+        return
+    end
+    return player == owner or player.admin
+end
+
+local function getDeckOrCard(zoneGUID)
+    local zone = getObjectFromGUID(zoneGUID)
+    if zone == nil then
+        printToAll("[fdd835][WARNING][-] Wrong Zone. Zone with GUID '" .. zoneGUID .. "' doesn't exist.")
+        return nil
+    end
+
+    for _, obj in pairs(zone.getObjects()) do
+      if obj.tag == "Deck" or obj.tag == "Card" then
+          return obj
+      end
+    end
+
+    local zoneName = ""
+    for name, guid in pairs(ZONE_GUIDS) do
+        if guid == zoneGUID then
+            zoneName = tostring(name)
+            goto printError
+        end
+    end
+    zoneName = "'Zone not found'"
+    ::printError::
+    printToAll("[fdd835][WARNING][-] Can't find the deck or card in zone '" .. zoneName .. "'.")
+    return nil
+end
+
+function getDeckFromZone(params)
+    if params.zoneGUID == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in getDeckFromZone().")
+        return nil
+    end
+    return getDeckOrCard(params.zoneGUID)
+end
+
+function getMonsterDeck()
+    return getDeckOrCard(ZONE_GUIDS.MONSTER_DECK)
+end
+
+function getHappenDeck()
+    return getDeckOrCard(ZONE_GUIDS.HAPPEN_DECK)
+end
+
+function getTreasureDeck()
+    return getDeckOrCard(ZONE_GUIDS.TREASURE_DECK)
+end
+
+function getLootDeck()
+    return getDeckOrCard(ZONE_GUIDS.LOOT_DECK)
+end
+
+function getBonusSoulDeck()
+    return getDeckOrCard(ZONE_GUIDS.BONUS_SOUL_DECK)
+end
+
+function getFloorDeck()
+    return getDeckOrCard(ZONE_GUIDS.FLOOR_DECK)
+end
