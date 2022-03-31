@@ -1,5 +1,6 @@
 zone_guid = "8515c8"
 
+
 function onObjectEnterScriptingZone(zone, object)
     if zone ~= getObjectFromGUID(zone_guid) then return end
     Wait.frames(function()
