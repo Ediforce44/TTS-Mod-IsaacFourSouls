@@ -87,7 +87,7 @@ function isPlayerAuthorized(params)
     else
         return
     end
-    return player == owner or player.admin
+    return player == params.ownerPlayer or player.admin
 end
 
 local function getDeckOrCard(zoneGUID)
@@ -118,7 +118,7 @@ end
 
 function getDeckFromZone(params)
     if params.zoneGUID == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in getDeckFromZone().")
+        printToAll("[fdd835][WARNING][-] Wrong parameters in 'getDeckFromZone()'.")
         return nil
     end
     return getDeckOrCard(params.zoneGUID)
