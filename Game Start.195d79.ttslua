@@ -8,7 +8,7 @@ HAPPEN_DECK_ZONE_GUID = "61e7b7"
 TREASURE_DECK_ZONE_GUID = "190cda"
 LOOT_DECK_ZONE_GUID = "c413a5"
 SETTING_UP_NOTE_GUID = "56a44e"
-SOUL_DECK_ZONE_GUID = "979776" 
+SOUL_DECK_ZONE_GUID = "979776"
 
 function onLoad()
   self.createButton({
@@ -97,6 +97,10 @@ function onStart()
         settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
         destroyObject(settingUpNote)
     end
+
+    Turns.enable = true
+    Turns.type = 1
+    print(tostring(Turns.type))
 
     self.destroy()
 end

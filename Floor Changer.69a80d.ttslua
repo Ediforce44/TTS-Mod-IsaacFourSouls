@@ -5,6 +5,9 @@ startTurnColor = nil
 skipOneTurnTirgger = true
 
 function onPlayerTurn(player)
+
+    startTurnColor = Turns.turn_color
+
   if skipOneTurnTirgger then
     skipOneTurnTirgger = false
     return
@@ -136,7 +139,7 @@ function openNextFloor()
   local obj = objInZone[2]
 --  if obj.name == "Remaining Floors" then
   if obj.guid == "409647" then
-    obj = objInZone[1]      
+    obj = objInZone[1]
     end
 
   if obj.tag ~= "Deck" and obj.tag ~= "Card" then

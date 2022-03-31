@@ -1,3 +1,5 @@
+LOOT_DECK_ZONE = "c413a5"
+
 function onLoad()
     broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
 end
@@ -30,10 +32,25 @@ SECOND_HEARTS_GUID = {
   -- Yellow player hearts
   "3f81b7",
   -- Green player hearts
+  -- Green player hearts
   "c326f1"
 }
 
-function onPlayerTurn(color)
+function onPlayerTurn(player, previous_player)
+
+    lootdeck = getDeckFromZone(LOOT_DECK_ZONE)
+
+    if previous_player == nil then
+        print(player.color .. " is going first. It's now their turn.")
+
+        lootdeck.deal(1, Turns.turn_color)
+        previous_player = player
+    else
+        --print(previous_player.color .. "'s turn is over. It's now " .. player.color .. "'s turn.")
+
+        lootdeck.deal(1, Turns.turn_color)
+    end
+
     -- Monster HP
     print(type(getObjectFromGUID("9bb226").getVar("value")))
     print(getObjectFromGUID("9bb226").getVar("val"))
