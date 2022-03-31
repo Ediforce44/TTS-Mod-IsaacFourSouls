@@ -1,0 +1,243 @@
+CHARACTER_PLACER_GUID = "d2c68a"
+PLAYERS_SLOTS = {
+  Red = {
+    { position = {2.11, 1.56, -10.41}, rotation = {0, 180, 0} },
+    { position = {6.13, 1.56, -10.41}, rotation = {0, 180, 0} },
+    { position = {10.19, 1.56, -10.41}, rotation = {0, 180, 0} },
+    { position = {14.21, 1.56, -10.41}, rotation = {0, 180, 0} }
+  },
+  Blue = {
+    { position = {-33.91, 1.56, -10.44}, rotation = {0, 180, 0} },
+    { position = {-29.88, 1.56, -10.44}, rotation = {0, 180, 0} },
+    { position = {-25.80, 1.56, -10.44}, rotation = {0, 180, 0} },
+    { position = {-21.80, 1.56, -10.44}, rotation = {0, 180, 0} }
+  },
+  Green = {
+    { position = {-2.14, 1.56, 10.39}, rotation = {0, 0, 0} },
+    { position = {-6.16, 1.56, 10.39}, rotation = {0, 0, 0} },
+    { position = {-10.21, 1.56, 10.39}, rotation = {0, 0, 0} },
+    { position = {-14.21, 1.56, 10.39}, rotation = {0, 0, 0} }
+  },
+  Yellow = {
+    { position = {33.87, 1.56, 10.37}, rotation = {0, 0, 0} },
+    { position = {29.86, 1.56, 10.37}, rotation = {0, 0, 0} },
+    { position = {25.83, 1.56, 10.37}, rotation = {0, 0, 0} },
+    { position = {21.82, 1.56, 10.37}, rotation = {0, 0, 0} }
+  }
+}
+
+inputCharCount = 2
+characterPull = {}
+waitForSelectCharacters = {
+  Red = {},
+  Blue = {},
+  Green = {},
+  Yellow = {}
+}
+
+math.randomseed(os.time())
+
+function onLoad()
+  loadCharactersFromWorld()
+  initButtons()
+end
+
+function loadCharactersFromWorld()
+  characterPull = {}
+  local allObj = getAllObjects()
+  for i, obj in pairs(allObj) do
+    local objDesc = obj.getDescription()
+    if objDesc == "character-pack" and not isCharUsedInWaitPull(obj.guid) then
+      table.insert(characterPull, obj)
+    end
+  end
+end
+
+function isCharUsedInWaitPull(charGuid)
+  for _, player in pairs(waitForSelectCharacters) do
+    for _, char in pairs(player) do
+      if charGuid == char.guid then
+        return true
+      end
+    end
+  end
+  return false
+end
+
+function initButtons()
+  self.createButton({
+    click_function = "nope",
+    function_owner = self,
+    label          = "Count:",
+    position       = {-1.4, 1, 0},
+    width          = 0,
+    height         = 0,
+    font_size      = 300,
+    font_color     = {1, 1, 1}
+  })
+  self.createInput({
+    input_function = "updateCharactersCount",
+    function_owner = self,
+    label          = "test",
+    alignment      = 3,
+    position       = {0, 1, 0},
+    width          = 300,
+    height         = 340,
+    font_size      = 300,
+    value          = inputCharCount,
+    validation     = 2,
+    tab            = 1
+  })
+  self.createButton({
+    click_function = "randomizeToAll",
+    function_owner = self,
+    label          = "Randomize to [e57373]All",
+    position       = {3.1, 1, 0},
+    width          = 2000,
+    height         = 350,
+    font_size      = 230
+  })
+  self.createButton({
+    click_function = "randomizeToMe",
+    function_owner = self,
+    label          = "Randomize to [7986cb]Me",
+    position       = {7.4, 1, 0},
+    width          = 2000,
+    height         = 350,
+    font_size      = 230
+  })
+end
+
+-- TODO: Dont give change value to invalid
+function updateCharactersCount(obj, _, value)
+  if tonumber(value) >= 5 then
+    print("Invalid input value. Set to max: 4")
+    inputCharCount = 4
+    obj.editInput({index=0, value=4})
+    return
+  elseif tonumber(value) <= 0 then
+    print("Invalid input value. Set to min: 1")
+    obj.editInput({index=0, value=1})
+    inputCharCount = 1
+    return
+  end
+
+  inputCharCount = value
+end
+
+function randomizeToAll(_, playerClickerColor)
+  loadCharactersFromWorld()
+  if #characterPull < 6 then
+    printToColor("[fdd835][WARNING][-] Too few characters (min: 6). Maybe you forget  press \"Place characters\" button?", playerClickerColor)
+    return
+  end
+
+  playerList = Player.getPlayers()
+  for _, player in pairs(playerList) do
+    randomizeToPlayer(player.color)
+  end
+end
+
+function randomizeToMe(_, playerClickerColor)
+  loadCharactersFromWorld()
+  if #characterPull < 2 then
+    printToColor("[fdd835][WARNING][-] Too few characters (min: 2). Maybe you forget  press \"Place characters\" button?", playerClickerColor)
+    return
+  end
+
+  randomizeToPlayer(playerClickerColor)
+end
+
+function randomizeToPlayer(playerColor)
+  if waitForSelectCharacters[playerColor] == nil then
+    printToColor("[fdd835][WARNING][-] " .. playerColor .. " is invalid color. " .. playerColor .. " must change color to one of valid: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", playerColor)
+    return
+  end
+
+  if #waitForSelectCharacters[playerColor] ~= 0 then
+    printToColor("[fdd835][WARNING][-] " .. playerColor .. " already selecting character.", playerColor)
+    return
+  end
+
+  for i = 1, inputCharCount do
+    local randomCharacteracterIndex = math.random(#characterPull)
+    local randomCharacter = characterPull[randomCharacteracterIndex]
+
+    table.remove(characterPull, randomCharacteracterIndex)
+    table.insert(waitForSelectCharacters[playerColor], randomCharacter)
+
+    makeCharacterPackToSelect(randomCharacter, randomCharacter.getPosition(), playerColor)
+    local slotData = PLAYERS_SLOTS[playerColor][i]
+    randomCharacter.setPositionSmooth(slotData.position, false)
+    randomCharacter.setRotation(slotData.rotation)
+  end
+end
+
+function makeCharacterPackToSelect(obj, originalPos, playerColor)
+  obj.clearButtons()
+  obj.interactable = false
+
+  _G["v_selectCharacter" .. obj.guid] = function(obj, playerClickerColor) selectCharacter(obj, playerClickerColor) end
+  obj.createButton({
+    click_function = "v_selectCharacter" .. obj.guid,
+    function_owner = self,
+    label = "Select",
+    position = {0, 0.3, 1.7},
+    width = 760,
+    height = 260,
+    font_size = 180,
+    font_color = {1, 1, 1},
+    color = {102/225, 187/255, 106/255}
+  })
+  _G["v_returnCharacter" .. obj.guid] = function(obj) returnCharacter(obj, playerColor, originalPos) end
+  obj.createButton({
+    click_function = "v_returnCharacter" .. obj.guid,
+    function_owner = self,
+    label = "Return",
+    position = {0, 0.3, -1.7},
+    width = 480,
+    height = 200,
+    font_size = 100,
+    font_color = {1, 1, 1},
+    color = {239/225, 83/255, 80/255}
+  })
+end
+
+function selectCharacter(obj, playerColor)
+  -- removeCharacterFromSelecting(obj.guid, playerColor)
+  -- getObjectFromGUID(CHARACTER_PLACER_GUID).call("setCharacterPackScriptByCall", {obj=obj})
+  obj.call("selectCharacterByCall", {obj=obj, playerColor=playerColor})
+  -- obj.setPositionSmooth(originalPos, false)
+end
+
+function returnCharacter(obj, playerColor, originalPos)
+  removeCharacterFromSelecting(obj.guid, playerColor)
+  -- getObjectFromGUID(CHARACTER_PLACER_GUID).call("setCharacterPackScriptByCall", {obj=obj})
+  obj.call("initButtons")
+  obj.setPositionSmooth(originalPos, false)
+  obj.setRotation({0, 180, 0})
+end
+
+function removeCharacterFromSelecting(charGuid, playerColor)
+  if not waitForSelectCharacters[playerColor] then
+    printToColor("[ef5350][ERROR][-] You do not have characters for select", playerColor, stringColorToRGB("Red"))
+    return
+  end
+
+  for i, char in pairs(waitForSelectCharacters[playerColor]) do
+    if char.guid == charGuid then
+      table.insert(characterPull, char)
+      table.remove(waitForSelectCharacters[playerColor], i)
+    end
+  end
+end
+
+function onAllCharsDeleted()
+  characterPull = {}
+  waitForSelectCharacters = {
+    Red = {},
+    Blue = {},
+    Green = {},
+    Yellow = {}
+  }
+end

@@ -1,0 +1,181 @@
+CHARACTER_PLACER_GUID = "d2c68a"
+FLOOR_CHANGE_GUID = "69a80d"
+
+PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
+
+MONSTER_DECK_ZONE_GUID = "52e22c"
+HAPPEN_DECK_ZONE_GUID = "61e7b7"
+TREASURE_DECK_ZONE_GUID = "190cda"
+LOOT_DECK_ZONE_GUID = "c413a5"
+SETTING_UP_NOTE_GUID = "56a44e"
+SOUL_DECK_ZONE_GUID = "979776" 
+
+function onLoad()
+  self.createButton({
+    click_function = "onStart",
+    label = "Start",
+    tooltip = "Click here to start!",
+    function_owner = self,
+    position = {0, 0.11, -1},
+    rotation = {0, 0, 0},
+    width = 1100,
+    height = 500,
+    font_size = 400
+})
+end
+
+function getDeckFromZone(zoneGuid)
+  local zone = getObjectFromGUID(zoneGuid)
+  for _, obj in pairs(zone.getObjects()) do
+    if obj.tag == "Deck" then return obj end
+  end
+  return nil
+end
+
+function shuffleOptions(array)
+
+    local output = { }
+    local random = math.random
+
+    for index = 1, #array do
+        local offset = index - 1
+        local value = array[index]
+        local randomIndex = offset*random()
+        local flooredIndex = randomIndex - randomIndex%1
+
+        if flooredIndex == offset then
+            output[#output + 1] = value
+        else
+            output[#output + 1] = output[flooredIndex + 1]
+            output[flooredIndex + 1] = value
+        end
+    end
+
+    return output
+end
+
+function onStart()
+    local isAllReady = isAllPlayersSelectCharacter()
+    if isAllReady == false or isAllReady == nil then
+        printToAll("[fdd835][WARNING][-] Each player must take a character before start.")
+        return
+    end
+
+    loadDecksFromZones()
+    deckShuffle()
+
+    monsterDeck.takeObject({position={24.07, 1.55, 0.03}, flip=true})
+    monsterDeck.takeObject({position={27.40, 1.55, 0.03}, flip=true})
+
+    shopDeck.takeObject({position={-27.21, 1.56, 0.00}, flip=true})
+    shopDeck.takeObject({position={-23.90, 1.55, 0.01}, flip=true})
+
+ soulDeck.takeObject({position={-37.90, 1.57, -3.20}, flip=true})
+    soulDeck.takeObject({position={-37.90, 1.57, 0.00}, flip=true})
+    soulDeck.takeObject({position={-37.90, 1.57, 3.20}, flip=true})
+
+    lootDeck.deal(3)
+
+    if happenDeck ~= nil then
+        monsterDeck.putObject(happenDeck)
+        happenDeck.setPosition({30.74, 2.04, 0.09})
+    end
+
+    monsterDeck.shuffle()
+
+    self.editButton({
+        index = 0,
+        click_function = "dummy",
+        label = "",
+        tooltip = "",
+        width = 0,
+        height = 0,
+        font_size = 0
+    })
+
+    if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
+        settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
+        destroyObject(settingUpNote)
+    end
+
+    self.destroy()
+end
+
+function loadDecksFromZones()
+  monsterDeck = getDeckFromZone(MONSTER_DECK_ZONE_GUID)
+  happenDeck = getDeckFromZone(HAPPEN_DECK_ZONE_GUID)
+  shopDeck = getDeckFromZone(TREASURE_DECK_ZONE_GUID)
+  lootDeck = getDeckFromZone(LOOT_DECK_ZONE_GUID)
+  soulDeck = getDeckFromZone(SOUL_DECK_ZONE_GUID)
+end
+
+function isAllPlayersSelectCharacter()
+    local characterPlacerObj = getObjectFromGUID(CHARACTER_PLACER_GUID)
+    local playersSpawnedCharacterObj = characterPlacerObj.getTable("playersSpawnedCharacterObj")
+    local selectedCharacterCount = 0
+    for _, pObjs in pairs(playersSpawnedCharacterObj) do
+        if #pObjs > 0 then
+            selectedCharacterCount = selectedCharacterCount + 1
+        end
+    end
+
+    return selectedCharacterCount == getPlayersCount()
+end
+
+function getPlayersCount()
+  local counter = 0
+  for _, player in pairs(Player.getPlayers()) do
+    for _, color in pairs(PLAYER_COLORS) do
+      if player.color == color then
+        counter = counter + 1
+      end
+    end
+  end
+  return counter
+end
+
+function deckShuffle()
+    local floorsDeckGuid = getFloorsDeckGuid()
+
+    local index = 1
+    local decksToShuffle = {}
+    if monsterDeck ~= nil then
+      decksToShuffle[index] = monsterDeck.guid
+      index = index + 1
+    end
+    if happenDeck ~= nil then
+      decksToShuffle[index] = happenDeck.guid
+      index = index + 1
+    end
+    if soulDeck ~= nil then
+      decksToShuffle[index] = soulDeck.guid
+      index = index + 1
+    end
+    if shopDeck ~= nil then
+      decksToShuffle[index] = shopDeck.guid
+      index = index + 1
+    end
+    if lootDeck ~= nil then
+      decksToShuffle[index] = lootDeck.guid
+      index = index + 1
+    end
+    if floorsDeckGuid ~= nil then
+      decksToShuffle[index] = floorsDeckGuid
+      index = index + 1
+    end
+
+    for i = 1, #decksToShuffle, 1 do
+        obj = getObjectFromGUID(decksToShuffle[i])
+        if obj ~= nil then
+            obj.shuffle()
+        end
+    end
+end
+
+function getFloorsDeckGuid()
+  local floorChanger = getObjectFromGUID(FLOOR_CHANGE_GUID)
+  return floorChanger.call("getFloorsDeckGuid")
+end
+
+function dummy()
+end

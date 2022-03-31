@@ -1,0 +1,346 @@
+START_POS = {41.40, 1.02, 14.24}
+X_MARGIN = 3.21
+Z_MARGIN = 4.91
+MAX_ROW_SIZE = 11
+CHARACTER_RANDOMIZER_GUID = "bc6e13"
+CHARACTER_PLACER_GUID = "d2c68a"
+SPAWN_DATA = {
+  Red = {
+    character = { position = {2.13, 1.56, -15.27}, rotation = {0, 180, 0} },
+    characterItem = { position = {6.18, 1.56, -15.27}, rotation = {0, 180, 0} },
+    characterStartSoul = { position = {33.22, 1.56, -15.92}, rotation = {0, 270, 0} }
+  },
+  Blue = {
+    character = { position = {-33.87, 1.56, -15.31}, rotation = {0, 180, 0} },
+    characterItem = { position = {-29.88, 1.56, -15.29}, rotation = {0, 180, 0} },
+    characterStartSoul = { position = {-2.78, 1.56, -15.91}, rotation = {0, 270, 0} }
+  },
+  Green = {
+    character = { position = {-2.08, 1.56, 15.24}, rotation = {0, 0, 0} },
+    characterItem = { position = {-6.16, 1.56, 15.27}, rotation = {0, 0, 0} },
+    characterStartSoul = { position = {-33.18, 1.56, 15.99}, rotation = {0, 90, 0} }
+  },
+  Yellow = {
+    character = { position = {33.90, 1.56, 15.26}, rotation = {0, 0, 0} },
+    characterItem = { position = {29.90, 1.56, 15.25}, rotation = {0, 0, 0} },
+    characterStartSoul = { position = {2.79, 1.56, 15.92}, rotation = {0, 90, 0} }
+  }
+}
+
+playersSpawnedCharacterObj = {
+  Red = {},
+  Blue = {},
+  Green = {},
+  Yellow = {}
+}
+
+nextPosition = nil
+curRowSize = nil
+
+charObjs = {}
+
+-- Dirty stuff
+function table.clone(org)
+  return {table.unpack(org)}
+end
+
+function onLoad()
+  resetNextPos()
+  loadCharactersFromWorld()
+  initButton()
+end
+
+function initButton()
+  self.createButton({
+    click_function = "placeCharactersCallback",
+    function_owner = self,
+    label          = "Place characters",
+    position       = {0, 0.2, 2},
+    width          = 1500,
+    height         = 300,
+    font_size      = 200,
+    font_color     = {1, 1, 1},
+    color          = {0.25, 0.78, 0.25}
+  })
+  self.createButton({
+    click_function = "deleteExistCharacters",
+    function_owner = self,
+    label          = "Delete exist characters",
+    position       = {0, 0.2, -2},
+    width          = 2000,
+    height         = 300,
+    font_size      = 200,
+    font_color     = {1, 1, 1},
+    color          = {0.78, 0.25, 0.25}
+  })
+end
+
+function placeCharactersCallback()
+  placeCharactersFromBag(self, false)
+end
+
+function loadCharactersFromWorld()
+  charObjs = {}
+  local allObj = getAllObjects()
+  for i, obj in pairs(allObj) do
+    local objDescription = obj.getDescription()
+    if objDescription == "character-pack" then
+      setCharacterPackScript(obj)
+      calcNextPackPosition()
+      table.insert(charObjs, obj)
+    end
+  end
+end
+
+function placeCharactersFromBag(bagObj, deleteBag)
+  local objInBagCount = bagObj.getQuantity()
+
+  for i = 1, objInBagCount do
+    local obj = bagObj.takeObject()
+
+    if obj.getDescription() == "character-pack" then
+      obj.setPositionSmooth(nextPosition, false)
+      obj.setRotation({0, 180, 0})
+
+      setCharacterPackScript(obj)
+      calcNextPackPosition()
+
+      table.insert(charObjs, obj)
+    else
+      if obj.tag == "Bag" then
+        placeCharactersFromBag(obj, true)
+      end
+    end
+  end
+
+  reloadWorldCharacterPacksInExternalObj()
+
+  if deleteBag then
+    bagObj.destroy()
+  end
+end
+
+function deleteExistCharacters()
+  for i, obj in pairs(charObjs) do
+    if obj ~= nil then
+      obj.destroy()
+    end
+  end
+  charObjs = {}
+  resetNextPos()
+  getObjectFromGUID(CHARACTER_RANDOMIZER_GUID).call("onAllCharsDeleted")
+end
+
+function resetNextPos()
+  nextPosition = table.clone(START_POS)
+  curRowSize = 0
+end
+
+function calcNextPackPosition()
+  curRowSize = curRowSize + 1
+  nextPosition[1] = nextPosition[1] + X_MARGIN
+
+  if curRowSize == MAX_ROW_SIZE then
+      curRowSize = 0
+      nextPosition[1] = nextPosition[1] - X_MARGIN * MAX_ROW_SIZE
+      nextPosition[3] = nextPosition[3] - Z_MARGIN
+  end
+end
+
+function reloadWorldCharacterPacksInExternalObj()
+  Wait.frames(function() getObjectFromGUID(CHARACTER_RANDOMIZER_GUID).call("loadCharactersFromWorld") end, 60)
+end
+
+function setCharacterPackScript(obj)
+  obj.setLuaScript([[
+    CHARACTER_PLACER_GUID = "]] .. CHARACTER_PLACER_GUID .. [["
+    CHARACTER_RANDOMIZER_GUID = "]] .. CHARACTER_RANDOMIZER_GUID .. [["
+    PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
+
+    spawnData = nil
+
+    function onLoad()
+      spawnData = loadSpawnData()
+      initButtons()
+    end
+
+    function loadSpawnData()
+      local characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
+      return characterPlacer.getTable("SPAWN_DATA")
+    end
+
+    function initButtons()
+      self.clearButtons()
+      self.interactable = false
+
+      self.createButton({
+        click_function = "selectCharacter",
+        function_owner = self,
+        label          = "Select",
+        position       = {0, 0.3, 1.7},
+        width          = 760,
+        height         = 260,
+        font_size      = 180,
+        font_color     = {1, 1, 1},
+        color          = {84/225, 110/255, 122/255}
+      })
+      self.createButton({
+        click_function = "unlock",
+        function_owner = self,
+        label          = "Unlock",
+        position       = {0.4, 0.3, -1.7},
+        width          = 400,
+        height         = 110,
+        font_size      = 80,
+        color          = {102/225, 187/255, 106/255}
+      })
+      self.createButton({
+        click_function = "lock",
+        function_owner = self,
+        label          = "Lock",
+        position       = {-0.4, 0.3, -1.7},
+        width          = 400,
+        height         = 110,
+        font_size      = 80,
+        color          = {239/225, 83/255, 80/255}
+      })
+    end
+
+    function selectCharacter(_, playerClickerColor)
+      if spawnData[playerClickerColor] == nil then
+        printToColor("[fdd835][WARNING][-] Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", playerClickerColor)
+        return
+      end
+
+      local characterRandomizer = getObjectFromGUID(CHARACTER_RANDOMIZER_GUID)
+      local waitForSelectCharacters = characterRandomizer.getTable("waitForSelectCharacters")
+      if #waitForSelectCharacters[playerClickerColor] > 0 and not isCharacterInPullToSelect(waitForSelectCharacters) then
+        printToColor("[fdd835][WARNING][-] You can't select character from global pull while you select from random.", playerClickerColor)
+        return
+      end
+
+      if isCharacterInAnotherPlayerPullToSelect(playerClickerColor, waitForSelectCharacters) then
+        printToColor("[fdd835][WARNING][-] You can't select character from another player pull.", playerClickerColor)
+        return
+      end
+
+      cleanupSpawnedObj(playerClickerColor)
+
+      local spawnedObj = {}
+      local cardsInPackCount = self.getQuantity()
+      for i = 1, cardsInPackCount do
+        local obj = self.takeObject({ index = 0 })
+        local objClone = obj.clone()
+        Wait.frames(function() self.putObject(obj) end, 5)
+        local objDescription = objClone.getDescription()
+
+        local cardSpawnData = getCardSpawnData(objDescription, playerClickerColor)
+        objClone.setPositionSmooth(cardSpawnData.position, false)
+        objClone.setRotation(cardSpawnData.rotation)
+
+        if objClone.getStateId() != -1 then
+          for _, state in pairs(objClone.getStates()) do
+            table.insert(spawnedObj, state.guid)
+          end
+        end
+
+        table.insert(spawnedObj, objClone.guid)
+      end
+
+      updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
+    end
+
+    function isCharacterInPullToSelect(waitForSelectCharacters)
+      local isInPull = false
+      for _, pull in pairs(waitForSelectCharacters) do
+        for _, obj in pairs(pull) do
+          if obj.guid == self.guid then
+            isInPull = true
+          end
+        end
+      end
+      return isInPull
+    end
+
+    function isCharacterInAnotherPlayerPullToSelect(clickedPlayerColor, waitForSelectCharacters)
+        local inAnotherPull = false
+        for _, color in pairs(PLAYER_COLORS) do
+            if (color != clickedPlayerColor) then
+                inAnotherPull = isCharacterInPlayerPullToSelect(color, waitForSelectCharacters)
+                if (inAnotherPull == true) then break end
+            end
+        end
+        return inAnotherPull
+    end
+
+    function isCharacterInPlayerPullToSelect(playerColor, waitForSelectCharacters)
+      local isInPull = false
+      for _, obj in pairs(waitForSelectCharacters[playerColor]) do
+        if obj.guid == self.guid then
+          isInPull = true
+        end
+      end
+      return isInPull
+    end
+
+    function cleanupSpawnedObj(playerColor)
+      local playerCharacterObj = getPlayerSpanedObj(playerColor)
+      if playerCharacterObj ~= nil then
+        for _, guid in pairs(playerCharacterObj) do
+          local obj = getObjectFromGUID(guid)
+          if obj ~= nil then
+            obj.destruct()
+          end
+        end
+        updatePlayerSpawnedObj(playerColor, {})
+      end
+    end
+
+    function getCardSpawnData(description, playerColor)
+      if description == "character" then
+        return spawnData[playerColor].character
+      elseif description == "character-item" or description == "character-item-counter" then
+        return spawnData[playerColor].characterItem
+      elseif description == "character-soul" then
+        return spawnData[playerColor].characterStartSoul
+      else
+        printToColor("[ef5350][ERROR][-] Unknown " .. description .. " card description matadata. Maybe you changed description of card?" , playerColor)
+        return
+      end
+    end
+
+    function getPlayerSpanedObj(playercolor)
+      characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
+      return characterPlacer.getTable("playersSpawnedCharacterObj")[playercolor]
+    end
+
+    function updatePlayerSpawnedObj(playerColor, spawnedObj)
+      characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
+      local playersSpawnedCharacterObj = characterPlacer.getTable("playersSpawnedCharacterObj")
+      playersSpawnedCharacterObj[playerColor] = spawnedObj
+      characterPlacer.setTable("playersSpawnedCharacterObj", playersSpawnedCharacterObj)
+    end
+
+    function unlock(obj)
+      obj.interactable = true
+    end
+
+    function lock(obj)
+        obj.interactable = false
+    end
+
+    -- For extended calls
+    function selectCharacterByCall(params)
+      selectCharacter(nil, params.playerColor)
+    end
+
+    function isCharacterInPullToSelectByCall(params)
+      return isCharacterInPullToSelect(params.waitForSelectCharacters)
+    end
+  ]]);
+end
+
+-- For extended calls
+function setCharacterPackScriptByCall(params)
+  setCharacterPackScript(params.obj)
+end

@@ -1,0 +1,50 @@
+function onLoad()
+    broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
+end
+
+-- Auto monster HP reset
+FIRST_HEARTS_GUID = {
+  -- Blue player hearts
+  "78f8e7",
+   -- Red player hearts
+  "bcabf3",
+  -- Yellow player hearts
+  "c02908",
+  -- Green player hearts
+  "12326f"
+}
+
+SECOND_HEARTS_GUID = {
+  -- Blue player hearts
+  "c9f7b2",
+   -- Red player hearts
+  "ca5135",
+  -- Yellow player hearts
+  "3f81b7",
+  -- Green player hearts
+  "c326f1"
+}
+
+function onPlayerTurn(color)
+    -- Monster HP
+    print(type(getObjectFromGUID("9bb226").getVar("value")))
+    print(getObjectFromGUID("9bb226").getVar("val"))
+    if (getObjectFromGUID("9bb226").getVar("val") == 0) then
+        getObjectFromGUID("9bb226").call("reset")
+    end
+    getObjectFromGUID("a75691").call("reset")
+    getObjectFromGUID("fab592").call("reset")
+    getObjectFromGUID("fb5299").call("reset")
+    getObjectFromGUID("b50db5").call("reset")
+    getObjectFromGUID("bcac8d").call("reset")
+
+    -- Players HP
+   for i, guid in pairs(FIRST_HEARTS_GUID) do
+     local objFirst = getObjectFromGUID(guid)
+     local isHeartActive = objFirst.getVar("isActive")
+     if isHeartActive ~= nil and isHeartActive == false then
+       local objSecond = getObjectFromGUID(SECOND_HEARTS_GUID[i])
+       objSecond.call("onPickUp")
+     end
+   end
+end

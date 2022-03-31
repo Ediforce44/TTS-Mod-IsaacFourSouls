@@ -1,0 +1,18 @@
+hp = 4
+type = "superboss"
+soul = 2
+function onObjectRotate(object, _, flip)
+    if object == self then
+        if flip == 0 then
+            self.setName("The Harbingers")
+            hp = 4
+            soul = 0
+            flip = false
+        elseif flip == 180 then -- gotta account for an edge case i'm not foreseeing idk
+            self.setName("The Beast!")
+            hp = 6
+            soul = 2
+            flip = true
+        end
+    end
+end

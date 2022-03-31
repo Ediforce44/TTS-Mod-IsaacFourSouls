@@ -1,0 +1,163 @@
+
+LANGUAGES = {
+  "English",
+  "Russian",
+  "France"
+}
+LANGUAGES_GUIDS = {
+  ["English"] = {
+    -- Rulebook
+    "54456f",
+    -- Official cards box
+    "cf0618",
+    -- Eternal Piles
+    "130b23",
+    -- Box Expansions
+    "dd6f16",
+    "85b402",
+    "29487d",
+    "b3ed1e",
+    "6b570f",
+    "9e2b6c",
+    "b7537f",
+    "79f77f",
+    "cd073d",
+    -- Booster Expansions
+    "25c0bc",
+    "f16000",
+    "31f975",
+    "8ad698",
+    "2a72bc",
+    "e2ac3d",
+    "711381",
+    "999fa9",
+    "e0e77c",
+    -- Gamemodes
+    "24d04a",
+    "416011",
+    "e9d4dd",
+    "7bbdb4",
+    "9a088b"
+  },
+  ["Russian"] = {
+    -- Rulebook
+    "6df828",
+    -- Eternal Piles
+    "c41988",
+    -- Box Expansions
+    "711262",
+    "88dc4a",
+    "65460b",
+    "b48182",
+    -- Official cards box
+    "d91f32"
+  },
+  ["France"] = {
+    -- Official cards box
+    "8d0c2f",
+    -- Rulebook
+    "54456f"
+  }
+}
+
+curLanguage = "English"
+langChanging = false
+
+function onLoad(saved_data)
+  if saved_data ~= "" then
+      local loaded_data = JSON.decode(saved_data)
+      curLanguage = loaded_data.curLanguage
+  end
+
+  initButtons()
+end
+
+function onSave()
+    local data_to_save = {curLanguage=curLanguage}
+    saved_data = JSON.encode(data_to_save)
+    --saved_data = "" --Remove -- at start & save to clear save data
+    return saved_data
+end
+
+function initButtons()
+  self.createButton({
+    click_function = 'switchToFrance',
+    function_owner = self,
+    label = 'Française',
+    position = {-4.2, 1.5, 2.5},
+    width = 1400,
+    height = 400,
+    font_size = 300,
+  })
+  self.createButton({
+    click_function = 'switchToRussian',
+    function_owner = self,
+    label = 'Русский',
+    position = {0, 1.5, 2.5},
+    width = 1400,
+    height = 400,
+    font_size = 300,
+  })
+  self.createButton({
+    click_function = 'switchToEnglish',
+    function_owner = self,
+    label = 'English',
+    position = {4.7, 1.5, 2.5},
+    width = 1400,
+    height = 400,
+    font_size = 300,
+  })
+end
+
+function switchToEnglish()
+  selectLang("English")
+end
+
+function switchToRussian()
+  selectLang("Russian")
+end
+
+function switchToFrance()
+  selectLang("France")
+end
+
+function selectLang(exLang)
+  if curLanguage == exLang or langChanging then return end
+  langChanging = true
+  changeLangObjsVisibility(curLanguage, true)
+  delayedCall("selectLangDelayed", 0.3, { exLang = exLang })
+  curLanguage = exLang
+end
+
+function selectLangDelayed(params)
+  changeLangObjsVisibility(params.exLang, false)
+  delayedCall("selectLangEnd", 0.3)
+end
+
+function selectLangEnd(params)
+  langChanging = false
+end
+
+function changeLangObjsVisibility(lang, hide)
+  yOffset = hide and -50 or 50
+  for _, guid in pairs(LANGUAGES_GUIDS[lang]) do
+    local obj = getObjectFromGUID(guid)
+    if obj ~= nil then
+      local curPos = obj.getPosition()
+      curPos.y = curPos.y + yOffset
+      obj.setPositionSmooth(curPos, false, true)
+      obj.setLock(hide)
+    end
+  end
+end
+
+numTimers = 0
+function delayedCall(funcName, delayTime, parameters)
+    local uniqueID = 'timer'..numTimers
+    numTimers = numTimers + 1
+    Timer.create( {
+        identifier = uniqueID,
+        function_name = funcName,
+        delay = delayTime,
+        parameters = parameters } )
+end 

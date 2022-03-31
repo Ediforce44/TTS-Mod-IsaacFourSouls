@@ -1,0 +1,177 @@
+INACTIVE_FLOOR_ZONE_GUID = "096e94"
+ACTIVE_FLOOR_DECK_POSITION = {-6.20, 5, -1.70}
+
+startTurnColor = nil
+skipOneTurnTirgger = true
+
+function onPlayerTurn(player)
+  if skipOneTurnTirgger then
+    skipOneTurnTirgger = false
+    return
+  end
+  skipOneTurnTirgger = true
+
+
+  if player.color == startTurnColor then
+    openNextFloor()
+  end
+end
+
+function onLoad()
+  -- Next floor button
+  self.createButton({
+    click_function = "openNextFloor",
+    function_owner = self,
+    label          = "Next Floor",
+    position       = {0, 1, 0},
+    width          = 1000,
+    height         = 300,
+    font_size      = 200
+  })
+  -- Color buttons
+  self.createButton({
+    click_function = "onClickRedBtn",
+    function_owner = self,
+    label          = "",
+    position       = {1.2, 1, -7.6},
+    width          = 300,
+    height         = 300,
+    color          = {0.85, 0.1, 0.09},
+    tooltip        = "Red Turn"
+  })
+  self.createButton({
+    click_function = "onClickBlueBtn",
+    function_owner = self,
+    label          = "",
+    position       = {0.4, 1, -7.6},
+    width          = 300,
+    height         = 300,
+    color          = {0.12, 0.53, 1},
+    tooltip        = "Blue Turn"
+  })
+  self.createButton({
+    click_function = "onClickGreenBtn",
+    function_owner = self,
+    label          = "",
+    position       = {-0.4, 1, -7.6},
+    width          = 300,
+    height         = 300,
+    color          = {0.19, 0.7, 0.16},
+    tooltip        = "Green Turn"
+  })
+  self.createButton({
+    click_function = "onClickYellowBtn",
+    function_owner = self,
+    label          = "",
+    position       = {-1.2, 1, -7.6},
+    width          = 300,
+    height         = 300,
+    color          = {0.9, 0.89, 0.17},
+    tooltip        = "Yellow Turn"
+  })
+end
+
+function onClickRedBtn()
+  selectStartTurn(2, "Red")
+end
+
+function onClickBlueBtn()
+  selectStartTurn(3, "Blue")
+end
+
+function onClickGreenBtn()
+  selectStartTurn(4, "Green")
+end
+
+function onClickYellowBtn()
+  selectStartTurn(5, "Yellow")
+end
+
+function selectStartTurn(btnIndex, color)
+  local btns = self.getButtons()
+  local clickedBtn = btns[btnIndex];
+
+  -- Remove select marker btn if exist
+  if #btns > 5 then
+    self.removeButton(5)
+  end
+
+  if startTurnColor == color then
+    startTurnColor = nil
+    return
+  end
+
+  startTurnColor = color
+
+  -- Create select marker btn
+  local pos = clickedBtn.position
+  pos.y = pos.y + 0.02
+  self.createButton({
+    click_function = "dummy",
+    function_owner = self,
+    label          = "✓",
+    position       = pos,
+    width          = 150,
+    height         = 150,
+    font_size      = 100,
+    font_color     = {0.85, 0.1, 0.09},
+    color          = {1, 1, 1, 1},
+  })
+end
+
+function openNextFloor()
+  print("openNextFloor")
+  local zone = getObjectFromGUID(INACTIVE_FLOOR_ZONE_GUID)
+  local objInZone = zone.getObjects()
+
+  -- !First obj is placeholder cards
+  if #objInZone == 1 then
+    printToAll("[fdd835][WARNING][-] In inactive floor zone no deck. Please place floors deck.")
+    return
+  elseif #objInZone > 2 then
+    printToAll("[fdd835][WARNING][-] In inactive floor zone more than one object. Please leave in zone only floors deck.")
+    return
+  end
+
+  local obj = objInZone[2]
+--  if obj.name == "Remaining Floors" then
+  if obj.guid == "409647" then
+    obj = objInZone[1]      
+    end
+
+  if obj.tag ~= "Deck" and obj.tag ~= "Card" then
+    printToAll("[fdd835][WARNING][-] Inactive floor zone not deck object. Please place floors deck.")
+    return
+  end
+
+  if not obj.is_face_down then
+    printToAll("[fdd835][WARNING][-] Floors deck must be face down. Flip.")
+    obj.flip()
+  end
+
+  local card = nil
+  if obj.tag == "Deck" then
+    card = obj.takeObject()
+  else
+    card = obj
+  end
+
+  card.flip()
+  card.setPositionSmooth(ACTIVE_FLOOR_DECK_POSITION, false)
+
+  broadcastToAll("[66bb6a]New floor open!")
+end
+
+function dummy() end
+
+-- For external call
+function getFloorsDeckGuid()
+  local zone = getObjectFromGUID(INACTIVE_FLOOR_ZONE_GUID)
+  local objInZone = zone.getObjects()
+
+  if #objInZone ~= 2 or objInZone[2].tag ~= "Deck" then
+    return nil
+  end
+
+  return objInZone[2].guid
+end
