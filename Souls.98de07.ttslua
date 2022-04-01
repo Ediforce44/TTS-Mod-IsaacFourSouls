@@ -9,6 +9,7 @@ function deal_soul_token(object, color)         --EbyE44
     Global.call("placeSoulToken", {ownerColor = owner_color})
 end
 
+
 function onObjectEnterScriptingZone(zone, object)
     if zone ~= getObjectFromGUID(zone_guid) then return end
     Wait.frames(function()
