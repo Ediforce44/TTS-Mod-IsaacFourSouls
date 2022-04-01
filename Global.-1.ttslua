@@ -69,3 +69,156 @@ function onPlayerTurn(player, previous_player)
      end
    end
 end
+
+---------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------- Edited by Ediforce44 --------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------
+ZONE_GUIDS = {
+    MONSTER_DECK = "52e22c",
+    HAPPEN_DECK = "61e7b7",
+    TREASURE_DECK = "190cda",
+    LOOT_DECK = "c413a5",
+    BONUS_SOUL_DECK = "979776",
+    FLOOR_DECK = "096e94",
+    SOUL_TOKEN_DECK = "560abc",
+    SOULS_BLUE = "c0bd67",
+    SOULS_RED = "8515c8",
+    SOULS_GREEN = "f95f84",
+    SOULS_YELLOW = "92610d"
+}
+
+function table.copy(t)
+    local tableCopy = {}
+    for key, value in pairs(t) do
+        tableCopy[key] = value
+    end
+    return tableCopy
+end
+
+function getZoneGUIDS()
+    --return copy(ZONE_GUID)
+    return table.copy(ZONE_GUIDS)
+end
+
+function isPlayerAuthorized(params)
+    local player
+    if params.playerColor ~= nil then
+        player = Player[params.playerColor]
+    elseif params.player ~= nil then
+        player = params.player
+    else
+        return
+    end
+    return player == params.ownerPlayer or player.admin
+end
+
+local function getDeckOrCard(zoneGUID)
+    local zone = getObjectFromGUID(zoneGUID)
+    if zone == nil then
+        printToAll("[fdd835][WARNING][-] Wrong Zone. Zone with GUID '" .. zoneGUID .. "' doesn't exist.")
+        return nil
+    end
+
+    for _, obj in pairs(zone.getObjects()) do
+      if obj.tag == "Deck" or obj.tag == "Card" then
+          return obj
+      end
+    end
+
+    local zoneName = ""
+    for name, guid in pairs(ZONE_GUIDS) do
+        if guid == zoneGUID then
+            zoneName = tostring(name)
+            goto printError
+        end
+    end
+    zoneName = "'Zone not found'"
+    ::printError::
+    printToAll("[fdd835][WARNING][-] Can't find the deck or card in zone '" .. zoneName .. "'.")
+    return nil
+end
+
+function getDeckFromZone(params)
+    if params.zoneGUID == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in 'getDeckFromZone()'.")
+        return nil
+    end
+    return getDeckOrCard(params.zoneGUID)
+end
+
+function getMonsterDeck()
+    return getDeckOrCard(ZONE_GUIDS.MONSTER_DECK)
+end
+
+function getHappenDeck()
+    return getDeckOrCard(ZONE_GUIDS.HAPPEN_DECK)
+end
+
+function getTreasureDeck()
+    return getDeckOrCard(ZONE_GUIDS.TREASURE_DECK)
+end
+
+function getLootDeck()
+    return getDeckOrCard(ZONE_GUIDS.LOOT_DECK)
+end
+
+function getBonusSoulDeck()
+    return getDeckOrCard(ZONE_GUIDS.BONUS_SOUL_DECK)
+end
+
+function getFloorDeck()
+    return getDeckOrCard(ZONE_GUIDS.FLOOR_DECK)
+end
+
+function getSoulTokenDeck()
+    return getDeckOrCard(ZONE_GUIDS.SOUL_TOKEN_DECK)
+end
+
+function getCardFromDeck(params)
+    if params.deck == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in 'getCardFromDeck()'.")
+        return nil
+    end
+    local obj = params.deck
+    local card = nil
+    if obj.tag == "Deck" then
+        card = obj.takeObject()
+    elseif obj.tag == "Card" then
+        card = obj
+    end
+    return card
+end
+
+function placeSoulToken(params)
+    local card = getCardFromDeck({deck = getSoulTokenDeck()})
+    if card ~= nil then
+        local zoneGUID = nil
+        --Rotate card and get GUID for the soul zone 
+        if params.ownerColor == "Red" then
+            card.setRotationSmooth({x=0, y=270, z=0}, false)
+            zoneGUID = ZONE_GUIDS.SOULS_RED
+        elseif params.ownerColor == "Blue" then
+            card.setRotationSmooth({x=0, y=270, z=0}, false)
+            zoneGUID = ZONE_GUIDS.SOULS_BLUE
+        elseif params.ownerColor == "Green" then
+            zoneGUID = ZONE_GUIDS.SOULS_GREEN
+        elseif params.ownerColor == "Yellow" then
+            zoneGUID = ZONE_GUIDS.SOULS_YELLOW
+        else
+            broadcastToAll("Nobody earned a soul. Hurray???")
+            return
+        end
+        --Set position and print text
+        local position = getObjectFromGUID(zoneGUID).call("nextFreeSoulPosition")
+        if position == nil then
+            printToAll("[fdd835][WARNING][-] Can't find a free position for a new soul token.")
+            position = getSoulTokenDeck().getPosition()
+        else
+            broadcastToAll(params.ownerColor .. " earned a soul. Hurray!!!")
+        end
+        card.setPositionSmooth(position, false)
+        return
+    else
+        printToAll("[fdd835][WARNING][-] Can't find the Soul Token deck: Maybe the soul tokens are empty. Place the soul tokens on its starting position.")
+    end
+end

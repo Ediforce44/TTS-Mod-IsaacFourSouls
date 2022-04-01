@@ -1,4 +1,13 @@
-zone_guid = "f95f84"
+--- Edited by Ediforce44
+owner_color = "Green"
+zone_guid = Global.call("getZoneGUIDS").SOULS_GREEN       --EbyE44
+
+function deal_soul_token(object, color)         --EbyE44
+    if not Global.call("isPlayerAuthorized", {playerColor = color, ownerPlayer = Player[owner_color]}) then
+        return
+    end
+    Global.call("placeSoulToken", {ownerColor = owner_color})
+end
 
 function onObjectEnterScriptingZone(zone, object)
     if zone ~= getObjectFromGUID(zone_guid) then return end
@@ -70,7 +79,7 @@ function createAll()
 
     self.createButton({
       label=tostring(val),
-      click_function="add_subtract",
+      click_function="deal_soul_token",
       tooltip=ttText,
       function_owner=self,
       position={0,0.05,-0.2},

@@ -1,5 +1,8 @@
 --- Hand counter by Schokolabbi
-LOOT_DECK_ZONE = "c413a5"
+
+--- Edited by Ediforce44
+LOOT_DECK_ZONE_GUID = "c413a5"
+
 --- Click delay time in seconds
 options = {["clickDelay"] = 0.3}
 
@@ -34,13 +37,13 @@ function update()
 end
 
 function findOwner(color)
-    if not isPlayerAuthorized(color) then return end
+    if not Global.call("isPlayerAuthorized", {playerColor = color, ownerPlayer = owner}) then return end         --EbyE44
     if clickCounter == 0 then
         Timer.create(doubleClickParameters)
     end
     if isDoubleClick() then
         setOwner(nil)
-    elseif not owner then
+    elseif not owner and (color == "Red" or color == "Blue" or color == "Green" or color == "Yellow") then      --EbyE44
         setOwner(color)
     end
 end
@@ -55,10 +58,24 @@ end
 
 function resetClickCounter()
     if clickCounter == 1 then
-        lootdeck = Global.call("getDeckFromZone",LOOT_DECK_ZONE)
-        lootdeck.deal(1, owner.color)
+        dealLootCard()    --EbyE44
     end
     clickCounter = 0
+end
+
+function dealLootCard()    --EbyE44
+    if owner == nil then
+        printToAll("[fdd835][WARNING][-] Wrong color. Choose a player color and try it again.")
+        return
+    end
+    local zone = getObjectFromGUID(LOOT_DECK_ZONE_GUID)
+    for _, obj in pairs(zone.getObjects()) do
+        if obj.tag == "Deck" or obj.tag == "Card" then
+            obj.deal(1, owner.color)
+            return
+        end
+    end
+    printToAll("[fdd835][WARNING][-] Can't find the Loot deck. Place the Loot deck on its starting position.")
 end
 
 function isDoubleClick()
@@ -86,9 +103,4 @@ function setOwner(color)
         position={0,0.05,0}, height=650, width=1000; font_size=1000, font_color={1,1,1,95},
         color={0,0,0,0}
     })
-end
-
-function isPlayerAuthorized(color)
-    player = Player[color]
-    return player == owner or player.admin
 end
