@@ -1,16 +1,7 @@
-LOOT_DECK_ZONE = "c413a5"
-
 function onLoad()
     broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
 end
 
-function getDeckFromZone(zoneGuid)
-  local zone = getObjectFromGUID(zoneGuid)
-  for _, obj in pairs(zone.getObjects()) do
-    if obj.tag == "Deck" then return obj end
-  end
-  return nil
-end
 -- Auto monster HP reset
 FIRST_HEARTS_GUID = {
   -- Blue player hearts
