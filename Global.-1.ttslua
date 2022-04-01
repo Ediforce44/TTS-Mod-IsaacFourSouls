@@ -27,7 +27,7 @@ SECOND_HEARTS_GUID = {
 
 function onPlayerTurn(player, previous_player)
 
-    lootdeck = getDeckFromZone(LOOT_DECK_ZONE)
+    local lootdeck = getDeckOrCard(ZONE_GUIDS.LOOT_DECK)
 
     if previous_player == nil then
         print(player.color .. " is going first. It's now their turn.")
