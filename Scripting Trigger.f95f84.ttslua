@@ -1,4 +1,4 @@
-SOUL_ZONE_FIRST_POSITION = {33.23, 1.5, -6.2}
+SOUL_ZONE_FIRST_POSITION = {-33.25, 1.5, 6.2}
 
 function nextFreeSoulPosition()         --EbyE44
     print(self.getGUID())

@@ -78,7 +78,7 @@ function createAll()
 
     self.createButton({
       label=tostring(val),
-      click_function="add_subtract",
+      click_function="deal_soul_token",
       tooltip=ttText,
       function_owner=self,
       position={0,0.05,-0.2},
