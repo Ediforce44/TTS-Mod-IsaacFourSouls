@@ -1,6 +1,44 @@
-SOUL_ZONE_FIRST_POSITION = {33.21, 1.5, -6.23}
+--- Written by Ediforce44
+INDEX_ZERO_POSITION = Vector(33.21, 1.5, -6.23)
+INDEX_OFFSET = -3.23
+INDEX_THRESHOLDS = {    --INDEX 1
+                        -7.8,
+                        --INDEX 2
+                        -11.1,
+                        --INDEX 3
+                        -14.3
+                        --INDEX 4
+                    }
+
+
+local function getIndexFromZCoord(zCoord)
+    if zCoord >= INDEX_THRESHOLDS[2] then
+        if zCoord > INDEX_THRESHOLDS[1] then
+            return 1
+        else
+            return 2
+        end
+    else
+        if zCoord < INDEX_THRESHOLDS[3] then
+            return 4
+        else
+            return 3
+        end
+    end
+end
+
 
 function nextFreeSoulPosition()         --EbyE44
-    print(self.getGUID())
-    return SOUL_ZONE_FIRST_POSITION
+    local indexTable = {true, true, true, true}
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.getVar("soul") ~= nil then
+            indexTable[getIndexFromZCoord(obj.getPosition().z)] = false
+        end
+    end
+    for index = 1, 4 do
+        if indexTable[index] then
+            return INDEX_ZERO_POSITION + Vector(0, 0, (index - 1) * INDEX_OFFSET)
+        end
+    end
+    return nil
 end
