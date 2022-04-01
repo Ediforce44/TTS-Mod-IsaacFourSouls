@@ -123,7 +123,7 @@ function selectStartTurn(btnIndex, color)
 end
 
 function openNextFloor()
-  print("openNextFloor")
+
   local zone = getObjectFromGUID(INACTIVE_FLOOR_ZONE_GUID)
   local objInZone = zone.getObjects()
 

@@ -11,7 +11,6 @@ function getDeckFromZone(zoneGuid)
   end
   return nil
 end
-
 -- Auto monster HP reset
 FIRST_HEARTS_GUID = {
   -- Blue player hearts
@@ -32,7 +31,6 @@ SECOND_HEARTS_GUID = {
   -- Yellow player hearts
   "3f81b7",
   -- Green player hearts
-  -- Green player hearts
   "c326f1"
 }
 
@@ -42,18 +40,16 @@ function onPlayerTurn(player, previous_player)
 
     if previous_player == nil then
         print(player.color .. " is going first. It's now their turn.")
-
         lootdeck.deal(1, Turns.turn_color)
         previous_player = player
+        previous_player.color = player.color
     else
-        --print(previous_player.color .. "'s turn is over. It's now " .. player.color .. "'s turn.")
-
+        print(previous_player.color .. "'s turn is over. It's now " .. player.color .. "'s turn.")
         lootdeck.deal(1, Turns.turn_color)
     end
 
     -- Monster HP
-    print(type(getObjectFromGUID("9bb226").getVar("value")))
-    print(getObjectFromGUID("9bb226").getVar("val"))
+
     if (getObjectFromGUID("9bb226").getVar("val") == 0) then
         getObjectFromGUID("9bb226").call("reset")
     end
