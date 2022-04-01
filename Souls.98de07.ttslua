@@ -1,4 +1,13 @@
-zone_guid = "8515c8"
+--- Edited by Ediforce44
+owner_color = "Red"
+zone_guid = Global.call("getZoneGUIDS").SOULS_RED       --EbyE44
+
+function deal_soul_token(object, color)         --EbyE44
+    if not Global.call("isPlayerAuthorized", {playerColor = color, ownerPlayer = Player[owner_color]}) then
+        return
+    end
+    Global.call("placeSoulToken", {ownerColor = owner_color})
+end
 
 function onObjectEnterScriptingZone(zone, object)
     if zone ~= getObjectFromGUID(zone_guid) then return end
@@ -70,7 +79,7 @@ function createAll()
 
     self.createButton({
       label=tostring(val),
-      click_function="add_subtract",
+      click_function="deal_soul_token",         --EbyE44
       tooltip=ttText,
       function_owner=self,
       position={0,0.05,-0.2},
@@ -84,16 +93,16 @@ function createAll()
       })
 
     self.createInput({
-        value = self.getName(), 
-        input_function = "editName", 
+        value = self.getName(),
+        input_function = "editName",
         tooltip=ttText,
         label = "Counter",
-        function_owner = self, 
+        function_owner = self,
         alignment = 3,
-        position = {0,0.05,1.5}, 
-        width = 1200, 
-        height = 1000, 
-        font_size = 400, 
+        position = {0,0.05,1.5},
+        width = 1200,
+        height = 1000,
+        font_size = 400,
         scale={x=1, y=1, z=1},
         font_color= f_color,
         color = {0,0,0,0}
@@ -148,7 +157,7 @@ function swap_align(_obj, _color, alt_click)
     reloadAll()
 end
 
-function editName(_obj, _string, value) 
+function editName(_obj, _string, value)
     self.setName(value)
     setTooltips()
 end
@@ -193,7 +202,7 @@ end
 function null()
 end
 
-function keepSample(_obj, _string, value) 
+function keepSample(_obj, _string, value)
     reloadAll()
 end
 

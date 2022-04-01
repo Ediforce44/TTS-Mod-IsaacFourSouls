@@ -59,6 +59,7 @@ ZONE_GUIDS = {
     LOOT_DECK = "c413a5",
     BONUS_SOUL_DECK = "979776",
     FLOOR_DECK = "096e94",
+    SOUL_TOKEN_DECK = "560abc",
     SOULS_BLUE = "c0bd67",
     SOULS_RED = "8515c8",
     SOULS_GREEN = "f95f84",
@@ -146,4 +147,49 @@ end
 
 function getFloorDeck()
     return getDeckOrCard(ZONE_GUIDS.FLOOR_DECK)
+end
+
+function getSoulTokenDeck()
+    return getDeckOrCard(ZONE_GUIDS.SOUL_TOKEN_DECK)
+end
+
+function getCardFromDeck(params)
+    if params.deck == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in 'getCardFromDeck()'.")
+        return nil
+    end
+    local obj = params.deck
+    local card = nil
+    if obj.tag == "Deck" then
+        card = obj.takeObject()
+    elseif obj.tag == "Card" then
+        card = obj
+    end
+    return card
+end
+
+function placeSoulToken(params)
+    local card = getCardFromDeck({deck = getSoulTokenDeck()})
+    if card ~= nil then
+        local zoneGUID = nil
+        if params.ownerColor == "Red" then
+            card.setRotationSmooth({x=0, y=270, z=0}, false)
+            zoneGUID = ZONE_GUIDS.SOULS_RED
+        elseif params.ownerColor == "Blue" then
+            card.setRotationSmooth({x=0, y=270, z=0}, false)
+            zoneGUID = ZONE_GUIDS.SOULS_BLUE
+        elseif params.ownerColor == "Green" then
+            zoneGUID = ZONE_GUIDS.SOULS_GREEN
+        elseif params.ownerColor == "Yellow" then
+            zoneGUID = ZONE_GUIDS.SOULS_YELLOW
+        else
+            broadcastToAll("Nobody earned a soul. Hurray???")
+            return
+        end
+        card.setPositionSmooth(getObjectFromGUID(zoneGUID).call("nextFreeSoulPosition"), false)
+        broadcastToAll(params.ownerColor .. " earned a soul. Hurray!!!")
+        return
+    else
+        printToAll("[fdd835][WARNING][-] Can't find the Soul Token deck: Maybe the soul tokens are empty. Place the soul tokens on its starting position.")
+    end
 end
