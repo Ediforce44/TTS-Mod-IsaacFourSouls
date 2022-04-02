@@ -1,4 +1,6 @@
-INACTIVE_FLOOR_ZONE_GUID = "096e94"
+--- Edited by Ediforce44
+INACTIVE_FLOOR_ZONE_GUID = Global.call("getZoneGUIDS_Deck").FLOOR
+
 ACTIVE_FLOOR_DECK_POSITION = {-6.20, 5, -1.70}
 
 startTurnColor = nil

@@ -1,4 +1,6 @@
+--- Edited by Ediforce44
 zone_guid = Global.call("getZoneGUIDS_Monster").SIX
+
 
 last_value = 0
 function onObjectEnterScriptingZone(zone, object)
