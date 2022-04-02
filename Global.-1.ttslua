@@ -194,20 +194,26 @@ function getPrintColors_Special()
 end
 
 function isPlayerAuthorized(params)
-    local player
+    -- If there is no owner, all players have the permission to interact with something
+    if params.ownerPlayer == nil then
+        return true
+    end
+    -- Interacting player has to be the owner or has to be an admin
+    local player = nil
     if params.playerColor ~= nil then
         player = Player[params.playerColor]
     elseif params.player ~= nil then
         player = params.player
     else
-        return
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'isPlayerAuthorized()'.")
+        return false
     end
     return player == params.ownerPlayer or player.admin
 end
 
 function getDeckFromZone(params)
     if params.zoneGUID == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in 'getDeckFromZone()'.")
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'getDeckFromZone()'.")
         return nil
     end
     return getDeckOrCard(params.zoneGUID)
@@ -243,7 +249,7 @@ end
 
 function getCardFromDeck(params)
     if params.deck == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in 'getCardFromDeck()'.")
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'getCardFromDeck()'.")
         return nil
     end
     local obj = params.deck
@@ -283,7 +289,8 @@ function placeSoulToken(params)
             printToAll("[fdd835][WARNING][-] Can't find a free position for a new soul token.")
             position = getSoulTokenDeck().getPosition()
         else
-            broadcastToAll(getPlayerString({playerColor = params.ownerColor}) .. PRINT_COLOR_SPECIAL.SOUL .. " earned a soul. Hurray!!!")
+            broadcastToAll(getPlayerString({playerColor = params.ownerColor}) .. PRINT_COLOR_SPECIAL.SOUL
+                            .. " earned a soul. Hurray!!!")
         end
         card.setPositionSmooth(position, false)
         return
