@@ -1,4 +1,4 @@
-zone_guid = Global.call("getZoneGUID_Monster").TWO
+zone_guid = Global.call("getZoneGUIDS_Monster").TWO
 last_value = 0
 function onObjectEnterScriptingZone(zone, object)
     if zone ~= getObjectFromGUID(zone_guid) then
