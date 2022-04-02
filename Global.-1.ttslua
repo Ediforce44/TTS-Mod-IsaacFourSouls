@@ -61,12 +61,13 @@ function onPlayerTurn(player, previous_player)
     local lootdeck = getDeckOrCard(ZONE_GUIDS.LOOT_DECK)
 
     if previous_player == nil then
-        print(player.color .. " is going first. It's now their turn.")
+        print(getPlayerString({playerColor = player.color}) .. " is going first. It's now their turn.")
         lootdeck.deal(1, Turns.turn_color)
         previous_player = player
         previous_player.color = player.color
     else
-        print(previous_player.color .. "'s turn is over. It's now " .. player.color .. "'s turn.")
+        print(getPlayerString({playerColor = previous_player.color}) .. "'s turn is over. It's now "
+                .. getPlayerString({playerColor = player.color}) .. "'s turn.")
         lootdeck.deal(1, Turns.turn_color)
     end
 
@@ -121,6 +122,30 @@ end
 function getZoneGUIDS()
     --return copy(ZONE_GUID)
     return table.copy(ZONE_GUIDS)
+REAL_PLAYER_COLOR = {
+    Yellow = "[D0E431]",
+    Green = "[2BB837]",
+    Blue = "[1C79F8]",
+    Red = "[C60A00]"
+}
+
+PRINT_COLOR_PLAYER = {
+    YELLOW = REAL_PLAYER_COLOR["Yellow"],
+    GREEN = REAL_PLAYER_COLOR["Green"],
+    BLUE = REAL_PLAYER_COLOR["Blue"],
+    RED = REAL_PLAYER_COLOR["Red"]
+}
+function getPlayerString(params)
+    local playerString = "'Player not Found'"
+    if params.playerColor ~= nil then
+        playerString = REAL_PLAYER_COLOR[params.playerColor]
+        if playerString == nil then
+            playerString = ""
+        end
+        playerString = playerString .. params.playerColor .. "[-]"
+    end
+    return playerString
+end
 end
 
 function isPlayerAuthorized(params)
