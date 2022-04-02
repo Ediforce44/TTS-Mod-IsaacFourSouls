@@ -146,10 +146,10 @@ ZONE_GUID_DECK = {
 }
 
 ZONE_GUID_SOUL = {
-    YELLOW = "92610d",
-    GREEN = "f95f84",
-    BLUE = "c0bd67",
-    RED = "8515c8"
+    Yellow = "92610d",
+    Green = "f95f84",
+    Blue = "c0bd67",
+    Red = "8515c8"
 }
 
 ZONE_GUID_MONSTER = {
@@ -183,6 +183,10 @@ end
 
 function getZoneGUIDS_Monster()
     return table.copy(ZONE_GUID_MONSTER)
+end
+
+function getPrintColors_RealPlayer()
+    return table.copy(REAL_PLAYER_COLOR)
 end
 
 function getPrintColors_Player()
@@ -265,26 +269,21 @@ end
 function placeSoulToken(params)
     local card = getCardFromDeck({deck = getSoulTokenDeck()})
     if card ~= nil then
-        local zoneGUID = nil
-        --Rotate card and get GUID for the soul zone
+        --Rotate card
         if params.ownerColor == "Red" then
             card.setRotationSmooth({x=0, y=270, z=0}, false)
-            zoneGUID = ZONE_GUID_SOUL.RED
         elseif params.ownerColor == "Blue" then
             card.setRotationSmooth({x=0, y=270, z=0}, false)
-            zoneGUID = ZONE_GUID_SOUL.BLUE
         elseif params.ownerColor == "Green" then
             card.setRotationSmooth({x=0, y=90, z=0}, false)
-            zoneGUID = ZONE_GUID_SOUL.GREEN
         elseif params.ownerColor == "Yellow" then
             card.setRotationSmooth({x=0, y=90, z=0}, false)
-            zoneGUID = ZONE_GUID_SOUL.YELLOW
         else
             broadcastToAll(PRINT_COLOR_SPECIAL.SOUL .. "Nobody earned a soul. Hurray???")
             return
         end
         --Set position and print text
-        local position = getObjectFromGUID(zoneGUID).call("nextFreeSoulPosition")
+        local position = getObjectFromGUID(ZONE_GUIDS_SOUL[params.ownerColor]).call("nextFreeSoulPosition")
         if position == nil then
             printToAll("[fdd835][WARNING][-] Can't find a free position for a new soul token.")
             position = getSoulTokenDeck().getPosition()

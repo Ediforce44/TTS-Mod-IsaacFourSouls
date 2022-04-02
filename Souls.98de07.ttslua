@@ -1,6 +1,6 @@
 --- Edited by Ediforce44
 owner_color = "Red"
-zone_guid = Global.call("getZoneGUIDS_Soul").RED       --EbyE44
+zone_guid = Global.call("getZoneGUIDS_Soul")[owner_color]       --EbyE44
 
 function deal_soul_token(object, color)         --EbyE44
     if not Global.call("isPlayerAuthorized", {playerColor = color, ownerPlayer = Player[owner_color]}) then
