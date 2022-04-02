@@ -14,17 +14,17 @@ local function getDeckOrCard(zoneGUID)
           return obj
       end
     end
-
+    --Can't find a Deck or Card in the zone
     local zoneName = ""
-    for name, guid in pairs(ZONE_GUIDS) do
+    for name, guid in pairs(ZONE_GUID_DECK) do
         if guid == zoneGUID then
             zoneName = tostring(name)
             goto printError
         end
     end
-    zoneName = "'Zone not found'"
+    zoneName = "'Zone is not a Deck-Zone'"
     ::printError::
-    printToAll("[fdd835][WARNING][-] Can't find the deck or card in zone '" .. zoneName .. "'.")
+    printToAll("[fdd835][WARNING][-] Can't find the deck or card in zone: " .. zoneName .. ".")
     return nil
 end
 ------------------------------------------------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ SECOND_HEARTS_GUID = {
 
 function onPlayerTurn(player, previous_player)
 
-    local lootdeck = getDeckOrCard(ZONE_GUIDS.LOOT_DECK)
+    local lootdeck = getDeckOrCard(ZONE_GUID_DECK.LOOT)
 
     if previous_player == nil then
         print(getPlayerString({playerColor = player.color}) .. " is going first. It's now their turn.")
@@ -97,20 +97,6 @@ end
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-ZONE_GUIDS = {
-    MONSTER_DECK = "52e22c",
-    HAPPEN_DECK = "61e7b7",
-    TREASURE_DECK = "190cda",
-    LOOT_DECK = "c413a5",
-    BONUS_SOUL_DECK = "979776",
-    FLOOR_DECK = "096e94",
-    SOUL_TOKEN_DECK = "560abc",
-    SOULS_BLUE = "c0bd67",
-    SOULS_RED = "8515c8",
-    SOULS_GREEN = "f95f84",
-    SOULS_YELLOW = "92610d"
-}
-
 function table.copy(t)
     local tableCopy = {}
     for key, value in pairs(t) do
@@ -119,9 +105,6 @@ function table.copy(t)
     return tableCopy
 end
 
-function getZoneGUIDS()
-    --return copy(ZONE_GUID)
-    return table.copy(ZONE_GUIDS)
 REAL_PLAYER_COLOR = {
     Yellow = "[D0E431]",
     Green = "[2BB837]",
@@ -135,6 +118,49 @@ PRINT_COLOR_PLAYER = {
     BLUE = REAL_PLAYER_COLOR["Blue"],
     RED = REAL_PLAYER_COLOR["Red"]
 }
+
+PRINT_COLOR_SPECIAL = {
+    WARNING = "[fdd835]",
+    SOUL = "[C8EFF7]",
+    MONSTER = "[352853]",
+    COIN = "[AB9023]",
+    LOOT = "[B9E9F0]",
+    FLOOR = "[5E4C3F]",
+    TREASURE_LIGHT = "[D6BF5C]",
+    TREASURE_DARK = "[998126]",
+    HP = "[951312]",
+    BLACK = "[010100]",
+    GRAY = "[3B4449]",
+    RED = "[CE3522]",
+    GOLD = "[E4BC2F]"
+}
+
+ZONE_GUID_DECK = {
+    MONSTER = "52e22c",
+    HAPPEN = "61e7b7",
+    TREASURE = "190cda",
+    LOOT = "c413a5",
+    BONUS_SOUL = "979776",
+    FLOOR = "096e94",
+    SOUL_TOKEN = "560abc"
+}
+
+ZONE_GUID_SOUL = {
+    YELLOW = "92610d",
+    GREEN = "f95f84",
+    BLUE = "c0bd67",
+    RED = "8515c8"
+}
+
+ZONE_GUID_MONSTER = {
+    ONE = "329a95",
+    TWO = "1a25c2",
+    THREE = "27417f",
+    FOUR = "f0d9fd",
+    FIVE = "839d81",
+    SIX = "6c1a32"
+}
+
 function getPlayerString(params)
     local playerString = "'Player not Found'"
     if params.playerColor ~= nil then
@@ -146,6 +172,25 @@ function getPlayerString(params)
     end
     return playerString
 end
+
+function getZoneGUIDS_Deck()
+    return table.copy(ZONE_GUID_DECK)
+end
+
+function getZoneGUIDS_Soul()
+    return table.copy(ZONE_GUID_SOUL)
+end
+
+function getZoneGUIDS_Monster()
+    return table.copy(ZONE_GUID_MONSTER)
+end
+
+function getPrintColors_Player()
+    return table.copy(PRINT_COLOR_PLAYER)
+end
+
+function getPrintColors_Special()
+    return table.copy(PRINT_COLOR_SPECIAL)
 end
 
 function isPlayerAuthorized(params)
@@ -169,31 +214,31 @@ function getDeckFromZone(params)
 end
 
 function getMonsterDeck()
-    return getDeckOrCard(ZONE_GUIDS.MONSTER_DECK)
+    return getDeckOrCard(ZONE_GUID_DECK.MONSTER)
 end
 
 function getHappenDeck()
-    return getDeckOrCard(ZONE_GUIDS.HAPPEN_DECK)
+    return getDeckOrCard(ZONE_GUID_DECK.HAPPEN)
 end
 
 function getTreasureDeck()
-    return getDeckOrCard(ZONE_GUIDS.TREASURE_DECK)
+    return getDeckOrCard(ZONE_GUID_DECK.TREASURE)
 end
 
 function getLootDeck()
-    return getDeckOrCard(ZONE_GUIDS.LOOT_DECK)
+    return getDeckOrCard(ZONE_GUID_DECK.LOOT)
 end
 
 function getBonusSoulDeck()
-    return getDeckOrCard(ZONE_GUIDS.BONUS_SOUL_DECK)
+    return getDeckOrCard(ZONE_GUID_DECK.BONUS_SOUL)
 end
 
 function getFloorDeck()
-    return getDeckOrCard(ZONE_GUIDS.FLOOR_DECK)
+    return getDeckOrCard(ZONE_GUID_DECK.FLOOR)
 end
 
 function getSoulTokenDeck()
-    return getDeckOrCard(ZONE_GUIDS.SOUL_TOKEN_DECK)
+    return getDeckOrCard(ZONE_GUID_DECK.SOUL_TOKEN)
 end
 
 function getCardFromDeck(params)
@@ -218,16 +263,18 @@ function placeSoulToken(params)
         --Rotate card and get GUID for the soul zone
         if params.ownerColor == "Red" then
             card.setRotationSmooth({x=0, y=270, z=0}, false)
-            zoneGUID = ZONE_GUIDS.SOULS_RED
+            zoneGUID = ZONE_GUID_SOUL.RED
         elseif params.ownerColor == "Blue" then
             card.setRotationSmooth({x=0, y=270, z=0}, false)
-            zoneGUID = ZONE_GUIDS.SOULS_BLUE
+            zoneGUID = ZONE_GUID_SOUL.BLUE
         elseif params.ownerColor == "Green" then
-            zoneGUID = ZONE_GUIDS.SOULS_GREEN
+            card.setRotationSmooth({x=0, y=90, z=0}, false)
+            zoneGUID = ZONE_GUID_SOUL.GREEN
         elseif params.ownerColor == "Yellow" then
-            zoneGUID = ZONE_GUIDS.SOULS_YELLOW
+            card.setRotationSmooth({x=0, y=90, z=0}, false)
+            zoneGUID = ZONE_GUID_SOUL.YELLOW
         else
-            broadcastToAll("Nobody earned a soul. Hurray???")
+            broadcastToAll(PRINT_COLOR_SPECIAL.SOUL .. "Nobody earned a soul. Hurray???")
             return
         end
         --Set position and print text
@@ -236,12 +283,13 @@ function placeSoulToken(params)
             printToAll("[fdd835][WARNING][-] Can't find a free position for a new soul token.")
             position = getSoulTokenDeck().getPosition()
         else
-            broadcastToAll(params.ownerColor .. " earned a soul. Hurray!!!")
+            broadcastToAll(getPlayerString({playerColor = params.ownerColor}) .. PRINT_COLOR_SPECIAL.SOUL .. " earned a soul. Hurray!!!")
         end
         card.setPositionSmooth(position, false)
         return
     else
-        printToAll("[fdd835][WARNING][-] Can't find the Soul Token deck: Maybe the soul tokens are empty. Place the soul tokens on its starting position.")
+        printToAll("[fdd835][WARNING][-] Can't find the Soul Token deck: Maybe the soul tokens are empty. " ..
+                    "Place the soul tokens on its starting position.")
     end
 end
 ------------------------------------------------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 --- Hand counter by Schokolabbi
 
 --- Edited by Ediforce44
-LOOT_DECK_ZONE_GUID = "c413a5"
+LOOT_DECK_ZONE_GUID = Global.call("getZoneGUIDS_Deck").LOOT
 
 --- Click delay time in seconds
 options = {["clickDelay"] = 0.3}
@@ -37,7 +37,7 @@ function update()
 end
 
 function findOwner(color)
-    if not Global.call("isPlayerAuthorized", {playerColor = color, ownerPlayer = owner}) then return end         --EbyE44
+    if not Global.call("isPlayerAuthorized", {playerColor = color, ownerPlayer = owner}) then return end        --EbyE44
     if clickCounter == 0 then
         Timer.create(doubleClickParameters)
     end
