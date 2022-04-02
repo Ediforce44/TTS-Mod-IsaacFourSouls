@@ -283,7 +283,7 @@ function placeSoulToken(params)
             return
         end
         --Set position and print text
-        local position = getObjectFromGUID(ZONE_GUIDS_SOUL[params.ownerColor]).call("nextFreeSoulPosition")
+        local position = getObjectFromGUID(ZONE_GUID_SOUL[params.ownerColor]).call("nextFreeSoulPosition")
         if position == nil then
             printToAll("[fdd835][WARNING][-] Can't find a free position for a new soul token.")
             position = getSoulTokenDeck().getPosition()
