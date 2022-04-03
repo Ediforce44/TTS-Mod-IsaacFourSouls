@@ -10,6 +10,21 @@ INDEX_THRESHOLDS = {    --INDEX 1
                         -14.3
                         --INDEX 4
                     }
+INDEX_BLOCKED = {false, false, false, false}
+
+local function getTimerParameters(blockedIndex)
+    local timerParameters = {
+        ["identifier"] = "SoulIndexTimer" .. self.guid .. tostring(blockedIndex),
+        ["function_name"] = "resetBlockedIndex",
+        ["parameters"] = {index = tonumber(blockedIndex)},
+        ["delay"] = 2,
+    }
+    return timerParameters
+end
+
+local function resetBlockedIndex(params)
+    INDEX_BLOCKED[params.index] = false
+end
 
 
 local function getIndexFromZCoord(zCoord)
@@ -28,9 +43,13 @@ local function getIndexFromZCoord(zCoord)
     end
 end
 
-
+-- You have two seconds to place a object on the returned position.
+-- Otherwise the position will no longer be reserved.
 function nextFreeSoulPosition()         --EbyE44
-    local indexTable = {true, true, true, true}
+    local indexTable = {}
+    for i = 1, 4 do
+        indexTable[i] = not INDEX_BLOCKED[i]
+    end
     for _ , obj in pairs(self.getObjects()) do
         if obj.getVar("soul") ~= nil then
             indexTable[getIndexFromZCoord(obj.getPosition().z)] = false
@@ -38,6 +57,8 @@ function nextFreeSoulPosition()         --EbyE44
     end
     for index = 1, 4 do
         if indexTable[index] then
+            INDEX_BLOCKED[index] = true
+            Timer.create(getTimerParameteres(index))
             return INDEX_ZERO_POSITION + Vector(0, 0, (index - 1) * INDEX_OFFSET)
         end
     end
