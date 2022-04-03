@@ -77,6 +77,8 @@ function placeCardInSoulZone(params)
                             .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. " earned a soul. Hurray!!!")
             params.card.setRotationSmooth({x=0, y=270, z=0}, false)
             params.card.setPositionSmooth(position, false)
+            return true
         end
     end
+    return false
 end

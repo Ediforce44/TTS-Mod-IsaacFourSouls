@@ -257,7 +257,9 @@ function placeSoulToken(params)
     if soulToken ~= nil then
         local soulZoneGUID = ZONE_GUID_SOUL[params.ownerColor]
         if soulZoneGUID ~= nil then
-            getObjectFromGUID(soulZoneGUID).call("placeCardInSoulZone", {card = soulToken})
+            if not getObjectFromGUID(soulZoneGUID).call("placeCardInSoulZone", {card = soulToken}) then
+                soulToken.setPosition(getSoulTokenDeck().getPosition())
+            end
         else
             broadcastToAll(PRINT_COLOR_SPECIAL.SOUL .. "Nobody earned a soul. Hurray???")
             printToAll("[fdd835][WARNING][-] '" .. tostring(params.ownerColor) .. "' isn't a player color.")
