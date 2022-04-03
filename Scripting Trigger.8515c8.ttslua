@@ -16,13 +16,13 @@ local function getTimerParameters(blockedIndex)
     local timerParameters = {
         ["identifier"] = "SoulIndexTimer" .. self.guid .. tostring(blockedIndex),
         ["function_name"] = "resetBlockedIndex",
-        ["parameters"] = {index = tonumber(blockedIndex)},
+        ["parameters"] = {index = blockedIndex},
         ["delay"] = 2,
     }
     return timerParameters
 end
 
-local function resetBlockedIndex(params)
+function resetBlockedIndex(params)
     INDEX_BLOCKED[params.index] = false
 end
 
@@ -58,26 +58,26 @@ function nextFreeSoulPosition()         --EbyE44
     for index = 1, 4 do
         if indexTable[index] then
             INDEX_BLOCKED[index] = true
-            Timer.create(getTimerParameteres(index))
+            Timer.create(getTimerParameters(index))
             return INDEX_ZERO_POSITION + Vector(0, 0, (index - 1) * INDEX_OFFSET)
         end
     end
-    printToAll("[fdd835][WARNING][-] Can't find a free position in " .. Global.getTable("ZONE_GUID_SOUL")[owner_color]
+    printToAll("[fdd835][WARNING][-] Can't find a free position in " .. Global.getTable("REAL_PLAYER_COLOR")[owner_color]
                 .. "Soul Zone.")
     return nil
 end
 
 function placeCardInSoulZone(params)
     if params.card == nil or params.card.tag ~= "Card" then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in " .. Global.getTable("ZONE_GUID_SOUL")[owner_color]
+        printToAll("[fdd835][WARNING][-] Wrong parameters in " .. Global.getTable("REAL_PLAYER_COLOR")[owner_color]
                     .. "Soul Zone[-]" .. " function 'placeCardInSoulZone()'. Maybe parameter isn't a card.")
     else
         local position = nextFreeSoulPosition()
         if position ~= nil then
             broadcastToAll(Global.call("getPlayerString", {playerColor = owner_color})
                             .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. " earned a soul. Hurray!!!")
-            card.setRotationSmooth({x=0, y=270, z=0}, false)
-            card.setPositionSmooth(position, false)
+            params.card.setRotationSmooth({x=0, y=270, z=0}, false)
+            params.card.setPositionSmooth(position, false)
         end
     end
 end
