@@ -1,5 +1,6 @@
-HEARTS_GUID = {"bcabf3", "ca5135", "0a7171",
-               "33bf0c", "159680", "c7837a"}
+--- Edited by Ediforce44
+owner_color = "Red"
+HEARTS_GUID = Global.call("getPlayerHeartTokens", {playerColor = owner_color})
 INACTIVE_HEART_COLOR = {0, 0, 0}
 ACTIVE_HEART_COLOR = {219/255, 26/255, 24/255}
 
