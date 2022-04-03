@@ -180,42 +180,6 @@ function getPlayerString(params)
     return playerString
 end
 
-function getZoneGUIDS_Deck()
-    return table.copy(ZONE_GUID_DECK)
-end
-
-function getZoneGUIDS_Soul()
-    return table.copy(ZONE_GUID_SOUL)
-end
-
-function getZoneGUIDS_Monster()
-    return table.copy(ZONE_GUID_MONSTER)
-end
-
-function getPrintColors_RealPlayer()
-    return table.copy(REAL_PLAYER_COLOR)
-end
-
-function getPrintColors_Player()
-    return table.copy(PRINT_COLOR_PLAYER)
-end
-
-function getPrintColors_Special()
-    return table.copy(PRINT_COLOR_SPECIAL)
-end
-
-function getAllPlayerHeartTokens()
-    return table.copy(HEART_TOKENS_GUID)
-end
-
-function getPlayerHeartTokens(params)
-    if params.playerColor == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'getPlayerHeartTokens()'.")
-        return nil
-    end
-    return table.copy(HEART_TOKENS_GUID)[params.playerColor]
-end
-
 function isPlayerAuthorized(params)
     -- If there is no owner, all players have the permission to interact with something
     if params.ownerPlayer == nil then

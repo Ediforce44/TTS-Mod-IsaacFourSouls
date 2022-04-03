@@ -1,5 +1,5 @@
 --- Edited by Ediforce44
-zone_guid = Global.call("getZoneGUIDS_Monster").ONE
+zone_guid = Global.getTable("ZONE_GUID_MONSTER").ONE
 
 last_value = 0
 function onObjectEnterScriptingZone(zone, object)

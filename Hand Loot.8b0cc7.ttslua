@@ -1,7 +1,7 @@
 --- Hand counter by Schokolabbi
 
 --- Edited by Ediforce44
-LOOT_DECK_ZONE_GUID = Global.call("getZoneGUIDS_Deck").LOOT
+LOOT_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").LOOT
 
 --- Click delay time in seconds
 options = {["clickDelay"] = 0.3}

@@ -4,7 +4,7 @@ FLOOR_CHANGE_GUID = "69a80d"
 PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
 
 --- Edited by Ediforce44
-ZONE_GUIDS_DECK = Global.call("getZoneGUIDS_Deck")
+ZONE_GUIDS_DECK = Global.getTable("ZONE_GUID_DECK")
 MONSTER_DECK_ZONE_GUID = ZONE_GUIDS_DECK.MONSTER
 HAPPEN_DECK_ZONE_GUID = ZONE_GUIDS_DECK.HAPPEN
 TREASURE_DECK_ZONE_GUID = ZONE_GUIDS_DECK.TREASURE
@@ -14,7 +14,7 @@ SOUL_DECK_ZONE_GUID = ZONE_GUIDS_DECK.BONUS_SOUL
 SETTING_UP_NOTE_GUID = "56a44e"
 
 function onLoad()
-  self.createButton({
+    self.createButton({
     click_function = "onStart",
     label = "Start",
     tooltip = "Click here to start!",
@@ -25,14 +25,6 @@ function onLoad()
     height = 500,
     font_size = 400
 })
-end
-
-function getDeckFromZone(zoneGuid)
-  local zone = getObjectFromGUID(zoneGuid)
-  for _, obj in pairs(zone.getObjects()) do
-    if obj.tag == "Deck" then return obj end
-  end
-  return nil
 end
 
 function shuffleOptions(array)
@@ -73,7 +65,7 @@ function onStart()
     shopDeck.takeObject({position={-27.21, 1.56, 0.00}, flip=true})
     shopDeck.takeObject({position={-23.90, 1.55, 0.01}, flip=true})
 
- soulDeck.takeObject({position={-37.90, 1.57, -3.20}, flip=true})
+    soulDeck.takeObject({position={-37.90, 1.57, -3.20}, flip=true})
     soulDeck.takeObject({position={-37.90, 1.57, 0.00}, flip=true})
     soulDeck.takeObject({position={-37.90, 1.57, 3.20}, flip=true})
 
@@ -103,17 +95,16 @@ function onStart()
 
     Turns.enable = true
     Turns.type = 1
-    print(tostring(Turns.type))
 
     self.destroy()
 end
 
 function loadDecksFromZones()
-  monsterDeck = getDeckFromZone(MONSTER_DECK_ZONE_GUID)
-  happenDeck = getDeckFromZone(HAPPEN_DECK_ZONE_GUID)
-  shopDeck = getDeckFromZone(TREASURE_DECK_ZONE_GUID)
-  lootDeck = getDeckFromZone(LOOT_DECK_ZONE_GUID)
-  soulDeck = getDeckFromZone(SOUL_DECK_ZONE_GUID)
+  monsterDeck = Global.call("getDeckFromZone", {zoneGUID = MONSTER_DECK_ZONE_GUID})
+  happenDeck = Global.call("getDeckFromZone", {zoneGUID = HAPPEN_DECK_ZONE_GUID})
+  shopDeck = Global.call("getDeckFromZone", {zoneGUID = TREASURE_DECK_ZONE_GUID})
+  lootDeck = Global.call("getDeckFromZone", {zoneGUID = LOOT_DECK_ZONE_GUID})
+  soulDeck = Global.call("getDeckFromZone", {zoneGUID = SOUL_DECK_ZONE_GUID})
 end
 
 function isAllPlayersSelectCharacter()
