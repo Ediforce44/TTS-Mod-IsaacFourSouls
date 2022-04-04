@@ -1,4 +1,7 @@
 --- Written by Ediforce44
+OWN_MONSTER_ZONE_GUID = Global.getTable("ZONE_GUID_MONSTER").ONE
+MONSTER_ZONE_POSITION = getObjectFromGUID(OWN_MONSTER_ZONE_GUID).getPosition()
+
 
 function onLoad()
   -- Attack button
@@ -16,4 +19,10 @@ function onLoad()
 end
 
 function dummy()
+    local newMonsterCard = Global.call("getCardFromDeck", {deck = Global.call("getMonsterDeck")})
+    if newMonsterCard ~= nil then
+        newMonsterCard.flip()
+        newMonsterCard.setPositionSmooth({MONSTER_ZONE_POSITION.x, 5, MONSTER_ZONE_POSITION.z}, false)
+        getObjectFromGUID(OWN_MONSTER_ZONE_GUID).call("getActiveMonsterStats")
+    end
 end

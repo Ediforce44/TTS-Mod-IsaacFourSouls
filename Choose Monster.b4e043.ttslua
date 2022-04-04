@@ -1,4 +1,5 @@
 --- Written by Ediforce44
+OWN_MONSTER_ZONE_GUID = Global.getTable("ZONE_GUID_MONSTER").FOUR
 
 function onLoad()
   -- Attack button
