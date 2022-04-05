@@ -1,17 +1,7 @@
 --- Written by Ediforce44
-ATTACK_BUTTON_STATES = {INACTIVE = "Inactive", ATTACK = "Attack", CHOOSE = "This Zone"}
+ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
 ATTACK_BUTTON_INDEX = 0
 ACTIVE = true
-
-local function placeNewMonsterCard()
-    local newMonsterCard = Global.call("getCardFromDeck", {deck = Global.call("getMonsterDeck")})
-    if newMonsterCard ~= nil then
-        newMonsterCard.flip()
-        newMonsterCard.setPositionSmooth({self.getPosition().x, 5, self.getPosition().z}, false)
-        return true
-    end
-    return false
-end
 
 local function getAttackButton()
     return self.getButtons()[ATTACK_BUTTON_INDEX + 1]
@@ -20,8 +10,8 @@ end
 function onLoad()
     -- Attack button
     self.createButton({
-        click_function = "click_function",
-        function_owner = self,
+        click_function = "click_function_AttackButton",
+        function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER),
         label          = "Attack",
         position       = {0, -0.5, 3},
         width          = 1000,
@@ -30,24 +20,6 @@ function onLoad()
         color          = {0.2, 0.157, 0.325},
         font_color     = {1, 1, 1}
     })
-end
-
-function click_function(_, color)
-    if Global.getVar("activePlayerColor") == color then
-        local attackButton = getAttackButton()
-        if attackButton.label == ATTACK_BUTTON_STATES.INACTIVE then
-            return
-        elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACK then
-            --TODO
-        elseif attackButton.label == ATTACK_BUTTON_STATES.CHOOSE then
-            if placeNewMonsterCard() then
-                self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK})
-                getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).call("zoneChosen")
-            end
-        else
-            printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
-        end
-    end
 end
 
 function activateZone()
