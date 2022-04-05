@@ -57,7 +57,7 @@ SECOND_HEARTS_GUID = {
 }
 
 function onPlayerTurn(player, previous_player)
-
+    activePlayerColor = player.color
     local lootdeck = getDeckOrCard(ZONE_GUID_DECK.LOOT)
 
     if previous_player == nil then
@@ -167,6 +167,12 @@ HEART_TOKENS_GUID = {
     Blue = {"78f8e7", "c9f7b2", "4b26ea", "098303", "9e8aa0", "dbcc87"},
     Red = {"bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
 }
+
+DISCARD_PILE_POSITION = {
+    MONSTER = {34.06, 5, 0}
+}
+
+activePlayerColor = "Red"
 
 function getPlayerString(params)
     local playerString = "'Player not Found'"
