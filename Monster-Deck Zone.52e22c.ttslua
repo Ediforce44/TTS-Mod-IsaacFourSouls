@@ -1,11 +1,18 @@
 --- Written by Ediforce44
+MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
+ATTACK_BUTTON_STATES = {ATTACK = "Attack", CHOOSE = "Choose Zone"}
+ATTACK_BUTTON_INDEX = 0
+
+local function getAttackButton()
+    return self.getButtons()[ATTACK_BUTTON_INDEX + 1]
+end
 
 function onLoad()
     -- Attack button
     self.createButton({
-        click_function = "dummy",
+        click_function = "click_function",
         function_owner = self,
-        label          = "Inactive",
+        label          = "Attack",
         position       = {0, -0.5, 3},
         width          = 1000,
         height         = 300,
@@ -13,4 +20,34 @@ function onLoad()
         color          = {0.2, 0.157, 0.325},
         font_color     = {1, 1, 1}
     })
+end
+
+function click_function(_, color)
+    if Global.getVar("activePlayerColor") == color then
+        local attackButton = getAttackButton()
+        if attackButton.label == ATTACK_BUTTON_STATES.ATTACK then
+            self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.CHOOSE, width = 1100})
+            for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
+                local zone = getObjectFromGUID(guid)
+                if zone.getVar("ACTIVE") then
+                    zone.call("changeButtonState", {newState = zone.getTable("ATTACK_BUTTON_STATES").CHOOSE})
+                end
+            end
+        elseif attackButton.label == ATTACK_BUTTON_STATES.CHOOSE then
+            --Resets all Attack Buttons
+            zoneChosen()
+        else
+            printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
+        end
+    end
+end
+
+function zoneChosen()
+    for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
+        local zone = getObjectFromGUID(guid)
+        if zone.getVar("ACTIVE") then
+            zone.call("changeButtonState", {newState = zone.getTable("ATTACK_BUTTON_STATES").ATTACK})
+        end
+    end
+    self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK, width = 1000})
 end
