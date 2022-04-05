@@ -74,8 +74,14 @@ function placeCardInSoulZone(params)
     else
         local position = nextFreeSoulPosition()
         if position ~= nil then
+            local soulAmount = "zero souls"
+            if params.card.getVar("soul") == 1 then
+                soulAmount = "one soul"
+            elseif params.card.getVar("soul") == 2 then
+                soulAmount = "two souls"
+            end
             broadcastToAll(Global.call("getPlayerString", {playerColor = owner_color})
-                            .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. " earned a soul. Hurray!!!")
+                            .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. " earned " .. soulAmount .. ". Hurray!!!")
             params.card.setRotationSmooth({x=0, y=270, z=0}, false)
             params.card.setPositionSmooth(position, false)
             return true

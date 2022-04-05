@@ -29,6 +29,13 @@ local function placeNewMonsterCard(zone)
     return false
 end
 
+local function printAttackPhrase(monsterName)
+    local phrase = Global.call("getPlayerString", {playerColor = Global.getVar("activePlayerColor")})
+    phrase = phrase .. " attacks " .. Global.getTable("PRINT_COLOR_SPECIAL").GRAY .. monsterName .. "[-] !!!"
+    broadcastToAll(phrase)
+    return phrase
+end
+
 function onLoad()
     -- Attack button
     self.createButton({
@@ -71,6 +78,7 @@ function click_function_AttackButton(zone, color)
             return
         elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACK then
             --TODO
+            printAttackPhrase("TEST MONSTER")
         elseif attackButton.label == ATTACK_BUTTON_STATES.CHOOSE then
             if placeNewMonsterCard(zone) then
                 zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
