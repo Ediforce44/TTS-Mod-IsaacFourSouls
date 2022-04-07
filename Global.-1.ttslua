@@ -136,12 +136,12 @@ PRINT_COLOR_SPECIAL = {
 }
 
 ZONE_GUID_DECK = {
+    TREASURE = "190cda",
+    FLOOR = "096e94",
+    LOOT = "c413a5",
     MONSTER = "52e22c",
     HAPPEN = "61e7b7",
-    TREASURE = "190cda",
-    LOOT = "c413a5",
     BONUS_SOUL = "979776",
-    FLOOR = "096e94",
     SOUL_TOKEN = "560abc"
 }
 
@@ -168,7 +168,19 @@ HEART_TOKENS_GUID = {
     Red = {"bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
 }
 
+MONSTER_HEART_TOKENS_GUID = {
+    ONE = "9bb226",
+    TWO = "a75691",
+    THREE = "fab592",
+    FOUR = "fb5299",
+    FIVE = "b50db5",
+    SIX = "bcac8d"
+}
+
 DISCARD_PILE_POSITION = {
+    TREASURE = {-33.91, 2.53, 0},
+    FLOOR = {-6.20, 1.89, -1.70},
+    LOOT = {1.64, 2.53, 0},
     MONSTER = {34.06, 5, 0}
 }
 
