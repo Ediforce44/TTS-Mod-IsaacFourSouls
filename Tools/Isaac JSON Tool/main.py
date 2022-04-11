@@ -29,17 +29,23 @@ def translateRewards(rewardsString):
             return ""
     else:
         return ""
-    print(JSON_string)
+    #print(JSON_string)
     loot = getReward("loot", JSON_string)
     cents = getReward("¢", JSON_string)
     if cents == 0:
         cents = getReward("cent", JSON_string)
+        if cents == 0:
+            cents = getReward("\\uffe0", JSON_string)
     treasures = getReward("treasure", JSON_string)
     souls = getReward("soul", JSON_string)
     
     rewardsLua = rewardsLua + "{cents = " + str(cents) + ", loot = " + str(loot) + ", treasure = " + str(treasures) \
         + ", souls = " + str(souls) + "}"
     return rewardsLua
+
+def matchesMonsterPattern(nickname):
+    pattern = re.compile("(.*)monster(.*)", re.I)
+    return pattern.match(nickname)
 
 if __name__ == "__main__":
     fileName = str(sys.argv[1])
@@ -50,8 +56,16 @@ if __name__ == "__main__":
         if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
             for card in val["ContainedObjects"]:
                 #print(card["GUID"])
-                rewardTableString = translateRewards(card["Description"])
-                card["LuaScript"] = card["LuaScript"] + "\n" + rewardTableString
+                card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+        # Expansions
+        if val["Name"] == "Custom_Model_Infinite_Bag":
+            for expansion in val["ContainedObjects"]:
+                if expansion["Name"] == "Custom_Model_Bag" or expansion["Name"] == "Bag":
+                    for content in expansion["ContainedObjects"]:
+                        if (content["Nickname"] == "" or matchesMonsterPattern(content["Nickname"])):
+                            if content["Name"] == "Deck":
+                                for card in content["ContainedObjects"]:
+                                    card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
     newFile = open(fileName + "_Reward.json", "w+")
     newFile.write(json.dumps(JSON_data, indent=2))
     newFile.close()
