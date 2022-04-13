@@ -151,11 +151,16 @@ function onObjectLeaveScriptingZone(zone, object)
                 newAttributes.ATK = firstObjectInZone.getVar("dice")
                 newAttributes.DMG = firstObjectInZone.getVar("atk")
             elseif firstObjectInZone.tag == "Deck" then
-                local containedObjects = firstObjectInZone.getData().ContainedObjects
+                for _ , card in pairs(firstObjectInZone.getObjects()) do
+                    if card.guid == object.getGUID() then
+                        return
+                    end
+                end
+                local containedObjects = firstObjectInZone.getObjects()
                 local firstCard = containedObjects[#containedObjects]
-                local script = firstCard["LuaScript"]
+                local script = firstCard.lua_script
                 newAttributes = findAttrsInScript(script)
-                if #newAttributes == 0 then
+                if newAttributes == {} then
                     newAttributes.HP = object.getVar("hp") or 0
                 end
                 newAttributes.NAME = firstCard["Nickname"]
