@@ -179,10 +179,24 @@ function click_function_ChooseButton(_, color, alt_click)
                 local zone = getObjectFromGUID(guid)
                 if zone.getVar("active") then
                     zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE})
+                else
+                    --TODO deacivate inactive buttons
+                    zone.call("deactivateAttackButton")
                 end
             end
         elseif chooseButton.label == CHOOSE_BUTTON_STATES.CHOOSE then
-            zoneChosen(nil) --resets all Attack Buttons
+            --TODO activate inactive Buttons
+            --TODO change attack buttons to ATTACK
+            for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
+                local zone = getObjectFromGUID(guid)
+                if zone.getVar("active") then
+                    zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+                else
+                    zone.call("activateAttackButton")
+                end
+            end
+            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK})
+            --zoneChosen(nil) --resets all Attack Buttons
         else
             printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
         end
@@ -210,13 +224,22 @@ function click_function_AttackButton(zone, color, alt_click)
                 printToAll("[fdd835][WARNING][-] There is no active monster to attack. The attribute 'NAME' is empty.")
             else
                 printAttackPhrase(monsterName)
-                zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACKING})
-                --TODO deacivate other buttons
+                --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACKING})
+                --TODO deacivate all other buttons
+                for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
+                    local monsterZone = getObjectFromGUID(guid)
+                    if monsterZone.getGUID() ~= zone then
+                        monsterZone.call("deactivateAttackButton")
+                    else
+                        monsterZone.editButton({index = monsterZone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACKING})
+                    end
+                end
             end
         elseif attackButton.label == ATTACK_BUTTON_STATES.CHOOSE then
             if placeNewMonsterCard({zone = zone, isTargetOfAttack = true}) then
                 zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
-                zoneChosen(zone)
+                click_function_AttackButton(zone, color, alt_click)
+                --zoneChosen(zone)
             end
         elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACKING then
             local monsterName = zone.getTable("active_monster_attrs").NAME
@@ -226,8 +249,16 @@ function click_function_AttackButton(zone, color, alt_click)
                 broadcastToAll(Global.call("getActivePlayerString") .. " cancels the Attack on "
                                 .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. monsterName .. "[-] !!!")
             end
-            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
-            --TODO activate other buttons
+            --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+            --TODO activate all other buttons
+            for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
+                local monsterZone = getObjectFromGUID(guid)
+                if monsterZone.getGUID() ~= zone then
+                    monsterZone.call("activateAttackButton")
+                else
+                    monsterZone.editButton({index = monsterZone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+                end
+            end
         elseif attackButton.label == ATTACK_BUTTON_STATES.DIED then
             zone.call("finishMonster")
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})

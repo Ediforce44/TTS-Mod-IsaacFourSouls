@@ -45,6 +45,14 @@ end
 function onLoad()
     ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
     -- Attack button
+    activateButton()
+end
+
+function deactivateAttackButton()
+    self.removeButton(ATTACK_BUTTON_INDEX)
+end
+
+function activateAttackButton()
     self.createButton({
         click_function = "click_function_AttackButton",
         function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER),
