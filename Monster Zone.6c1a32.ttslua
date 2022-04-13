@@ -21,7 +21,7 @@ active = false
 
 MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
 ATTACK_BUTTON_STATES = {}
-ATTACK_BUTTON_INDEX = 0
+ATTACK_BUTTON_INDEX = nil
 
 local function getAttackButton()
     return self.getButtons()[ATTACK_BUTTON_INDEX + 1]
@@ -45,25 +45,32 @@ end
 function onLoad()
     ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
     -- Attack button
-    activateButton()
+    activateAttackButton()
 end
 
 function deactivateAttackButton()
-    self.removeButton(ATTACK_BUTTON_INDEX)
+    if ATTACK_BUTTON_INDEX then
+        self.removeButton(ATTACK_BUTTON_INDEX)
+        ATTACK_BUTTON_INDEX = nil
+    end
 end
 
 function activateAttackButton()
-    self.createButton({
-        click_function = "click_function_AttackButton",
-        function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER),
-        label          = ATTACK_BUTTON_STATES.INACTIVE,
-        position       = {0, -0.5, 3},
-        width          = 1000,
-        height         = 300,
-        font_size      = 200,
-        color          = {0.2, 0.157, 0.325},
-        font_color     = {1, 1, 1}
-    })
+    if ATTACK_BUTTON_INEDX == nil then
+        ATTACK_BUTTON_INDEX = 0
+        local state = active and ATTACK_BUTTON_STATES.ATTACK or ATTACK_BUTTON_STATES.INACTIVE
+        self.createButton({
+            click_function = "click_function_AttackButton",
+            function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER),
+            label          = state,
+            position       = {0, -0.5, 3},
+            width          = 1000,
+            height         = 300,
+            font_size      = 200,
+            color          = {0.2, 0.157, 0.325},
+            font_color     = {1, 1, 1}
+        })
+    end
 end
 
 function monsterDied()
