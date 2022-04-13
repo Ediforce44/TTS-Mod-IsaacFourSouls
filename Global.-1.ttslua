@@ -29,6 +29,7 @@ local function getDeckOrCard(zoneGUID)
 end
 ------------------------------------------------------------------------------------------------------------------------
 
+
 function onLoad()
     broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
 end
@@ -97,6 +98,17 @@ end
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+activePlayerColor = "Red"
+
+automaticRewarding = {
+    Yellow = true,
+    Green = true,
+    Blue = true,
+    Red = true
+}
+
+CLICK_DELAY = 0.3
+
 function table.copy(t)
     local tableCopy = {}
     for key, value in pairs(t) do
@@ -168,7 +180,7 @@ HEART_TOKENS_GUID = {
     Red = {"bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
 }
 
-MONSTER_HEART_TOKENS_GUID = {
+MONSTER_HP_COUNTER_GUID = {
     ONE = "9bb226",
     TWO = "a75691",
     THREE = "fab592",
@@ -184,8 +196,6 @@ DISCARD_PILE_POSITION = {
     MONSTER = {34.06, 5, 0}
 }
 
-activePlayerColor = "Red"
-
 function getPlayerString(params)
     local playerString = "'Player not Found'"
     if params.playerColor ~= nil then
@@ -196,6 +206,10 @@ function getPlayerString(params)
         playerString = playerString .. params.playerColor .. "[-]"
     end
     return playerString
+end
+
+function getActivePlayerString()
+    return getPlayerString({playerColor = activePlayerColor})
 end
 
 function isPlayerAuthorized(params)
@@ -214,6 +228,34 @@ function isPlayerAuthorized(params)
         return false
     end
     return player == params.ownerPlayer or player.admin
+end
+
+function deactivateRewarding(params)
+    if params.playerColor == nil then
+        if params.player == nil then
+            printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'deactivateRewarding()'.")
+            return
+        else
+            automaticRewarding[params.player.color] = false
+        end
+    else
+        automaticRewarding[params.playerColor] = false
+    end
+end
+
+--Thank you Bone White in discord for this <3       --Edited by Ediforce44
+function findIntInScript(params)
+    if params.scriptString == nil or params.varName then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'findIntInScript()'.")
+        return nil
+    end
+    for line in string.gmatch(scriptString,"[^\r\n]+") do -- for each line in the script
+        if string.sub(line,1,#varName) == varName then -- if the beginning of the line matches var
+            local value = string.match(line,"%d+",#varName) -- get the first number listed in that line after the var name
+            return tonumber(value)
+        end
+    end
+    return nil
 end
 
 function getDeckFromZone(params)

@@ -1,18 +1,54 @@
 --- Written by Ediforce44
-ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
+HP_COUNTER_GUID = Global.getTable("MONSTER_HP_COUNTER_GUID").SIX
+
+altClickCounter = 0
+
+active_monster_attrs = {
+    NAME    = "",
+    HP      = 0,
+    ATK     = 0,
+    DMG     = 0
+}
+
+active_monster_reward = {
+    CENTS       = 0,
+    LOOT        = 0,
+    TREASURES   = 0,
+    SOULS       = 0
+}
+
+active = false
+
+MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
+ATTACK_BUTTON_STATES = {}
 ATTACK_BUTTON_INDEX = 0
-ACTIVE = false
 
 local function getAttackButton()
     return self.getButtons()[ATTACK_BUTTON_INDEX + 1]
 end
 
+local function containsDeckOrCard()
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Deck" or obj.tag == "Card" then
+            return true
+        end
+    end
+    return false
+end
+
+local function payReward()
+    --TODO pay reward if automatic rewarding is active
+    broadcastToAll(Global.call("getActivePlayerString") .. " got rewards for killing "
+        .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME .. "[-] !!!")
+end
+
 function onLoad()
+    ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
     -- Attack button
     self.createButton({
         click_function = "click_function_AttackButton",
         function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER),
-        label          = "Inactive",
+        label          = ATTACK_BUTTON_STATES.INACTIVE,
         position       = {0, -0.5, 3},
         width          = 1000,
         height         = 300,
@@ -22,26 +58,57 @@ function onLoad()
     })
 end
 
+function monsterDied()
+    broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME .. "[-] got killed !!!")
+    self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.DIED})
+end
+
+function finishMonster()
+    --TODO entferne das oberste monster und lege es auf den ablagestapel
+    --TODO wenn das feld danach leer ist decke ein neues monster auf
+    payReward()
+end
+
+function resetAltClickCounter()
+    altClickCounter = 0
+end
+
+function updateAttributes(params)
+    if params.HP == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in monster zone function 'updateAttributes()'."
+            .. " The parameter table should always contain a value for the key 'HP'")
+    else
+        active_monster_attrs.NAME = params.NAME or "Unkown"
+        active_monster_attrs.HP = params.HP or 0
+        active_monster_attrs.ATK = params.ATK or -1
+        active_monster_attrs.DMG = params.DMG or -1
+        getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = active_monster_attrs.HP})
+    end
+end
+
 function activateZone()
     local attackButton = getAttackButton()
     if attackButton.label ~= ATTACK_BUTTON_STATES.INACTIVE then
         printToAll("[fdd835][WARNING][-] Can't activate Zone: " .. self.guid .. ". This Zone is already active.")
     else
-        if placeNewMonsterCard() then
-            self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK})
-            ACTIVE = true
+        if not containsDeckOrCard() then
+            if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == false then
+                return
+            end
         end
+        self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK})
+        active = true
     end
 end
 
 function deactivateZone()
-    local deck = Global.call("getDeckFromZone", {zoneGUID = self.guid})
-    if deck ~= nil then
-        deck.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Deck" or obj.tag == "Card" then
+            obj.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+        end
     end
-    local attackButton = getAttackButton()
-    self.editButton({inedx = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE})
-    ACTIVE = false
+    self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE})
+    active = false
 end
 
 function changeButtonState(params)

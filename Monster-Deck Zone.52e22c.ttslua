@@ -3,16 +3,32 @@ MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
 CHOOSE_BUTTON_STATES = {ATTACK = "Attack", CHOOSE = "Cancel"}
 CHOOSE_BUTTON_INDEX = 0
 
-ATTACK_BUTTON_STATES = {INACTIVE = "Inactive", ATTACK = "Attack", CHOOSE = "This Zone"}
+ATTACK_BUTTON_STATES = {
+    INACTIVE    = "Inactive",
+    ATTACK      = "Attack",
+    CHOOSE      = "This Zone",
+    ATTACKING   = "Cancel",
+    DIED        = "Finish Him"
+}
 
 local function getChooseButton()
     return self.getButtons()[CHOOSE_BUTTON_INDEX + 1]
 end
 
-local function zoneChosen()
+local function getDoubleAltClickParameters(zone)
+    DOUBLE_CLICK_PARAMETERS = {
+        ["identifier"] = "AltClickTimer" .. zone.guid,
+        ["function_owner"] = zone,
+        ["function_name"] = "resetAltClickCounter",
+        ["delay"] = Global.getVar("CLICK_DELAY")
+    }
+    return DOUBLE_CLICK_PARAMETERS
+end
+
+local function zoneChosen(chosenZone)
     for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
         local zone = getObjectFromGUID(guid)
-        if zone.getVar("ACTIVE") then
+        if zone.getVar("active") then
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
         end
     end
@@ -20,21 +36,10 @@ local function zoneChosen()
 end
 
 local function printAttackPhrase(monsterName)
-    local phrase = Global.call("getPlayerString", {playerColor = Global.getVar("activePlayerColor")})
+    local phrase = Global.call("getActivePlayerString")
     phrase = phrase .. " attacks " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. monsterName .. "[-] !!!"
     broadcastToAll(phrase)
     return phrase
-end
-
-local function placeNewMonsterCard(zone, isTargetOfAttack)
-    local newMonsterCard = Global.call("getCardFromDeck", {deck = Global.call("getMonsterDeck")})
-    if newMonsterCard ~= nil then
-        newMonsterCard.flip()
-        newMonsterCard.setPositionSmooth({zone.getPosition().x, 5, zone.getPosition().z}, false)
-        if isTargetOfAttack then Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end, 1) end
-        return true
-    end
-    return false
 end
 
 function onLoad()
@@ -52,43 +57,175 @@ function onLoad()
     })
 end
 
-function click_function_ChooseButton(_, color)
-    if Global.getVar("activePlayerColor") == color then
+function placeNewMonsterCard(params)
+    if params.zone == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'placeNewMonsterCard()'.")
+    end
+    local newMonsterCard = Global.call("getCardFromDeck", {deck = Global.call("getMonsterDeck")})
+    if newMonsterCard ~= nil then
+        newMonsterCard.flip()
+        newMonsterCard.setPositionSmooth({params.zone.getPosition().x, 5, params.zone.getPosition().z}, false)
+        if params.isTargetOfAttack then Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end, 1) end
+        return true
+    end
+    return false
+end
+
+--Thank you Bone White in discord for this <3       --Edited by Ediforce44
+function findAttrsInScript(scriptString)
+    local attrs = {}
+    local hpPattern = "([Hh][Pp]%s?=%s?%d+)"
+    local atkPattern = "[Dd][Ii][Cc][Ee]%s?=%s?%d+"
+    local dmgPattern = "[Aa][Tt][Kk]%s?=%s?%d+"
+    local attrPatterns = {HP = hpPattern, ATK = atkPattern, DMG = dmgPattern}
+    for line in string.gmatch(scriptString,"[^\r\n]+") do -- for each line in the script
+        for attrName , pattern in pairs(attrPatterns) do
+            local attrString = string.match(line, pattern)
+            if attrString ~= nil then
+                attrs[tostring(attrName)] = tonumber(string.match(attrString, "%d+"))
+            end
+        end
+    end
+    return attrs
+end
+
+--Thank you Bone White in discord for this <3       --Edited by Ediforce44
+function findRewardsInScript(scriptString)
+    local rewards = {}
+    local varName = "rewards"
+    for line in string.gmatch(scriptString,"[^\r\n]+") do -- for each line in the script
+        if string.sub(line,1,#varName) == varName then -- if the beginning of the line matches var
+            local tableString = string.match(line,"{.*}",#varName)
+            if tableString ~= nil then
+                local entryCents = string.match(tableString, "cents = %d+")
+                local entryLoot = string.match(tableString, "loot = %d+")
+                local entryTreasure = string.match(tableString, "treasures = %d+")
+                local entrySouls = string.match(tableString, "souls = %d+")
+                rewards.CENTS = tonumber(string.match(entryCents, "%d+"))
+                rewards.LOOT = tonumber(string.match(entryLoot, "%d+"))
+                rewards.TREASURES = tonumber(string.match(entryTreasure, "%d+"))
+                rewards.SOULS = tonumber(string.match(entrySouls, "%d+"))
+                return rewards
+            end
+        end
+    end
+    return rewards
+end
+
+--TODO: add reward table extraction (vielleicht auch erst sobald hp counter auf null geht)
+function onObjectEnterScriptingZone(zone, object)
+    for i, guid in pairs(MONSTER_ZONE_GUIDS) do
+        if guid == zone.getGUID() then
+            local newAttributes = {}
+            if object.tag == "Deck" then
+                local containedObjects = object.getData().ContainedObjects
+                local firstCard = containedObjects[#containedObjects]
+                local script = firstCard["LuaScript"]
+                newAttributes = findAttrsInScript(script)
+                if newAttributes == {} then
+                    newAttributes.HP = object.getVar("hp") or 0
+                end
+                newAttributes.NAME = firstCard["Nickname"]
+            elseif object.getVar("hp") or 0 > 0 then
+                newAttributes.NAME = object.getName()
+                newAttributes.HP = object.getVar("hp")
+                newAttributes.ATK = object.getVar("dice")
+                newAttributes.DMG = object.getVar("atk")
+            end
+            zone.call("updateAttributes", newAttributes)
+        end
+    end
+end
+
+--TODO: reward table extraction
+function onObjectLeaveScriptingZone(zone, object)
+    for i, guid in pairs(MONSTER_ZONE_GUIDS) do
+        if guid == zone.getGUID() then
+            local newAttributes = {}
+            local firstObjectInZone = zone.getObjects()[1]
+            if firstObjectInZone == nil then
+                newAttributes = {NAME = "", HP = 0}
+            elseif firstObjectInZone.tag == "Card" then
+                newAttributes.NAME = firstObjectInZone.getName()
+                newAttributes.HP = firstObjectInZone.getVar("hp") or 0
+                newAttributes.ATK = firstObjectInZone.getVar("dice")
+                newAttributes.DMG = firstObjectInZone.getVar("atk")
+            elseif firstObjectInZone.tag == "Deck" then
+                local containedObjects = firstObjectInZone.getData().ContainedObjects
+                local firstCard = containedObjects[#containedObjects]
+                local script = firstCard["LuaScript"]
+                newAttributes = findAttrsInScript(script)
+                if #newAttributes == 0 then
+                    newAttributes.HP = object.getVar("hp") or 0
+                end
+                newAttributes.NAME = firstCard["Nickname"]
+            end
+            zone.call("updateAttributes", newAttributes)
+        end
+    end
+end
+
+function click_function_ChooseButton(_, color, alt_click)
+    if Global.getVar("activePlayerColor") == color or Player[color].admin then
         local chooseButton = getChooseButton()
         if chooseButton.label == CHOOSE_BUTTON_STATES.ATTACK then
             self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE})
             for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
                 local zone = getObjectFromGUID(guid)
-                if zone.getVar("ACTIVE") then
+                if zone.getVar("active") then
                     zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE})
                 end
             end
         elseif chooseButton.label == CHOOSE_BUTTON_STATES.CHOOSE then
-            --Resets all Attack Buttons
-            zoneChosen()
+            zoneChosen(nil) --resets all Attack Buttons
         else
             printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
         end
     end
 end
 
-function click_function_AttackButton(zone, color)
-    if Global.getVar("activePlayerColor") == color then
+function click_function_AttackButton(zone, color, alt_click)
+    if Global.getVar("activePlayerColor") == color or Player[color].admin then
+        if alt_click then
+            local clickCounter = zone.getVar("altClickCounter")
+            if clickCounter > 0 then
+                zone.call("deactivateZone")
+            else
+                zone.setVar("altClickCounter", clickCounter + 1)
+                Timer.create(getDoubleAltClickParameters(zone))
+            end
+            return
+        end
         local attackButton = zone.getButtons()[zone.getVar("ATTACK_BUTTON_INDEX") + 1]
         if attackButton.label == ATTACK_BUTTON_STATES.INACTIVE then
-            return
+            zone.call("activateZone")
         elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACK then
-            --TODO -- Verzögerung zu stark, speicher in der zone welches monster dort aufgedeckt wurde etc
-            local card = Global.call("getCardFromDeck", {deck = Global.call("getDeckFromZone", {zoneGUID = zone.guid})})
-            if card ~= nil then
-                Wait.frames(function () printAttackPhrase(card.getName()) end, 1)
-                card.setPosition(zone.getPosition())
+            local monsterName = zone.getTable("active_monster_attrs").NAME
+            if monsterName == "" then
+                printToAll("[fdd835][WARNING][-] There is no active monster to attack. The attribute 'NAME' is empty.")
+            else
+                printAttackPhrase(monsterName)
+                zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACKING})
+                --TODO deacivate other buttons
             end
         elseif attackButton.label == ATTACK_BUTTON_STATES.CHOOSE then
-            if placeNewMonsterCard(zone, true) then
+            if placeNewMonsterCard({zone = zone, isTargetOfAttack = true}) then
                 zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
-                zoneChosen()
+                zoneChosen(zone)
             end
+        elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACKING then
+            local monsterName = zone.getTable("active_monster_attrs").NAME
+            if monsterName == "" then
+                printToAll("[fdd835][WARNING][-] There is no active monster to attack. The attribute 'NAME' is empty.")
+            else
+                broadcastToAll(Global.call("getActivePlayerString") .. " cancels the Attack on "
+                                .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. monsterName .. "[-] !!!")
+            end
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+            --TODO activate other buttons
+        elseif attackButton.label == ATTACK_BUTTON_STATES.DIED then
+            zone.call("finishMonster")
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
         else
             printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
         end

@@ -1,87 +1,38 @@
 --- Edited by Ediforce44
-zone_guid = Global.getTable("ZONE_GUID_MONSTER").FOUR
+zone = getObjectFromGUID(Global.getTable("ZONE_GUID_MONSTER").FOUR)
 
-last_value = 0
-function onObjectEnterScriptingZone(zone, object)
-    if zone ~= getObjectFromGUID(zone_guid) then
-        return
-    end
-    if object.tag == "Deck" then
-        local containedObjects = zone.getObjects()[1].getData().ContainedObjects
-        local firstData = containedObjects[#containedObjects]
-        local script = firstData["LuaScript"]
-        local scriptVal = findInScript(script, "hp")
-        if scriptVal > 0 then
-            val = scriptVal
-        else
-            val = object.getVar("hp") or 0
-        end
-    elseif object.getVar("hp") or 0 > 0 then
-            val = object.getVar("hp")
-    end
-    updateVal()
-    updateSave()
-end
-
---Thank you Bone White in discord for this <3
-function findInScript(script, var)
-  for s in string.gmatch(script,"[^\r\n]+") do -- for each line in the script
-    if string.sub(s,1,#var) == var then -- if the beginning of the line matches var
-      local n = string.match(s,"%d",#var) -- get the first number listed in that line after the var name
-      return tonumber(n)
-    end
-  end
-end
-
-function onObjectLeaveScriptingZone(zone, object)
-    if zone ~= getObjectFromGUID(zone_guid) then
-        return
-    elseif zone.getObjects()[1] == nil then
-        val = 0
-    elseif zone.getObjects()[1].tag == "Card" then
-        val = zone.getObjects()[1].getVar("hp") or 0
-    elseif zone.getObjects()[1].tag == "Deck" then
-        local containedObjects = zone.getObjects()[1].getData().ContainedObjects
-        local firstData = containedObjects[#containedObjects]
-        local script = firstData["LuaScript"]
-        val = findInScript(script, "hp") or 0
-    else
-        val = last_value
-    end
-    updateVal()
-    updateSave()
-end
-
-function reset()
-    objects = getObjectFromGUID(zone_guid).getObjects()
-    if objects[1] == nil then
-        val = 0
-    elseif objects[1].tag == "Deck" then
-       val = last_value
-    else
-        val = objects[1].getVar("hp") or 0
-    end
-    updateVal()
-    updateSave()
-end
+value = 0
 MIN_VALUE = 0
 MAX_VALUE = 9
 
+function updateHP(params)
+    if params.HP ~= nil and params.HP >= 0 then
+        value = params.HP
+        updateVal()
+        updateSave()
+    end
+end
+
+function reset()
+    value = zone.getTable("active_monster_attrs").HP
+    updateVal()
+    updateSave()
+end
+
 function onload(saved_data)
     light_mode = false
-    val = 0
+    value = 0
 
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         light_mode = loaded_data[1]
-        val = loaded_data[2]
+        value = loaded_data[2]
     end
-
     createAll()
 end
 
 function updateSave()
-    local data_to_save = {light_mode, val}
+    local data_to_save = {light_mode, value}
     saved_data = JSON.encode(data_to_save)
     self.script_state = saved_data
 end
@@ -96,13 +47,13 @@ function createAll()
     end
 
     if self.getName() == "" then
-        ttText = val
+        ttText = value
     else
-        ttText = val .. "\n" .. self.getName()
+        ttText = value .. "\n" .. self.getName()
     end
 
     self.createButton({
-      label=tostring(val),
+      label=tostring(value),
       click_function="add_subtract",
       tooltip=ttText,
       function_owner=self,
@@ -196,36 +147,39 @@ function swap_align(_obj, _color, alt_click)
     reloadAll()
 end
 
-function editName(_obj, _string, value)
-    self.setName(value)
+function editName(_obj, _string, newName)
+    self.setName(newName)
     setTooltips()
 end
 
 function add_subtract(_obj, _color, alt_click)
     mod = alt_click and -1 or 1
-    new_value = math.min(math.max(val + mod, MIN_VALUE), MAX_VALUE)
-    if val ~= new_value then
-        val = new_value
+    new_value = math.min(math.max(value + mod, MIN_VALUE), MAX_VALUE)
+    if value ~= new_value then
+        value = new_value
         updateVal()
         updateSave()
+    end
+    if new_value == 0 then
+        zone.call("monsterDied")
     end
 end
 
 function updateVal()
     if self.getName() == "" then
-        ttText = val
+        ttText = value
     else
-        ttText = val .. "\n" .. self.getName()
+        ttText = value .. "\n" .. self.getName()
     end
     self.editButton({
         index = 0,
-        label = tostring(val),
+        label = tostring(value),
         tooltip = ttText
         })
 end
 
 function reset_val()
-    val = 0
+    value = 0
     updateVal()
     updateSave()
 end
@@ -238,7 +192,7 @@ function setTooltips()
         })
     self.editButton({
         index = 0,
-        value = tostring(val),
+        value = tostring(value),
         tooltip = ttText
         })
 end
@@ -246,7 +200,7 @@ end
 function null()
 end
 
-function keepSample(_obj, _string, value)
+function keepSample(_obj, _string, _)
     reloadAll()
 end
 
@@ -256,8 +210,8 @@ function onScriptingButtonDown(index, playerColor)
         if index == 10 then
             new_value = 0
         end
-        if val ~= new_value then
-            val = new_value
+        if value ~= new_value then
+            value = new_value
             updateVal()
             updateSave()
         end
