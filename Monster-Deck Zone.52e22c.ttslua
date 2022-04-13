@@ -206,9 +206,9 @@ function onObjectEnterScriptingZone(zone, object)
                     newAttributes.HP = object.getVar("hp") or 0
                 end
                 newAttributes.NAME = firstCard["Nickname"]
-            elseif object.getVar("hp") or 0 > 0 then
+            elseif object.tag == "Card" then
                 newAttributes.NAME = object.getName()
-                newAttributes.HP = object.getVar("hp")
+                newAttributes.HP = object.getVar("hp") or 0
                 newAttributes.ATK = object.getVar("dice")
                 newAttributes.DMG = object.getVar("atk")
             end

@@ -156,12 +156,17 @@ function add_subtract(_obj, _color, alt_click)
     mod = alt_click and -1 or 1
     new_value = math.min(math.max(value + mod, MIN_VALUE), MAX_VALUE)
     if value ~= new_value then
+        if value == 0 then
+            zone.call("monsterReanimated")
+        end
+
         value = new_value
+
+        if new_value == 0 then
+            zone.call("monsterDied")
+        end
         updateVal()
         updateSave()
-    end
-    if new_value == 0 then
-        zone.call("monsterDied")
     end
 end
 
