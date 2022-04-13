@@ -56,7 +56,7 @@ function deactivateAttackButton()
 end
 
 function activateAttackButton()
-    if ATTACK_BUTTON_INEDX == nil then
+    if ATTACK_BUTTON_INDEX == nil then
         ATTACK_BUTTON_INDEX = 0
         local state = active and ATTACK_BUTTON_STATES.ATTACK or ATTACK_BUTTON_STATES.INACTIVE
         self.createButton({
@@ -74,8 +74,19 @@ function activateAttackButton()
 end
 
 function monsterDied()
-    broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME .. "[-] got killed !!!")
-    self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.DIED})
+    if active then
+        broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME
+            .. "[-] got killed !!!")
+        MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.DIED})
+    end
+end
+
+function monsterReanimated()
+    if active then
+        broadcastToAll(Global.call("getActivePlayerString") .. " fucked up. "
+            .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME .. "[-] is undead ???")
+        MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.ATTACK})
+    end
 end
 
 function finishMonster()

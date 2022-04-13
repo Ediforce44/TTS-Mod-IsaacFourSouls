@@ -1,7 +1,7 @@
 --- Written by Ediforce44
 MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
 CHOOSE_BUTTON_STATES = {ATTACK = "Attack", CHOOSE = "Cancel"}
-CHOOSE_BUTTON_INDEX = 0
+CHOOSE_BUTTON_INDEX = nil
 
 ATTACK_BUTTON_STATES = {
     INACTIVE    = "Inactive",
@@ -38,21 +38,27 @@ local function printAttackPhrase(monsterName)
 end
 
 local function activateChooseButton()
-    self.createButton({
-        click_function = "click_function_ChooseButton",
-        function_owner = self,
-        label          = "Attack",
-        position       = {0, -0.5, 3},
-        width          = 1000,
-        height         = 300,
-        font_size      = 200,
-        color          = {0.2, 0.157, 0.325},
-        font_color     = {1, 1, 1}
-    })
+    if CHOOSE_BUTTON_INDEX == nil then
+        CHOOSE_BUTTON_INDEX = 0
+        self.createButton({
+            click_function = "click_function_ChooseButton",
+            function_owner = self,
+            label          = "Attack",
+            position       = {0, -0.5, 3},
+            width          = 1000,
+            height         = 300,
+            font_size      = 200,
+            color          = {0.2, 0.157, 0.325},
+            font_color     = {1, 1, 1}
+        })
+    end
 end
 
 local function deactivateChooseButton()
-    self.removeButton(CHOOSE_BUTTON_INDEX)
+    if CHOOSE_BUTTON_INDEX then
+        self.removeButton(CHOOSE_BUTTON_INDEX)
+        CHOOSE_BUTTON_INDEX = nil
+    end
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -78,12 +84,9 @@ local function deactivateAllOtherMonsterButtons(zone)
     deactivateChooseButton()
 end
 
-local function activateAllOtherMonsterButtons(zone)
+local function activateAllMonsterButtons()
     for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
-        local monsterZone = getObjectFromGUID(guid)
-        if monsterZone.getGUID() ~= zone.guid then
-            monsterZone.call("activateAttackButton")
-        end
+        getObjectFromGUID(guid).call("activateAttackButton")
     end
     activateChooseButton()
 end
@@ -106,6 +109,46 @@ function placeNewMonsterCard(params)
         return true
     end
     return false
+end
+
+function changeZoneState(params)
+    local zone = params.zone
+    local newState = params.newState
+    if zone == nil or newState == nil then
+        return
+    end
+    if newState == ATTACK_BUTTON_STATES.INACTIVE then
+        activateAllMonsterButtons()
+        if zone.getVar("active") then
+            zone.call("deactivateZone")
+        end
+    elseif newState == ATTACK_BUTTON_STATES.ATTACK then
+        activateAllMonsterButtons()
+        if not zone.getVar("active") then
+            zone.call("activateZone")
+        else
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+        end
+    elseif newState == ATTACK_BUTTON_STATES.CHOOSE then
+        if zone.getVar("active") then   --change button state
+            --zone.call("activateAttackButton")
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE})
+        else    --deactivate buttons for inactive zones
+            zone.call("deactivateAttackButton")
+        end
+    elseif newState == ATTACK_BUTTON_STATES.ATTACKING then
+        if zone.getVar("active") then
+            zone.call("activateAttackButton")
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.ATTACKING})
+            deactivateAllOtherMonsterButtons(zone)
+        end
+    elseif newState == ATTACK_BUTTON_STATES.DIED then
+        if zone.getVar("active") then
+            zone.call("activateAttackButton")
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.DIED})
+            deactivateAllOtherMonsterButtons(zone)
+        end
+    end
 end
 
 --Thank you Bone White in discord for this <3       --Edited by Ediforce44
@@ -213,23 +256,11 @@ function click_function_ChooseButton(_, color, alt_click)
         if chooseButton.label == CHOOSE_BUTTON_STATES.ATTACK then
             self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE})
             for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
-                local zone = getObjectFromGUID(guid)
-                if zone.getVar("active") then
-                    zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE})
-                else    --deactivate buttons for inactive zones
-                    zone.call("deactivateAttackButton")
-                end
+                changeZoneState({zone = getObjectFromGUID(guid), newState = ATTACK_BUTTON_STATES.CHOOSE})
             end
         elseif chooseButton.label == CHOOSE_BUTTON_STATES.CHOOSE then
             self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK})
-            for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
-                local zone = getObjectFromGUID(guid)
-                if zone.getVar("active") then
-                    zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
-                else    --activate buttons for inactive zones
-                    zone.call("activateAttackButton")
-                end
-            end
+            activateAllMonsterButtons()
         else
             printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
         end
@@ -239,7 +270,7 @@ end
 function click_function_AttackButton(zone, color, alt_click)
     if Global.getVar("activePlayerColor") == color or Player[color].admin then
         if alt_click then
-            resetAttackButton()
+            resetAttackButton(zone)
             return
         end
         local attackButton = zone.getButtons()[zone.getVar("ATTACK_BUTTON_INDEX") + 1]
@@ -247,13 +278,11 @@ function click_function_AttackButton(zone, color, alt_click)
             zone.call("activateZone")
         elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACK then
             if printAttackPhrase(zone.getTable("active_monster_attrs").NAME) then
-                zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.ATTACKING})
-                deactivateAllOtherMonsterButtons(zone)
+                changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACKING})
             end
         elseif attackButton.label == ATTACK_BUTTON_STATES.CHOOSE then
             if placeNewMonsterCard({zone = zone, isTargetOfAttack = true}) then
-                zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACKING})
-                deactivateAllOtherMonsterButtons(zone)
+                changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACKING})
             end
         elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACKING then
             local monsterName = zone.getTable("active_monster_attrs").NAME
@@ -263,11 +292,10 @@ function click_function_AttackButton(zone, color, alt_click)
                 broadcastToAll(Global.call("getActivePlayerString") .. " cancels the Attack on "
                                 .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. monsterName .. "[-] !!!")
             end
-            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
-            activateAllOtherMonsterButtons(zone)
+            changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
         elseif attackButton.label == ATTACK_BUTTON_STATES.DIED then
             zone.call("finishMonster")
-            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+            changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
         else
             printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
         end
