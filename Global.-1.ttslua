@@ -164,13 +164,6 @@ ZONE_GUID_DECK = {
     SOUL_TOKEN = "560abc"
 }
 
-ZONE_GUID_SOUL = {
-    Yellow = "92610d",
-    Green = "f95f84",
-    Blue = "c0bd67",
-    Red = "8515c8"
-}
-
 ZONE_GUID_MONSTER = {
     ONE = "329a95",
     TWO = "1a25c2",
@@ -178,6 +171,21 @@ ZONE_GUID_MONSTER = {
     FOUR = "f0d9fd",
     FIVE = "839d81",
     SIX = "6c1a32"
+}
+
+ZONE_GUID_SOUL = {
+    Yellow = "92610d",
+    Green = "f95f84",
+    Blue = "c0bd67",
+    Red = "8515c8"
+}
+
+COIN_COUNTER_GUID = {
+    --TODO
+    Yellow = "",
+    Green = "",
+    Blue = "",
+    Red = ""
 }
 
 HEART_TOKENS_GUID = {

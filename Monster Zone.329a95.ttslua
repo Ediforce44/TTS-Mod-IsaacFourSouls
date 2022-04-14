@@ -17,7 +17,7 @@ active_monster_reward = {
     SOULS       = 0
 }
 
-active = true
+active = false
 
 MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
 ATTACK_BUTTON_STATES = {}
@@ -36,13 +36,37 @@ local function containsDeckOrCard()
     return false
 end
 
-local function payReward()
-    --TODO pay reward if automatic rewarding is active
-    broadcastToAll(Global.call("getActivePlayerString") .. " got rewards for killing "
-        .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME .. "[-] !!!")
+local function payOutCents(playerColor, amount)
+    getObjectFromGUID(Global.getTable("COIN_COUNTER_GUID")[playerColor]).call("modifyCoins", {modifier = amount})
+end
+
+local function payOutLoot(playerColor, amount)
+    local lootDeck = Global.call("getLootDeck")
+    if lootDeck == nil then
+        printToAll("[fdd835][WARNING][-] Can't find the Loot deck."
+            .. " Place the Loot deck on its starting position.")
+    end
+    lootDeck.deal(amount, playerColor)
+end
+
+local function payOutTreasures(playerColor, amount)
+    local treasureDeck = Global.call("getTreasureDeck")
+    if treasureDeck == nil then
+        printToAll("[fdd835][WARNING][-] Can't find the Treasure deck."
+            .. " Place the Treasure deck on its starting position.")
+    end
+    --TODO erkenne welches feld vor einem spieler belegt ist und plaziere karten in einem freien feld
+    treasureDeck.deal(amount_monster_reward.TREASURES, playerColor)
+end
+
+local function payOutSouls(playerColor, amount)
+    for i = 1, amount do
+        Global.call("placeSoulToken", {playerColor = playerColor})
+    end
 end
 
 function onLoad()
+    active = true
     ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
     -- Attack button
     activateAttackButton()
@@ -90,9 +114,50 @@ function monsterReanimated()
 end
 
 function finishMonster()
-    --TODO entferne das oberste monster und lege es auf den ablagestapel
-    --TODO wenn das feld danach leer ist decke ein neues monster auf
-    payReward()
+    local activePlayerColor = Global.getVar("activePlayerColor")
+    local monsterCard = nil
+    for _ , object in pairs(self.getObjects()) do
+        if object.tag == "Deck" then
+            monsterCard = object.takeObject({index = object.getQuantity()})
+            break
+        elseif object.tag == "Card" then
+            monsterCard = object
+            break
+        end
+    end
+    if Global.getTable("automaticRewarding")[activePlayerColor] then
+        local rewarded = false
+
+        if active_monster_reward.CENTS ~= 0 then
+            payOutCents(activePlayerColor, active_monster_reward.CENTS)
+            rewarded = true
+        end
+        if active_monster_reward.LOOT ~= 0 then
+            payOutLoot(activePlayerColor, active_monster_reward.LOOT)
+            rewarded = true
+        end
+        if active_monster_reward.TREASURES ~= 0 then
+            payOutTreasures(activePlayerColor, active_monster_reward.TREASURES)
+            rewarded = true
+        end
+
+        if rewarded then
+            broadcastToAll(Global.call("getActivePlayerString") .. " got rewards for killing "
+                .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME .. "[-] !!!")
+        end
+    end
+
+    if active_monster_reward.SOULS ~= 0 then    -- Monster becomes soul token
+        getObjectFromGUID(Global.getTable("ZONE_GUID_SOUL")[activePlayerColor]).call("placeCardInSoulZone"
+            , {card = monsterCard})
+    else    -- Monster just get discarded
+        monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+    end
+    if not containsDeckOrCard() then
+        if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == false then
+            return
+        end
+    end
 end
 
 function resetAltClickCounter()
