@@ -12,6 +12,20 @@ INDEX_THRESHOLDS = {    --INDEX 1
                     }
 INDEX_BLOCKED = {false, false, false, false}
 
+BACK_SCALING = {0.225, 1, 0.078}
+
+autoRewarding = true
+rewardingButtonLocked = true
+REWARDING_BUTTON_OFFSET = {x=-0.855, y=-0.4, z=-0.415}
+REWARDING_BUTTON_COLOR = {
+    ON  = Global.getTable("REAL_PLAYER_COLOR_RGB")[owner_color],
+    OFF = {0, 0, 0}
+}
+REWARDING_BUTTON_TEXT = {
+    ON = "Auto Rewarding:\n>>> ON <<<",
+    OFF = "Auto Rewarding:\n>>> OFF <<<"
+}
+
 local function getTimerParameters(blockedIndex)
     local timerParameters = {
         ["identifier"] = "SoulIndexTimer" .. self.guid .. tostring(blockedIndex),
@@ -39,6 +53,53 @@ local function getIndexFromZCoord(zCoord)
         else
             return 3
         end
+    end
+end
+
+local function getTooltipStringRB()
+    return "      Auto. Rewarding Button\n------------" .. (rewardingButtonLocked and " (Locked) " or "-----------")
+            .. "------------\n\n - Right-Click: (Un-)lock Button\n - Left-Click: Switch mode\n"
+end
+
+function onLoad()
+    self.createButton({
+        click_function = "click_function_SwitchRewardingMode",
+        function_owner = self,
+        label          = autoRewarding and REWARDING_BUTTON_TEXT.ON or REWARDING_BUTTON_TEXT.OFF,
+        position       = REWARDING_BUTTON_OFFSET,
+        scale          = BACK_SCALING,
+        width          = 1400,
+        height         = 420,
+        font_size      = 180,
+        color          = autoRewarding and REWARDING_BUTTON_COLOR.ON or REWARDING_BUTTON_COLOR.OFF,
+        font_color     = {1, 1, 1},
+        tooltip        = getTooltipStringRB()
+    })
+end
+
+function click_function_SwitchRewardingMode(_, color, alt_click)
+    if Global.call("isPlayerAuthorized", {playerColor = color}) then
+        -- Locks and unlocks rewarding button
+        if alt_click then
+            rewardingButtonLocked = not rewardingButtonLocked
+            self.editButton({index = 0, tooltip = getTooltipStringRB()})
+            return
+        elseif rewardingButtonLocked then
+            return
+        end
+        -- Switch rewarding mode
+        autoRewarding = not autoRewarding
+        local msg = "Your Auto Rewarding has been "
+        if autoRewarding then
+            self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.ON, color = REWARDING_BUTTON_COLOR.ON})
+            msg = msg .. "turned ON !!!"
+        else
+            self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.OFF, color = REWARDING_BUTTON_COLOR.OFF})
+            msg = msg .."turned OFF !!!"
+        end
+        print(Global.getTable("REAL_PLAYER_COLOR")[owner_color] .. owner_color
+                .. "s[-] auto rewarding mode has changed.")
+        broadcastToColor(msg, owner_color)
     end
 end
 
