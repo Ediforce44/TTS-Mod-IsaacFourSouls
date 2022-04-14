@@ -124,6 +124,13 @@ REAL_PLAYER_COLOR = {
     Red = "[C60A00]"
 }
 
+REAL_PLAYER_COLOR_RGB = {
+    Yellow = {208/255, 228/255, 49/255},
+    Green = {43/255, 184/255, 55/255},
+    Blue = {28/255, 121/255, 248/255},
+    Red = {198/255, 10/255, 0/255}
+}
+
 PRINT_COLOR_PLAYER = {
     YELLOW = REAL_PLAYER_COLOR["Yellow"],
     GREEN = REAL_PLAYER_COLOR["Green"],
