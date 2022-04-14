@@ -63,16 +63,17 @@ local function getTooltipStringRB()
 end
 
 function onLoad()
+    local autoRewardingON = Global.getTable("automaticRewarding")[owner_color]
     self.createButton({
         click_function = "click_function_SwitchRewardingMode",
         function_owner = self,
-        label          = autoRewarding and REWARDING_BUTTON_TEXT.ON or REWARDING_BUTTON_TEXT.OFF,
+        label          = autoRewardingON and REWARDING_BUTTON_TEXT.ON or REWARDING_BUTTON_TEXT.OFF,
         position       = REWARDING_BUTTON_OFFSET,
         scale          = BACK_SCALING,
         width          = 1400,
         height         = 420,
         font_size      = 180,
-        color          = autoRewarding and REWARDING_BUTTON_COLOR.ON or REWARDING_BUTTON_COLOR.OFF,
+        color          = autoRewardingON and REWARDING_BUTTON_COLOR.ON or REWARDING_BUTTON_COLOR.OFF,
         font_color     = {1, 1, 1},
         tooltip        = getTooltipStringRB()
     })
@@ -88,20 +89,28 @@ function click_function_SwitchRewardingMode(_, color, alt_click)
         elseif rewardingButtonLocked then
             return
         end
-        -- Switch rewarding mode
-        autoRewarding = not autoRewarding
-        local msg = "Your Auto Rewarding has been "
-        if autoRewarding then
-            self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.ON, color = REWARDING_BUTTON_COLOR.ON})
-            msg = msg .. "turned ON !!!"
-        else
-            self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.OFF, color = REWARDING_BUTTON_COLOR.OFF})
-            msg = msg .."turned OFF !!!"
-        end
-        print(Global.getTable("REAL_PLAYER_COLOR")[owner_color] .. owner_color
-                .. "s[-] auto rewarding mode has changed.")
-        broadcastToColor(msg, owner_color)
+
+        Global.call("switchRewardingMode", {playerColor = owner_color})
     end
+end
+
+-- Called by the global function switchRewardingMode()
+function onSwitchingRewardingMode(params)
+    if params.newState == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in 'soul zone' function 'onSwitchingRewardingMode()'.")
+    end
+
+    local msg = "Your Auto Rewarding has been "
+    if params.newState then
+        self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.ON, color = REWARDING_BUTTON_COLOR.ON})
+        msg = msg .. "turned ON !!!"
+    else
+        self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.OFF, color = REWARDING_BUTTON_COLOR.OFF})
+        msg = msg .."turned OFF !!!"
+    end
+    print(Global.getTable("REAL_PLAYER_COLOR")[owner_color] .. owner_color
+            .. "s[-] auto rewarding mode has changed.")
+    broadcastToColor(msg, owner_color)
 end
 
 -- You have two seconds to place a object on the returned position.

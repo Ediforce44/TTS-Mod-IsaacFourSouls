@@ -237,17 +237,21 @@ function isPlayerAuthorized(params)
     return player == params.ownerPlayer or player.admin
 end
 
-function deactivateRewarding(params)
+function switchRewardingMode(params)
+    local color = ""
     if params.playerColor == nil then
         if params.player == nil then
             printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'deactivateRewarding()'.")
             return
         else
-            automaticRewarding[params.player.color] = false
+            color = params.player.color
         end
     else
-        automaticRewarding[params.playerColor] = false
+        color = params.playerColor
     end
+    local newValue = not automaticRewarding[color]
+    automaticRewarding[color] = newValue
+    getObjectFromGUID(ZONE_GUID_SOUL.[color]).call("onSwitchingRewardingMode", {newState = newValue})
 end
 
 --Thank you Bone White in discord for this <3       --Edited by Ediforce44
