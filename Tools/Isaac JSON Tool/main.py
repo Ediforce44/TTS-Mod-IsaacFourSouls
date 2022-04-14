@@ -12,6 +12,10 @@ def getReward(rewardType, rewardsString):
         amount = int(re.search("[0-9]{1,2}", m.group(0)).group(0))
     return amount
 
+def rewardsVarExist(JSON_string):
+    pattern = re.compile("rewards\s?=\s?")
+    return pattern.search(JSON_string) != None
+
 def translateRewards(rewardsString):
     rewardsLua = "rewards = "
     JSON_string = rewardsString
@@ -47,16 +51,31 @@ def matchesMonsterPattern(nickname):
     pattern = re.compile("(.*)monster(.*)", re.I)
     return pattern.match(nickname)
 
-if __name__ == "__main__":
-    fileName = str(sys.argv[1])
-    JSON_file = open(fileName + ".json", "r", encoding = "utf8")
+def main(argv, argc):
+    if argc < 2:
+        print("\033[91mTo little parameters:\033[0m\n\r\033[93mPlease pass the file name of the file you want to sniff as parameter.\033[0m\n")
+        return
+    fileName = str(argv[1])
+    m = re.search("\.json", fileName)
+    if m != None:
+        fileName = fileName[:m.start()]
+    try:
+        JSON_file = open(fileName + ".json", "r", encoding = "utf8")
+    except:
+        print("\033[91mThe File with the name '" + fileName + "' doesn't exist.\033[0m\n")
+        return
+    
     JSON_data = json.load(JSON_file)
+    
     for val in JSON_data["ObjectStates"]:
         #print(val["Name"])
         if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
             for card in val["ContainedObjects"]:
                 #print(card["GUID"])
-                card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+                if not rewardsVarExist(card["LuaScript"]):
+                    card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+    
+    for val in JSON_data["ObjectStates"]:
         # Expansions
         if val["Name"] == "Custom_Model_Infinite_Bag":
             for expansion in val["ContainedObjects"]:
@@ -65,9 +84,15 @@ if __name__ == "__main__":
                         if (content["Nickname"] == "" or matchesMonsterPattern(content["Nickname"])):
                             if content["Name"] == "Deck":
                                 for card in content["ContainedObjects"]:
-                                    card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+                                    if not rewardsVarExist(card["LuaScript"]):
+                                        card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+
     newFile = open(fileName + "_Reward.json", "w+")
     newFile.write(json.dumps(JSON_data, indent=2))
     newFile.close()
     JSON_file.close()
+
+if __name__ == "__main__":
+    main(sys.argv, len(sys.argv))
+    
     
