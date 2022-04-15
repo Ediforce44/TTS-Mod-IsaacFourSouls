@@ -69,13 +69,27 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 function onLoad(saved_data)
+    if saved_data == "" then
+        return
+    end
+
     local loaded_data = JSON.decode(saved_data)
-    --TODO
+    if loaded_data[1] then
+        activateChooseButton()
+        for _ , state in pairs(CHOOSE_BUTTON_STATES) do
+            if state == loadad_data[1] then
+                self.editButton({index = CHOOSE_BUTTON_INDEX, label = state})
+            end
+        end
+    end
 end
 
 function onSave()
-    --TODO
-    return ""
+    local currentLabel = nil
+    if getChooseButton() then
+        currentLabel = getChooseButton().label
+    end
+    return {currentLabel}
 end
 
 function activateChooseButton()
