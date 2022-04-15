@@ -91,7 +91,11 @@ function onLoad(saved_data)
 end
 
 function onSave()
-    return ""
+    local currentLabel = nil
+    if getAttackButton() then
+        currentLabel = getAttackButton().label
+    end
+    return JSON.encode({active, currentLabel})
 end
 
 function deactivateAttackButton()
@@ -209,12 +213,10 @@ function updateRewards(params)
 end
 
 function activateZone()
-    local attackButton = getAttackButton()
-    if attackButton == nil then
+    if ATTACK_BUTTON_INDEX == nil then
         activateAttackButton()
     end
-    attackButton = getAttackButton()
-    if attackButton.label ~= ATTACK_BUTTON_STATES.INACTIVE then
+    if active then
         printToAll("[fdd835][WARNING][-] Can't activate Zone: " .. self.guid .. ". This Zone is already active.")
     else
         if not containsDeckOrCard() then
@@ -228,6 +230,9 @@ function activateZone()
 end
 
 function deactivateZone()
+    if ATTACK_BUTTON_INDEX == nil then
+        activateAttackButton()
+    end
     for _ , obj in pairs(self.getObjects()) do
         if obj.tag == "Deck" or obj.tag == "Card" then
             obj.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)

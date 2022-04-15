@@ -37,30 +37,6 @@ local function printAttackPhrase(monsterName)
     return phrase
 end
 
-local function activateChooseButton()
-    if CHOOSE_BUTTON_INDEX == nil then
-        CHOOSE_BUTTON_INDEX = 0
-        self.createButton({
-            click_function = "click_function_ChooseButton",
-            function_owner = self,
-            label          = "Attack",
-            position       = {0, -0.5, 3},
-            width          = 1000,
-            height         = 300,
-            font_size      = 200,
-            color          = {0.2, 0.157, 0.325},
-            font_color     = {1, 1, 1}
-        })
-    end
-end
-
-local function deactivateChooseButton()
-    if CHOOSE_BUTTON_INDEX then
-        self.removeButton(CHOOSE_BUTTON_INDEX)
-        CHOOSE_BUTTON_INDEX = nil
-    end
-end
-
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Button functions ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
@@ -92,9 +68,38 @@ local function activateAllMonsterButtons()
 end
 ------------------------------------------------------------------------------------------------------------------------
 
-function onLoad()
-    -- Attack button
-    activateChooseButton()
+function onLoad(saved_data)
+    local loaded_data = JSON.decode(saved_data)
+    --TODO
+end
+
+function onSave()
+    --TODO
+    return ""
+end
+
+function activateChooseButton()
+    if CHOOSE_BUTTON_INDEX == nil then
+        CHOOSE_BUTTON_INDEX = 0
+        self.createButton({
+            click_function = "click_function_ChooseButton",
+            function_owner = self,
+            label          = "Attack",
+            position       = {0, -0.5, 3},
+            width          = 1000,
+            height         = 300,
+            font_size      = 200,
+            color          = {0.2, 0.157, 0.325},
+            font_color     = {1, 1, 1}
+        })
+    end
+end
+
+function deactivateChooseButton()
+    if CHOOSE_BUTTON_INDEX then
+        self.removeButton(CHOOSE_BUTTON_INDEX)
+        CHOOSE_BUTTON_INDEX = nil
+    end
 end
 
 function placeNewMonsterCard(params)

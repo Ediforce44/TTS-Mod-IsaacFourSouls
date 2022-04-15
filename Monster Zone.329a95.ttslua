@@ -27,7 +27,7 @@ local function getAttackButton()
     if ATTACK_BUTTON_INDEX == nil then
         return nil
     end
-    
+
     return self.getButtons()[ATTACK_BUTTON_INDEX + 1]
 end
 
@@ -69,11 +69,33 @@ local function payOutSouls(playerColor, amount)
     end
 end
 
-function onLoad()
+function onLoad(saved_data)
     ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
     if saved_data == "" then
         return
     end
+
+    local loaded_data = JSON.decode(saved_data)
+    if loaded_data[1] == true then
+        active = true
+        activateAttackButton()
+    end
+    if loaded_data[2] then
+        activateAttackButton()
+        for _ , state in pairs(ATTACK_BUTTON_STATES) do
+            if state == loaded_data[2] then
+                self.editButton({index = ATTACK_BUTTON_INDEX, label = state})
+            end
+        end
+    end
+end
+
+function onSave()
+    local currentLabel = nil
+    if getAttackButton() then
+        currentLabel = getAttackButton().label
+    end
+    return JSON.encode({active, currentLabel})
 end
 
 function deactivateAttackButton()
@@ -191,12 +213,10 @@ function updateRewards(params)
 end
 
 function activateZone()
-    local attackButton = getAttackButton()
-    if attackButton == nil then
+    if ATTACK_BUTTON_INDEX == nil then
         activateAttackButton()
     end
-    attackButton = getAttackButton()
-    if attackButton.label ~= ATTACK_BUTTON_STATES.INACTIVE then
+    if active then
         printToAll("[fdd835][WARNING][-] Can't activate Zone: " .. self.guid .. ". This Zone is already active.")
     else
         if not containsDeckOrCard() then
@@ -210,6 +230,9 @@ function activateZone()
 end
 
 function deactivateZone()
+    if ATTACK_BUTTON_INDEX == nil then
+        activateAttackButton()
+    end
     for _ , obj in pairs(self.getObjects()) do
         if obj.tag == "Deck" or obj.tag == "Card" then
             obj.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
