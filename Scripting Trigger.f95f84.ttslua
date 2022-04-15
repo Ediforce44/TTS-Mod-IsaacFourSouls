@@ -150,9 +150,8 @@ function placeCardInSoulZone(params)
                     elseif params.card.getVar("soul") == 2 then
                         soulAmount = "two souls"
                     end
-                    broadcastToAll(Global.call("getPlayerString", {playerColor = owner_color})
-                                    .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. " earned " .. soulAmount
-                                    .. ". Hurray !!!")
+                    broadcastToAll(Global.call("getPlayerString", {playerColor = owner_color}) .. " earned "
+                                    .. Global.getTabel("PRINT_COLOR_SPECIAL").SOUL .. soulAmount .. "[-]. Hurray !!!")
                 end
             , 1)
             params.card.setRotationSmooth({x=0, y=90, z=0}, false)
