@@ -192,32 +192,38 @@ function findRewardsInScript(scriptString)
     return rewards
 end
 
---TODO: add reward table extraction (vielleicht auch erst sobald hp counter auf null geht)
 function onObjectEnterScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
         if guid == zone.getGUID() then
             local newAttributes = {}
+            local rewards = {}
             if object.tag == "Deck" then
                 local containedObjects = object.getData().ContainedObjects
                 local firstCard = containedObjects[#containedObjects]
                 local script = firstCard["LuaScript"]
+                -- Attributes
                 newAttributes = findAttrsInScript(script)
                 if newAttributes == {} then
                     newAttributes.HP = object.getVar("hp") or 0
                 end
                 newAttributes.NAME = firstCard["Nickname"]
+                -- Rewards
+                rewards = findRewardsInScript(script)
             elseif object.tag == "Card" then
+                -- Attributes
                 newAttributes.NAME = object.getName()
                 newAttributes.HP = object.getVar("hp") or 0
                 newAttributes.ATK = object.getVar("dice")
                 newAttributes.DMG = object.getVar("atk")
+                -- Rewards
+                rewards = object.getTable("rewards") or {}
             end
             zone.call("updateAttributes", newAttributes)
+            zone.call("updateRewards", rewards)
         end
     end
 end
 
---TODO: reward table extraction
 function onObjectLeaveScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
         if guid == zone.getGUID() then
@@ -226,10 +232,13 @@ function onObjectLeaveScriptingZone(zone, object)
             if firstObjectInZone == nil then
                 newAttributes = {NAME = "", HP = 0}
             elseif firstObjectInZone.tag == "Card" then
+                -- Attributes
                 newAttributes.NAME = firstObjectInZone.getName()
                 newAttributes.HP = firstObjectInZone.getVar("hp") or 0
                 newAttributes.ATK = firstObjectInZone.getVar("dice")
                 newAttributes.DMG = firstObjectInZone.getVar("atk")
+                -- Rewards
+                rewards = firstObjectInZone.getTable("rewards") or {}
             elseif firstObjectInZone.tag == "Deck" then
                 for _ , card in pairs(firstObjectInZone.getObjects()) do
                     if card.guid == object.getGUID() then
@@ -239,13 +248,17 @@ function onObjectLeaveScriptingZone(zone, object)
                 local containedObjects = firstObjectInZone.getObjects()
                 local firstCard = containedObjects[#containedObjects]
                 local script = firstCard.lua_script
+                -- Attributes
                 newAttributes = findAttrsInScript(script)
                 if newAttributes == {} then
                     newAttributes.HP = object.getVar("hp") or 0
                 end
                 newAttributes.NAME = firstCard["Nickname"]
+                -- Rewards
+                rewards = findRewardsInScript(script)
             end
             zone.call("updateAttributes", newAttributes)
+            zone.call("updateRewards", rewards)
         end
     end
 end

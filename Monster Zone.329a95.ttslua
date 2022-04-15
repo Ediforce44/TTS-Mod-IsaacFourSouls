@@ -179,6 +179,13 @@ function updateAttributes(params)
     end
 end
 
+function updateRewards(params)
+    active_monster_reward.CENTS = params.CENTS or 0
+    active_monster_reward.LOOT = params.LOOT or 0
+    active_monster_reward.TREASURES = params.TREASURES or 0
+    active_monster_reward.SOULS = params.SOULS or 0
+end
+
 function activateZone()
     local attackButton = getAttackButton()
     if attackButton.label ~= ATTACK_BUTTON_STATES.INACTIVE then
