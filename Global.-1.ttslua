@@ -29,9 +29,24 @@ local function getDeckOrCard(zoneGUID)
 end
 ------------------------------------------------------------------------------------------------------------------------
 
-
-function onLoad()
+function onLoad(saved_data)         --EbyE44
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        if loaded_data[1] then
+            activePlayerColor = loaded_data[1]
+        end
+        if loaded_data[2] then
+            automaticRewarding.Yellow = loaded_data[2].Yellow and true
+            automaticRewarding.Green = loaded_data[2].Green and true
+            automaticRewarding.Blue = loaded_data[2].Blue and true
+            automaticRewarding.Red = loaded_data[2].Red and true
+        end
+    end
     broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
+end
+
+function onSave()                   --EbyE44
+    return JSON.encode({activePlayerColor, automaticRewarding})
 end
 
 -- Auto monster HP reset
