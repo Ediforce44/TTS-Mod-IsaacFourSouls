@@ -78,8 +78,6 @@ function onLoad(saved_data)
     local loaded_data = JSON.decode(saved_data)
     if loaded_data[1] == true then
         active = true
-        --TODO überprüfen ob knopf auftaucht: Szenario mehrere active zones und eine ist attacking
-        activateAttackButton()
     end
     if loaded_data[2] then
         activateAttackButton()

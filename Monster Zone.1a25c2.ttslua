@@ -78,7 +78,6 @@ function onLoad(saved_data)
     local loaded_data = JSON.decode(saved_data)
     if loaded_data[1] == true then
         active = true
-        activateAttackButton()
     end
     if loaded_data[2] then
         activateAttackButton()
@@ -88,6 +87,18 @@ function onLoad(saved_data)
             end
         end
     end
+    if loaded_data[3] then
+        active_monster_attrs.NAME = loaded_data[3].NAME or "Unkown"
+        active_monster_attrs.HP = loaded_data[3].HP or 0
+        active_monster_attrs.ATK = loaded_data[3].ATK or 0
+        active_monster_attrs.DMG = loaded_data[3].DMG or 0
+    end
+    if loaded_data[4] then
+        active_monster_reward.CENTS = loaded_data[4].CENTS or 0
+        active_monster_reward.LOOT = loaded_data[4].LOOT or 0
+        active_monster_reward.TREASURES = loaded_data[4].TREASURES or 0
+        active_monster_reward.SOULS = loaded_data[4].SOULS or 0
+    end
 end
 
 function onSave()
@@ -95,7 +106,7 @@ function onSave()
     if getAttackButton() then
         currentLabel = getAttackButton().label
     end
-    return JSON.encode({active, currentLabel})
+    return JSON.encode({active, currentLabel, active_monster_attrs, active_monster_reward})
 end
 
 function deactivateAttackButton()

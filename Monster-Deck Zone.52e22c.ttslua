@@ -1,6 +1,9 @@
 --- Written by Ediforce44
 MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
-CHOOSE_BUTTON_STATES = {ATTACK = "Attack", CHOOSE = "Cancel"}
+CHOOSE_BUTTON_STATES = {
+    ATTACK      = "Attack",
+    CHOOSE      = "Cancel"
+}
 CHOOSE_BUTTON_INDEX = nil
 
 ATTACK_BUTTON_STATES = {
@@ -12,6 +15,10 @@ ATTACK_BUTTON_STATES = {
 }
 
 local function getChooseButton()
+    if CHOOSE_BUTTON_INDEX == nil then
+        return nil
+    end
+
     return self.getButtons()[CHOOSE_BUTTON_INDEX + 1]
 end
 
@@ -77,7 +84,7 @@ function onLoad(saved_data)
     if loaded_data[1] then
         activateChooseButton()
         for _ , state in pairs(CHOOSE_BUTTON_STATES) do
-            if state == loadad_data[1] then
+            if state == loaded_data[1] then
                 self.editButton({index = CHOOSE_BUTTON_INDEX, label = state})
             end
         end
@@ -89,7 +96,7 @@ function onSave()
     if getChooseButton() then
         currentLabel = getChooseButton().label
     end
-    return {currentLabel}
+    return JSON.encode({currentLabel})
 end
 
 function activateChooseButton()
