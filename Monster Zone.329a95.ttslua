@@ -24,6 +24,10 @@ ATTACK_BUTTON_STATES = {}
 ATTACK_BUTTON_INDEX = nil
 
 local function getAttackButton()
+    if ATTACK_BUTTON_INDEX == nil then
+        return nil
+    end
+    
     return self.getButtons()[ATTACK_BUTTON_INDEX + 1]
 end
 
@@ -66,10 +70,10 @@ local function payOutSouls(playerColor, amount)
 end
 
 function onLoad()
-    active = true
     ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
-    -- Attack button
-    activateAttackButton()
+    if saved_data == "" then
+        return
+    end
 end
 
 function deactivateAttackButton()
@@ -188,6 +192,10 @@ end
 
 function activateZone()
     local attackButton = getAttackButton()
+    if attackButton == nil then
+        activateAttackButton()
+    end
+    attackButton = getAttackButton()
     if attackButton.label ~= ATTACK_BUTTON_STATES.INACTIVE then
         printToAll("[fdd835][WARNING][-] Can't activate Zone: " .. self.guid .. ". This Zone is already active.")
     else
