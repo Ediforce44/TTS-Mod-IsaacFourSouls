@@ -259,7 +259,7 @@ function switchRewardingMode(params)
     end
     local newValue = not automaticRewarding[color]
     automaticRewarding[color] = newValue
-    getObjectFromGUID(ZONE_GUID_SOUL.[color]).call("onSwitchingRewardingMode", {newState = newValue})
+    getObjectFromGUID(ZONE_GUID_SOUL[color]).call("onSwitchingRewardingMode", {newState = newValue})
 end
 
 --Thank you Bone White in discord for this <3       --Edited by Ediforce44

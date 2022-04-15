@@ -261,6 +261,12 @@ function click_function_ChooseButton(_, color, alt_click)
         elseif chooseButton.label == CHOOSE_BUTTON_STATES.CHOOSE then
             self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK})
             activateAllMonsterButtons()
+            for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
+                local zone = getObjectFromGUID(guid)
+                if zone.getVar("active") then
+                    zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+                end
+            end
         else
             printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
         end

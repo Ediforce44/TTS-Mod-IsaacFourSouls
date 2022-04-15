@@ -20,7 +20,7 @@ end
 
 function modifyCoins(params)            -- EbyE44
     if params.modifier == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in coin counter function 'modifyCoins()'."
+        printToAll("[fdd835][WARNING][-] Wrong parameters in coin counter function 'modifyCoins()'.")
     end
     new_value = math.min(math.max(value + params.modifier, MIN_VALUE), MAX_VALUE)
     if value ~= new_value then

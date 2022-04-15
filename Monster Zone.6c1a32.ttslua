@@ -117,7 +117,7 @@ function finishMonster()
     local monsterCard = nil
     for _ , object in pairs(self.getObjects()) do
         if object.tag == "Deck" then
-            monsterCard = object.takeObject({index = object.getQuantity()})
+            monsterCard = object.takeObject({index = object.getQuantity() - 1})
             break
         elseif object.tag == "Card" then
             monsterCard = object
@@ -152,11 +152,13 @@ function finishMonster()
     else    -- Monster just get discarded
         monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
     end
-    if not containsDeckOrCard() then
-        if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == false then
-            return
-        end
-    end
+    Wait.frames(function ()
+            if not containsDeckOrCard() then
+                if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == false then
+                    return
+                end
+            end
+        end, 60)
 end
 
 function resetAltClickCounter()
