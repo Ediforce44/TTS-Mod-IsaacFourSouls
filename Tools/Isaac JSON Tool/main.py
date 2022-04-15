@@ -43,8 +43,8 @@ def translateRewards(rewardsString):
     treasures = getReward("treasure", JSON_string)
     souls = getReward("soul", JSON_string)
     
-    rewardsLua = rewardsLua + "{cents = " + str(cents) + ", loot = " + str(loot) + ", treasure = " + str(treasures) \
-        + ", souls = " + str(souls) + "}"
+    rewardsLua = rewardsLua + "{CENTS = " + str(cents) + ", LOOT = " + str(loot) + ", TREASURES = " + str(treasures) \
+        + ", SOULS = " + str(souls) + "}"
     return rewardsLua
 
 def matchesMonsterPattern(nickname):
