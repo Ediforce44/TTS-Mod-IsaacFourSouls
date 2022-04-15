@@ -29,6 +29,7 @@ local function getDeckOrCard(zoneGUID)
 end
 ------------------------------------------------------------------------------------------------------------------------
 
+
 function onLoad()
     broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
 end
@@ -57,7 +58,7 @@ SECOND_HEARTS_GUID = {
 }
 
 function onPlayerTurn(player, previous_player)
-
+    activePlayerColor = player.color
     local lootdeck = getDeckOrCard(ZONE_GUID_DECK.LOOT)
 
     if previous_player == nil then
@@ -97,6 +98,17 @@ end
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+activePlayerColor = "Red"
+
+automaticRewarding = {
+    Yellow = true,
+    Green = true,
+    Blue = true,
+    Red = true
+}
+
+CLICK_DELAY = 0.3
+
 function table.copy(t)
     local tableCopy = {}
     for key, value in pairs(t) do
@@ -110,6 +122,13 @@ REAL_PLAYER_COLOR = {
     Green = "[2BB837]",
     Blue = "[1C79F8]",
     Red = "[C60A00]"
+}
+
+REAL_PLAYER_COLOR_RGB = {
+    Yellow = {208/255, 228/255, 49/255},
+    Green = {43/255, 184/255, 55/255},
+    Blue = {28/255, 121/255, 248/255},
+    Red = {198/255, 10/255, 0/255}
 }
 
 PRINT_COLOR_PLAYER = {
@@ -136,20 +155,13 @@ PRINT_COLOR_SPECIAL = {
 }
 
 ZONE_GUID_DECK = {
+    TREASURE = "190cda",
+    FLOOR = "096e94",
+    LOOT = "c413a5",
     MONSTER = "52e22c",
     HAPPEN = "61e7b7",
-    TREASURE = "190cda",
-    LOOT = "c413a5",
     BONUS_SOUL = "979776",
-    FLOOR = "096e94",
     SOUL_TOKEN = "560abc"
-}
-
-ZONE_GUID_SOUL = {
-    Yellow = "92610d",
-    Green = "f95f84",
-    Blue = "c0bd67",
-    Red = "8515c8"
 }
 
 ZONE_GUID_MONSTER = {
@@ -161,11 +173,41 @@ ZONE_GUID_MONSTER = {
     SIX = "6c1a32"
 }
 
+ZONE_GUID_SOUL = {
+    Yellow = "92610d",
+    Green = "f95f84",
+    Blue = "c0bd67",
+    Red = "8515c8"
+}
+
+COIN_COUNTER_GUID = {
+    Yellow = "9d76db",
+    Green = "c46653",
+    Blue = "8edf63",
+    Red = "965140"
+}
+
 HEART_TOKENS_GUID = {
     Yellow = {"c02908", "3f81b7", "f8e991", "f825c2", "2a9dfc", "443adb"},
     Green = {"12326f", "c326f1", "f5d095", "7e882b", "66804c", "e24915"},
     Blue = {"78f8e7", "c9f7b2", "4b26ea", "098303", "9e8aa0", "dbcc87"},
     Red = {"bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
+}
+
+MONSTER_HP_COUNTER_GUID = {
+    ONE = "9bb226",
+    TWO = "a75691",
+    THREE = "fab592",
+    FOUR = "fb5299",
+    FIVE = "b50db5",
+    SIX = "bcac8d"
+}
+
+DISCARD_PILE_POSITION = {
+    TREASURE = {-33.91, 2.53, 0},
+    FLOOR = {-6.20, 1.89, -1.70},
+    LOOT = {1.64, 2.53, 0},
+    MONSTER = {34.06, 5, 0}
 }
 
 function getPlayerString(params)
@@ -178,6 +220,10 @@ function getPlayerString(params)
         playerString = playerString .. params.playerColor .. "[-]"
     end
     return playerString
+end
+
+function getActivePlayerString()
+    return getPlayerString({playerColor = activePlayerColor})
 end
 
 function isPlayerAuthorized(params)
@@ -196,6 +242,38 @@ function isPlayerAuthorized(params)
         return false
     end
     return player == params.ownerPlayer or player.admin
+end
+
+function switchRewardingMode(params)
+    local color = ""
+    if params.playerColor == nil then
+        if params.player == nil then
+            printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'deactivateRewarding()'.")
+            return
+        else
+            color = params.player.color
+        end
+    else
+        color = params.playerColor
+    end
+    local newValue = not automaticRewarding[color]
+    automaticRewarding[color] = newValue
+    getObjectFromGUID(ZONE_GUID_SOUL[color]).call("onSwitchingRewardingMode", {newState = newValue})
+end
+
+--Thank you Bone White in discord for this <3       --Edited by Ediforce44
+function findIntInScript(params)
+    if params.scriptString == nil or params.varName then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'findIntInScript()'.")
+        return nil
+    end
+    for line in string.gmatch(scriptString,"[^\r\n]+") do -- for each line in the script
+        if string.sub(line,1,#varName) == varName then -- if the beginning of the line matches var
+            local value = string.match(line,"%d+",#varName) -- get the first number listed in that line after the var name
+            return tonumber(value)
+        end
+    end
+    return nil
 end
 
 function getDeckFromZone(params)

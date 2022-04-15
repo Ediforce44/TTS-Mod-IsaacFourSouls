@@ -12,6 +12,20 @@ INDEX_THRESHOLDS = {    --INDEX 1
                     }
 INDEX_BLOCKED = {false, false, false, false}
 
+BACK_SCALING = {0.225, 1, 0.078}
+
+autoRewarding = true
+rewardingButtonLocked = true
+REWARDING_BUTTON_OFFSET = {x=-0.85, y=-0.4, z=-0.415}
+REWARDING_BUTTON_COLOR = {
+    ON  = Global.getTable("REAL_PLAYER_COLOR_RGB")[owner_color],
+    OFF = {0, 0, 0}
+}
+REWARDING_BUTTON_TEXT = {
+    ON = "Auto Rewarding:\n>>> ON <<<",
+    OFF = "Auto Rewarding:\n>>> OFF <<<"
+}
+
 local function getTimerParameters(blockedIndex)
     local timerParameters = {
         ["identifier"] = "SoulIndexTimer" .. self.guid .. tostring(blockedIndex),
@@ -40,6 +54,76 @@ local function getIndexFromZCoord(zCoord)
             return 3
         end
     end
+end
+
+local function getTooltipStringRB()
+    return "      Auto. Rewarding Button\n------------" .. (rewardingButtonLocked and " (Locked) " or "-----------")
+            .. "------------\n\n - Right-Click: (Un-)lock Button\n - Left-Click: Switch mode\n"
+end
+
+function onLoad(saved_data)
+    local autoRewardingON = true
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        if loaded_data[1] == false then
+            autoRewardingON = loaded_data[1]
+        end
+        if loaded_data[2] == false then
+            rewardingButtonLocked = loaded_data[2]
+        end
+    end
+
+    self.createButton({
+        click_function = "click_function_SwitchRewardingMode",
+        function_owner = self,
+        label          = autoRewardingON and REWARDING_BUTTON_TEXT.ON or REWARDING_BUTTON_TEXT.OFF,
+        position       = REWARDING_BUTTON_OFFSET,
+        scale          = BACK_SCALING,
+        width          = 1400,
+        height         = 420,
+        font_size      = 180,
+        color          = autoRewardingON and REWARDING_BUTTON_COLOR.ON or REWARDING_BUTTON_COLOR.OFF,
+        font_color     = {1, 1, 1},
+        tooltip        = getTooltipStringRB()
+    })
+end
+
+function onSave()
+    return JSON.encode({Global.getTable("automaticRewarding")[owner_color], rewardingButtonLocked})
+end
+
+function click_function_SwitchRewardingMode(_, color, alt_click)
+    if Global.call("isPlayerAuthorized", {playerColor = color}) then
+        -- Locks and unlocks rewarding button
+        if alt_click then
+            rewardingButtonLocked = not rewardingButtonLocked
+            self.editButton({index = 0, tooltip = getTooltipStringRB()})
+            return
+        elseif rewardingButtonLocked then
+            return
+        end
+
+        Global.call("switchRewardingMode", {playerColor = owner_color})
+    end
+end
+
+-- Called by the global function switchRewardingMode()
+function onSwitchingRewardingMode(params)
+    if params.newState == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in 'soul zone' function 'onSwitchingRewardingMode()'.")
+    end
+
+    local msg = "Your Auto Rewarding has been "
+    if params.newState then
+        self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.ON, color = REWARDING_BUTTON_COLOR.ON})
+        msg = msg .. "turned ON !!!"
+    else
+        self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.OFF, color = REWARDING_BUTTON_COLOR.OFF})
+        msg = msg .."turned OFF !!!"
+    end
+    print(Global.getTable("REAL_PLAYER_COLOR")[owner_color] .. owner_color
+            .. "s[-] auto rewarding mode has changed.")
+    broadcastToColor(msg, owner_color)
 end
 
 -- You have two seconds to place a object on the returned position.
@@ -73,8 +157,18 @@ function placeCardInSoulZone(params)
     else
         local position = nextFreeSoulPosition()
         if position ~= nil then
-            broadcastToAll(Global.call("getPlayerString", {playerColor = owner_color})
-                            .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. " earned a soul. Hurray!!!")
+            Wait.frames(
+                function ()
+                local soulAmount = "zero souls"
+                    if params.card.getVar("soul") == 1 then
+                        soulAmount = "one soul"
+                    elseif params.card.getVar("soul") == 2 then
+                        soulAmount = "two souls"
+                    end
+                    broadcastToAll(Global.call("getPlayerString", {playerColor = owner_color}) .. " earned "
+                                    .. Global.getTabel("PRINT_COLOR_SPECIAL").SOUL .. soulAmount .. "[-]. Hurray !!!")
+                end
+            , 1)
             params.card.setRotationSmooth({x=0, y=270, z=0}, false)
             params.card.setPositionSmooth(position, false)
             return true

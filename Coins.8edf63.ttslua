@@ -1,21 +1,37 @@
+-- Edited by Ediforce44
+
+value = 0
+
 MIN_VALUE = 0
 MAX_VALUE = 999
 
 function onload(saved_data)
     light_mode = false
-    val = 0
+    value = 0
 
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         light_mode = loaded_data[1]
-        val = loaded_data[2]
+        value= loaded_data[2]
     end
 
     createAll()
 end
 
+function modifyCoins(params)            -- EbyE44
+    if params.modifier == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in coin counter function 'modifyCoins()'.")
+    end
+    new_value = math.min(math.max(value + params.modifier, MIN_VALUE), MAX_VALUE)
+    if value ~= new_value then
+        value = new_value
+        updateVal()
+        updateSave()
+    end
+end
+
 function updateSave()
-    local data_to_save = {light_mode, val}
+    local data_to_save = {light_mode, value}
     saved_data = JSON.encode(data_to_save)
     self.script_state = saved_data
 end
@@ -30,13 +46,13 @@ function createAll()
     end
 
     if self.getName() == "" then
-        ttText = val
+        ttText = value
     else
-        ttText = val .. "\n" .. self.getName()
+        ttText = value .. "\n" .. self.getName()
     end
 
     self.createButton({
-      label=tostring(val),
+      label=tostring(value),
       click_function="add_subtract",
       tooltip=ttText,
       function_owner=self,
@@ -51,16 +67,16 @@ function createAll()
       })
 
     self.createInput({
-        value = self.getName(), 
-        input_function = "editName", 
-        tooltip=ttText,
+        value = self.getName(),
+        input_function = "editName",
+        tooltip = ttText,
         label = "Counter",
-        function_owner = self, 
+        function_owner = self,
         alignment = 3,
-        position = {0,0.05,1.7}, 
-        width = 1200, 
-        height = 1000, 
-        font_size = 400, 
+        position = {0,0.05,1.7},
+        width = 1200,
+        height = 1000,
+        font_size = 400,
         scale={x=1, y=1, z=1},
         font_color= f_color,
         color = {0,0,0,0}
@@ -105,14 +121,14 @@ function createAll()
     self.createInput({
         value = "#",
         label = "...",
-        input_function = "keepSample", 
-        function_owner = self, 
+        input_function = "keepSample",
+        function_owner = self,
         alignment = 3,
         position={0,-0.05,-0.5},
         rotation={180,180,0},
-        width = 600, 
-        height = 800, 
-        font_size = 1200, 
+        width = 600,
+        height = 800,
+        font_size = 1200,
         scale={x=1, y=1, z=1},
         font_color=f_color,
         color = {0,0,0,0}
@@ -146,16 +162,16 @@ function swap_align(_obj, _color, alt_click)
     reloadAll()
 end
 
-function editName(_obj, _string, value) 
-    self.setName(value)
+function editName(_obj, _string, editValue)
+    self.setName(editValue)
     setTooltips()
 end
 
 function add_subtract(_obj, _color, alt_click)
     mod = alt_click and -1 or 1
-    new_value = math.min(math.max(val + mod, MIN_VALUE), MAX_VALUE)
-    if val ~= new_value then
-        val = new_value
+    new_value = math.min(math.max(value + mod, MIN_VALUE), MAX_VALUE)
+    if value ~= new_value then
+        value = new_value
         updateVal()
         updateSave()
     end
@@ -163,19 +179,19 @@ end
 
 function updateVal()
     if self.getName() == "" then
-        ttText = val
+        ttText = value
     else
-        ttText = val .. "\n" .. self.getName()
+        ttText = value .. "\n" .. self.getName()
     end
     self.editButton({
         index = 0,
-        label = tostring(val),
+        label = tostring(value),
         tooltip = ttText
         })
 end
 
 function reset_val()
-    val = 0
+    value = 0
     updateVal()
     updateSave()
 end
@@ -188,7 +204,7 @@ function setTooltips()
         })
     self.editButton({
         index = 0,
-        value = tostring(val),
+        value = tostring(value),
         tooltip = ttText
         })
 end
@@ -196,26 +212,27 @@ end
 function null()
 end
 
-function keepSample(_obj, _string, value) 
+function keepSample(_obj, _string, value)
     reloadAll()
 end
 
 function onScriptingButtonDown(index, playerColor)
-    if Player[playerColor].getHoverObject() == self then
+    if Player[playerColor].getHoverObject() == self then
+
         if index == 1 then
-            new_value = math.min(math.max(val - 5, MIN_VALUE), MAX_VALUE)
+            new_value = math.min(math.max(value - 5, MIN_VALUE), MAX_VALUE)
         end
         if index == 2 then
-            new_value = math.min(math.max(val + 5, MIN_VALUE), MAX_VALUE)
+            new_value = math.min(math.max(value + 5, MIN_VALUE), MAX_VALUE)
         end
         if index == 4 then
-            new_value = math.min(math.max(val - 10, MIN_VALUE), MAX_VALUE)
+            new_value = math.min(math.max(value - 10, MIN_VALUE), MAX_VALUE)
         end
         if index == 5 then
-            new_value = math.min(math.max(val + 10, MIN_VALUE), MAX_VALUE)
+            new_value = math.min(math.max(value + 10, MIN_VALUE), MAX_VALUE)
         end
-        if val ~= new_value then
-            val = new_value
+        if value ~= new_value then
+            value = new_value
             updateVal()
             updateSave()
         end

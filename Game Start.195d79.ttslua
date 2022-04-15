@@ -59,8 +59,16 @@ function onStart()
     loadDecksFromZones()
     deckShuffle()
 
-    monsterDeck.takeObject({position={24.07, 1.55, 0.03}, flip=true})
-    monsterDeck.takeObject({position={27.40, 1.55, 0.03}, flip=true})
+    -- Edited by Ediforce44
+    -- Init Monster Zones and Monster Button
+    local monsterZoneGUIDs = Global.getTable("ZONE_GUID_MONSTER")
+    getObjectFromGUID(monsterZoneGUIDs.ONE).call("activateZone")
+    getObjectFromGUID(monsterZoneGUIDs.TWO).call("activateZone")
+    getObjectFromGUID(monsterZoneGUIDs.THREE).call("deactivateZone")
+    getObjectFromGUID(monsterZoneGUIDs.FOUR).call("deactivateZone")
+    getObjectFromGUID(monsterZoneGUIDs.FIVE).call("deactivateZone")
+    getObjectFromGUID(monsterZoneGUIDs.SIX).call("deactivateZone")
+    getObjectFromGUID(MONSTER_DECK_ZONE_GUID).call("activateChooseButton")
 
     shopDeck.takeObject({position={-27.21, 1.56, 0.00}, flip=true})
     shopDeck.takeObject({position={-23.90, 1.55, 0.01}, flip=true})
