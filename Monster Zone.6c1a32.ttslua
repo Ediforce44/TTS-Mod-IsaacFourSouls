@@ -18,6 +18,7 @@ active_monster_reward = {
 }
 
 active = false
+lastState = nil
 
 MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
 ATTACK_BUTTON_STATES = {}
@@ -71,6 +72,7 @@ end
 
 function onLoad(saved_data)
     ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
+    lastState = ATTACK_BUTTON_STATES.ATTACK
     if saved_data == "" then
         return
     end
@@ -136,17 +138,25 @@ end
 
 function monsterDied()
     if active then
-        broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME
-            .. "[-] got killed !!!")
-        MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.DIED})
+        local attackButton = getAttackButton()
+        if attackButton then
+            lastState = attackButton.label
+            broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME
+                .. "[-] got killed !!!")
+            MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.DIED})
+        end
     end
 end
 
 function monsterReanimated()
-    if active then
+    if active and active_monster_attrs ~= 0 then
         broadcastToAll(Global.call("getActivePlayerString") .. " fucked up. "
             .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME .. "[-] is undead ???")
-        MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.ATTACK})
+        if lastState == ATTACK_BUTTON_STATES.ATTACKING then
+            MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.ATTACKING})
+        else
+            MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.ATTACK})
+        end
     end
 end
 
