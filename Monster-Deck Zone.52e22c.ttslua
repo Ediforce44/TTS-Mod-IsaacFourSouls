@@ -229,7 +229,7 @@ function onObjectEnterScriptingZone(zone, object)
                 local script = firstCard["LuaScript"]
                 -- Attributes
                 newAttributes = findAttrsInScript(script)
-                if newAttributes == {} then
+                if newAttributes.HP == nil then
                     newAttributes.HP = object.getVar("hp") or 0
                 end
                 newAttributes.NAME = firstCard["Nickname"]
