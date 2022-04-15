@@ -181,11 +181,10 @@ ZONE_GUID_SOUL = {
 }
 
 COIN_COUNTER_GUID = {
-    --TODO
-    Yellow = "",
-    Green = "",
-    Blue = "",
-    Red = ""
+    Yellow = "9d76db",
+    Green = "c46653",
+    Blue = "8edf63",
+    Red = "965140"
 }
 
 HEART_TOKENS_GUID = {

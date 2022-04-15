@@ -56,7 +56,7 @@ local function payOutTreasures(playerColor, amount)
             .. " Place the Treasure deck on its starting position.")
     end
     --TODO erkenne welches feld vor einem spieler belegt ist und plaziere karten in einem freien feld
-    treasureDeck.deal(amount_monster_reward.TREASURES, playerColor)
+    treasureDeck.deal(amount, playerColor)
 end
 
 local function payOutSouls(playerColor, amount)
@@ -177,6 +177,13 @@ function updateAttributes(params)
         active_monster_attrs.DMG = params.DMG or -1
         getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = active_monster_attrs.HP})
     end
+end
+
+function updateRewards(params)
+    active_monster_reward.CENTS = params.CENTS or 0
+    active_monster_reward.LOOT = params.LOOT or 0
+    active_monster_reward.TREASURES = params.TREASURES or 0
+    active_monster_reward.SOULS = params.SOULS or 0
 end
 
 function activateZone()

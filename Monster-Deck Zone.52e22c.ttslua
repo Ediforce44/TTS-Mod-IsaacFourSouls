@@ -228,6 +228,7 @@ function onObjectLeaveScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
         if guid == zone.getGUID() then
             local newAttributes = {}
+            local rewards = {}
             local firstObjectInZone = zone.getObjects()[1]
             if firstObjectInZone == nil then
                 newAttributes = {NAME = "", HP = 0}
