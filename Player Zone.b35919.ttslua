@@ -1,10 +1,16 @@
 -- Written by Ediforce44
 owner_color = "Red"
 
+ZONE_EDGES = {
+    {x=1, z=-8.5},      -- 1 = |""  ""| = 3
+    {x=1, z=-17},       -- 2 = |__  __| = 4
+    {x=27.5, z=-8.5},
+    {x=27.5, z=-17}
+}
+
 playerAlive = true
 attachedObjects = {}
 indexTable = {}
-indexPositions = {}
 
 local function payDeathPenalty()
     --TODO
@@ -19,41 +25,115 @@ local function detachObject(object)
     attachedObjects[object.getGUID()] = nil
 end
 
+local function insertIndexEntry(newEntry)
+    local midZ = ZONE_EDGES[1].z + ((ZONE_EDGES[2].z - ZONE_EDGES[1].z) / 2)
+    local row = 0
+    if newEntry.position.z < midZ then               -- Lower row
+        row = 1
+    else
+        row = 2
+    end
+    local newIndex = #indexTable[row] + 1
+    for index , entry in pairs(indexTable[row]) do
+        if entry.position.x > newEntry.position.x then
+            newIndex = index
+            break
+        end
+    end
+    table.insert(indexTable[row], newIndex, newEntry)
+end
+
 local function initIndexTable()
-    --TODO
+    indexTable = {{}, {}}
+
+    local position = {}
+    for _ , snapPoint in pairs(Global.getSnapPoints()) do
+        position = snapPoint.position
+        if position.x > ZONE_EDGES[1].x and position.z < ZONE_EDGES[1].z then
+            if position.x < ZONE_EDGES[4].x and position.z > ZONE_EDGES[4].z then
+                insertIndexEntry({free = true, position = position})
+            end
+        end
+    end
+end
+
+local function resetIndexTable()
+    for row = 1, 2 do
+        for column = 1, 7 do
+            indexTable[row][column].free = true
+        end
+    end
 end
 
 local function calculateIndexTable()
-    --TODO
+    resetIndexTable()
+    local marginOffset = 0.7
+    for _ , object in pairs(self.getObjects()) do
+        local objectPosition = object.getPosition()
+        local row = 0
+        if math.abs(objectPosition.z - indexTable[1][1].position.z) < marginOffset then
+            row = 1
+        elseif math.abs(objectPosition.z - indexTable[2][1].position.z) < marginOffset then
+            row = 2
+        end
+        if row > 0 then
+            for column = 1, 7 do
+                if math.abs(objectPosition.x - indexTable[row][column].position.x) < marginOffset then
+                    indexTable[row][column].free = false
+                end
+            end
+        end
+    end
+end
+
+local function getNextFreePosition()
+    calculateIndexTable()
+    for row = 1, 2 do
+        for column = 1, 7 do
+            if indexTable[row][column].free then
+                return indexTable[row][column].position
+            end
+        end
+    end
 end
 
 function onLoad(saved_data)
+    initIndexTable()
+    calculateIndexTable()
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         if loaded_data[1] then
             playerAlive = not (loaded_data[1] == false)      --Standard: true, only false if loaded_data[1] is false
         end
-        indexTable = loaded_data[2] or {}
-        attachedObjects = loaded_data[3] or {}
+        if loaded_data[2] then
+            attachedObjects = loaded_data[3]
+            return
+        end
+    end
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Card" then
+            attachObject(obj)
+        end
     end
 end
 
 function onSave()
-    return JSON.encode({playerAlive, indexTable, attachedObjects})
+    return JSON.encode({playerAlive, attachedObjects})
 end
 
 function onObjectEnterZone(zone, enteringObject)
     if zone.getGUID() == self.guid then
-        print("entering: " .. tostring(enteringObject.getGUID()))
-        --TODO überprüfe ob nur objecte diese function triggern, die gleiche tags wie die zone haben
-        attachObject(enteringObject)
+        if enteringObject.tag == "Card" then
+            attachObject(enteringObject)
+        end
     end
 end
 
 function onObjectLeaveZone(zone, leavingObject)
     if zone.getGUID() == self.guid then
-        print("leaving: " .. tostring(leavingObject.getGUID()))
-        detachObject(leavingObject)
+        if leavingObject.tag == "Card" then
+            detachObject(leavingObject)
+        end
     end
 end
 
@@ -66,8 +146,42 @@ function killPlayer()
     playerAlive = false
 end
 
-function getNextFreePosition()
-    initIndexTable()
-    calculatIndexTable()
-    --TODO
+function placeCardInPlayerZone(params)
+    if params.card == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeCardInPlayerZone()'.")
+        return
+    end
+    local freePosition = getNextFreePosition()
+    if freePosition ~= nil then
+        card.setPositionSmooth(freePosition, false)
+    else
+        card.deal(1, owner_color)
+    end
+end
+
+-- More efficent for multi card placing
+function placeMultipleCardsInPlayerZone(params)
+    if (params.cards == nil) or (#params.cards == 0) then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeMultipleCardsInPlayerZone()'.")
+        return
+    end
+
+    calculateIndexTable()
+    local maxCardIndex = #params.cards
+    local nextCardIndex = 1
+    for row = 1, 2 do
+        for column = 1, 7 do
+            if indexTable[row][column].free then
+                params.cards[nextCardIndex].setPositionSmmoth(cardindexTable[row][column].position, false)
+                nextCardIndex = nextCardIndex + 1
+                if nextCardIndex > maxCardIndex then
+                    return
+                end
+            end
+        end
+    end
+    -- Not enough free fields for cards
+    for index = nextCardIndex , maxCardIndex do
+        params.cards[index].deal(1, owner_color)
+    end
 end
