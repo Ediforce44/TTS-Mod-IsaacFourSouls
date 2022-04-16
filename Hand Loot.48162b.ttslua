@@ -4,7 +4,7 @@
 LOOT_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").LOOT
 
 --- Click delay time in seconds
-options = {["clickDelay"] = 0.3}
+options = {["clickDelay"] = Global.getVar("CLICK_DELAY")}
 
 clickCounter = 0
 
