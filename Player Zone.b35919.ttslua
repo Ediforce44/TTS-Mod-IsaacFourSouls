@@ -1,1 +1,73 @@
---Test
+-- Written by Ediforce44
+owner_color = "Red"
+
+playerAlive = true
+attachedObjects = {}
+indexTable = {}
+indexPositions = {}
+
+local function payDeathPenalty()
+    --TODO
+    return
+end
+
+local function attachObject(object)
+    attachedObjects[object.getGUID()] = 1     --Insert item attributes like "active", "loot", "happen", "ethernal", etc.
+end
+
+local function detachObject(object)
+    attachedObjects[object.getGUID()] = nil
+end
+
+local function initIndexTable()
+    --TODO
+end
+
+local function calculateIndexTable()
+    --TODO
+end
+
+function onLoad(saved_data)
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        if loaded_data[1] then
+            playerAlive = not (loaded_data[1] == false)      --Standard: true, only false if loaded_data[1] is false
+        end
+        indexTable = loaded_data[2] or {}
+        attachedObjects = loaded_data[3] or {}
+    end
+end
+
+function onSave()
+    return JSON.encode({playerAlive, indexTable, attachedObjects})
+end
+
+function onObjectEnterZone(zone, enteringObject)
+    if zone.getGUID() == self.guid then
+        print("entering: " .. tostring(enteringObject.getGUID()))
+        --TODO überprüfe ob nur objecte diese function triggern, die gleiche tags wie die zone haben
+        attachObject(enteringObject)
+    end
+end
+
+function onObjectLeaveZone(zone, leavingObject)
+    if zone.getGUID() == self.guid then
+        print("leaving: " .. tostring(leavingObject.getGUID()))
+        detachObject(leavingObject)
+    end
+end
+
+function reanimatePlayer()
+    playerAlive = true
+end
+
+function killPlayer()
+    payDeathPenalty()
+    playerAlive = false
+end
+
+function getNextFreePosition()
+    initIndexTable()
+    calculatIndexTable()
+    --TODO
+end
