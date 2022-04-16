@@ -60,8 +60,15 @@ local function payOutTreasures(playerColor, amount)
         printToAll("[fdd835][WARNING][-] Can't find the Treasure deck."
             .. " Place the Treasure deck on its starting position.")
     end
-    --TODO erkenne welches feld vor einem spieler belegt ist und plaziere karten in einem freien feld
-    treasureDeck.deal(amount, playerColor)
+    if amount > 1 then
+        local cards = {}
+        for n = 1, amount do
+            cards[n] = treasureDeck.takeObject({flip = true})
+        end
+        Global.call("getActivePlayerZone").call("placeMultipleCardsInZone", {cards = cards})
+    elseif amount == 1 then
+        Global.call("getActivePlayerZone").call("placeCardInZone", {card = treasureDeck.takeObject({flip = true})})
+    end
 end
 
 local function payOutSouls(playerColor, amount)

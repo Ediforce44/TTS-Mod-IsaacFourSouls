@@ -334,6 +334,10 @@ function getSoulTokenDeck()
     return getDeckOrCard(ZONE_GUID_DECK.SOUL_TOKEN)
 end
 
+function getActivePlayerZone()
+    return getObjectFromGUID(ZONE_GUID_PLAYER[activePlayerColor])
+end
+
 function getCardFromDeck(params)
     if params.deck == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'getCardFromDeck()'.")

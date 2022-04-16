@@ -2,10 +2,10 @@
 owner_color = "Yellow"
 
 ZONE_EDGES = {
-    {x=1, z=-8.5},      -- 1 = |""  ""| = 3
-    {x=1, z=-17},       -- 2 = |__  __| = 4
-    {x=27.5, z=-8.5},
-    {x=27.5, z=-17}
+    {x=35, z=8.5},      -- 1 = |""  ""| = 3
+    {x=35, z=17},       -- 2 = |__  __| = 4
+    {x=8.5, z=8.5},
+    {x=8.5, z=17}
 }
 
 playerAlive = true
@@ -49,8 +49,8 @@ local function initIndexTable()
     local position = {}
     for _ , snapPoint in pairs(Global.getSnapPoints()) do
         position = snapPoint.position
-        if position.x > ZONE_EDGES[1].x and position.z < ZONE_EDGES[1].z then
-            if position.x < ZONE_EDGES[4].x and position.z > ZONE_EDGES[4].z then
+        if position.x < ZONE_EDGES[1].x and position.z > ZONE_EDGES[1].z then
+            if position.x > ZONE_EDGES[4].x and position.z < ZONE_EDGES[4].z then
                 insertIndexEntry({free = true, position = position})
             end
         end
@@ -69,21 +69,27 @@ local function calculateIndexTable()
     resetIndexTable()
     local marginOffset = 0.7
     for _ , object in pairs(self.getObjects()) do
-        local objectPosition = object.getPosition()
-        local row = 0
-        if math.abs(objectPosition.z - indexTable[1][1].position.z) < marginOffset then
-            row = 1
-        elseif math.abs(objectPosition.z - indexTable[2][1].position.z) < marginOffset then
-            row = 2
-        end
-        if row > 0 then
-            for column = 1, 7 do
-                if math.abs(objectPosition.x - indexTable[row][column].position.x) < marginOffset then
-                    indexTable[row][column].free = false
+        if object.tag == "Card" or object.tag == "Deck" then
+            local objectPosition = object.getPosition()
+            local row = 0
+            if math.abs(objectPosition.z - indexTable[1][1].position.z) < marginOffset then
+                row = 1
+            elseif math.abs(objectPosition.z - indexTable[2][1].position.z) < marginOffset then
+                row = 2
+            end
+            if row > 0 then
+                for column = 1, 7 do
+                    if math.abs(objectPosition.x - indexTable[row][column].position.x) < marginOffset then
+                        indexTable[row][column].free = false
+                    end
                 end
             end
         end
     end
+end
+
+local function getRealPosition(indexPosition)
+    return {indexPosition.x, 5, indexPosition.z}
 end
 
 local function getNextFreePosition()
@@ -91,10 +97,11 @@ local function getNextFreePosition()
     for row = 1, 2 do
         for column = 1, 7 do
             if indexTable[row][column].free then
-                return indexTable[row][column].position
+                return getRealPosition(indexTable[row][column].position)
             end
         end
     end
+    return nil
 end
 
 function onLoad(saved_data)
@@ -146,21 +153,21 @@ function killPlayer()
     playerAlive = false
 end
 
-function placeCardInPlayerZone(params)
+function placeCardInZone(params)
     if params.card == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeCardInPlayerZone()'.")
         return
     end
     local freePosition = getNextFreePosition()
     if freePosition ~= nil then
-        card.setPositionSmooth(freePosition, false)
+        params.card.setPositionSmooth(freePosition, false)
     else
-        card.deal(1, owner_color)
+        params.card.deal(1, owner_color)
     end
 end
 
 -- More efficent for multi card placing
-function placeMultipleCardsInPlayerZone(params)
+function placeMultipleCardsInZone(params)
     if (params.cards == nil) or (#params.cards == 0) then
         printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeMultipleCardsInPlayerZone()'.")
         return
@@ -172,7 +179,7 @@ function placeMultipleCardsInPlayerZone(params)
     for row = 1, 2 do
         for column = 1, 7 do
             if indexTable[row][column].free then
-                params.cards[nextCardIndex].setPositionSmmoth(cardindexTable[row][column].position, false)
+                params.cards[nextCardIndex].setPositionSmooth(getRealPosition(indexTable[row][column].position), false)
                 nextCardIndex = nextCardIndex + 1
                 if nextCardIndex > maxCardIndex then
                     return
