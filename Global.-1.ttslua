@@ -179,6 +179,15 @@ ZONE_GUID_DECK = {
     SOUL_TOKEN = "560abc"
 }
 
+ZONE_GUID_SHOP = {
+    ONE = "fd849b",
+    TWO = "15e210",
+    THREE = "478a51",
+    FOUR = "512193",
+    FIVE = "5d1ed5",
+    SIX = "094179"
+}
+
 ZONE_GUID_MONSTER = {
     ONE = "329a95",
     TWO = "1a25c2",
