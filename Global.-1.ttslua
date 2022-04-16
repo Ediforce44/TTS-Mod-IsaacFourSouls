@@ -188,6 +188,13 @@ ZONE_GUID_MONSTER = {
     SIX = "6c1a32"
 }
 
+ZONE_GUID_PLAYER = {
+    Yellow = "bb01dd",
+    Green = "19df91",
+    Blue = "60361f",
+    Red = "b35919"
+}
+
 ZONE_GUID_SOUL = {
     Yellow = "92610d",
     Green = "f95f84",
@@ -325,6 +332,10 @@ end
 
 function getSoulTokenDeck()
     return getDeckOrCard(ZONE_GUID_DECK.SOUL_TOKEN)
+end
+
+function getActivePlayerZone()
+    return getObjectFromGUID(ZONE_GUID_PLAYER[activePlayerColor])
 end
 
 function getCardFromDeck(params)
