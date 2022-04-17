@@ -60,7 +60,7 @@ function onStart()
     deckShuffle()
 
     -- Edited by Ediforce44
-    -- Init Monster Zones and Monster Button
+    -- Init Monster Zones and Monster Buttons
     local monsterZoneGUIDs = Global.getTable("ZONE_GUID_MONSTER")
     getObjectFromGUID(monsterZoneGUIDs.ONE).call("activateZone")
     getObjectFromGUID(monsterZoneGUIDs.TWO).call("activateZone")
@@ -70,8 +70,15 @@ function onStart()
     getObjectFromGUID(monsterZoneGUIDs.SIX).call("deactivateZone")
     getObjectFromGUID(MONSTER_DECK_ZONE_GUID).call("activateChooseButton")
 
-    shopDeck.takeObject({position={-27.21, 1.56, 0.00}, flip=true})
-    shopDeck.takeObject({position={-23.90, 1.55, 0.01}, flip=true})
+    -- Init Shop Zones and Shop Buttons
+    local shopZoneGUIDs = Global.getTable("ZONE_GUID_SHOP")
+    getObjectFromGUID(shopZoneGUIDs.ONE).call("activateZone")
+    getObjectFromGUID(shopZoneGUIDs.TWO).call("activateZone")
+    getObjectFromGUID(shopZoneGUIDs.THREE).call("deactivateZone")
+    getObjectFromGUID(shopZoneGUIDs.FOUR).call("deactivateZone")
+    getObjectFromGUID(shopZoneGUIDs.FIVE).call("deactivateZone")
+    getObjectFromGUID(shopZoneGUIDs.SIX).call("deactivateZone")
+    getObjectFromGUID(TREASURE_DECK_ZONE_GUID).call("activateShopButton")
 
     soulDeck.takeObject({position={-37.90, 1.57, -3.20}, flip=true})
     soulDeck.takeObject({position={-37.90, 1.57, 0.00}, flip=true})
