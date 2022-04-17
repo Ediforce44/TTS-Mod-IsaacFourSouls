@@ -38,7 +38,7 @@ local function printAttackPhrase(monsterName)
         printToAll("[fdd835][WARNING][-] There is no active monster to attack. The attribute 'NAME' is empty.")
     else
         phrase = Global.call("getActivePlayerString")
-        phrase = phrase .. " attacks " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. monsterName .. "[-] !!!"
+        phrase = phrase .. " attacks " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. monsterName .. "[-] !!!"
         broadcastToAll(phrase)
     end
     return phrase
@@ -362,7 +362,7 @@ function click_function_AttackButton(zone, color, alt_click)
                 printToAll("[fdd835][WARNING][-] There is no active monster to attack. The attribute 'NAME' is empty.")
             else
                 broadcastToAll(Global.call("getActivePlayerString") .. " cancels the Attack on "
-                                .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. monsterName .. "[-] !!!")
+                                .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. monsterName .. "[-] !!!")
             end
             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
         elseif attackButton.label == ATTACK_BUTTON_STATES.DIED then

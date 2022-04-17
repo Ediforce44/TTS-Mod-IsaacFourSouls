@@ -156,6 +156,7 @@ PRINT_COLOR_PLAYER = {
 PRINT_COLOR_SPECIAL = {
     WARNING = "[fdd835]",
     SOUL = "[C8EFF7]",
+    MONSTER_LIGHT = "[67588B]",
     MONSTER = "[352853]",
     COIN = "[AB9023]",
     LOOT = "[B9E9F0]",

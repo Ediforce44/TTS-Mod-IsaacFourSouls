@@ -150,7 +150,7 @@ function monsterDied()
         local attackButton = getAttackButton()
         if attackButton then
             lastState = attackButton.label
-            broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME
+            broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME
                 .. "[-] got killed !!!")
             MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.DIED})
         end
@@ -160,7 +160,7 @@ end
 function monsterReanimated()
     if active and active_monster_attrs ~= 0 then
         broadcastToAll(Global.call("getActivePlayerString") .. " fucked up. "
-            .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME .. "[-] is undead ???")
+            .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME .. "[-] is undead ???")
         if lastState == ATTACK_BUTTON_STATES.ATTACKING then
             MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.ATTACKING})
         else
@@ -199,7 +199,7 @@ function finishMonster()
 
         if rewarded then
             broadcastToAll(Global.call("getActivePlayerString") .. " got rewards for killing "
-                .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER .. active_monster_attrs.NAME .. "[-] !!!")
+                .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME .. "[-] !!!")
         end
     end
 
