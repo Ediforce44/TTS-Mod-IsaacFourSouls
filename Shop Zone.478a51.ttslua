@@ -1,1 +1,121 @@
---Test
+-- Written by Ediforce44
+TREASURE_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE)
+
+altClickCounter = 0
+
+shop_item_attrs = {
+    NAME    = ""
+}
+
+PURCHASE_BUTTON_STATES = {}
+PURCHASE_BUTTON_INDEX = nil
+
+active = false
+
+local function getPurchaseButton()
+    if PURCHASE_BUTTON_INDEX == nil then
+        return nil
+    end
+    return self.getButtons()[PURCHASE_BUTTON_INDEX + 1]
+end
+
+function onLoad(saved_data)
+    PURCHASE_BUTTON_STATES = TREASURE_DECK_ZONE.getTable("PURCHASE_BUTTON_STATES")
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        if loaded_data[1] == true then
+            active = true
+        end
+        if loaded_data[2] then
+            activatePurchaseButton()
+            for _ , state in pairs(PURCHASE_BUTTON_STATES) do
+                if state == loaded_data[2] then
+                    self.editButton({index = PURCHASE_BUTTON_INDEX, label = state})
+                end
+            end
+        end
+        if loaded_data[3] then
+            shop_item_attrs = loaded_data[3]
+        end
+    end
+end
+
+function onSave()
+    local currentLabel = nil
+    if getPurchaseButton() then
+        currentLabel = getPurchaseButton().label
+    end
+    return JSON.encode({active, currentLabel, shop_item_attrs})
+end
+
+function updateAttributes(params)
+    shop_item_attrs.NAME = params.NAME or "Unkown"
+end
+
+function containsDeckOrCard()
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Deck" or obj.tag == "Card" then
+            return true
+        end
+    end
+    return false
+end
+
+function resetAltClickCounter()
+    altClickCounter = 0
+end
+
+function activateZone()
+    if PURCHASE_BUTTON_INDEX == nil then
+        activatePurchaseButton()
+    end
+    if active then
+        printToAll("[fdd835][WARNING][-] Can't activate Shop Zone: " .. self.guid .. ". This Zone is already active.")
+    else
+        if not containsDeckOrCard() then
+            if TREASURE_DECK_ZONE.call("placeNewTreasureCard", {zone = self}) == false then
+                return
+            end
+        end
+        self.editButton({index = PURCHASE_BUTTON_INDEX, label = PURCHASE_BUTTON_STATES.PURCHASE})
+        active = true
+    end
+end
+
+function deactivateZone()
+    if PURCHASE_BUTTON_INDEX == nil then
+        activatePurchaseButton()
+    end
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Deck" or obj.tag == "Card" then
+            obj.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").TREASURE)
+        end
+    end
+    self.editButton({index = PURCHASE_BUTTON_INDEX, label = PURCHASE_BUTTON_STATES.INACTIVE})
+    active = false
+end
+
+function activatePurchaseButton()
+    if PURCHASE_BUTTON_INDEX == nil then
+        PURCHASE_BUTTON_INDEX = 0
+        local state = active and PURCHASE_BUTTON_STATES.PURCHASE or PURCHASE_BUTTON_STATES.INACTIVE
+        self.createButton({
+            click_function = "click_function_PurchaseButton",
+            function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE),
+            label          = state,
+            position       = {0, -0.5, 3},
+            width          = 1000,
+            height         = 300,
+            font_size      = 200,
+            color          = {0.6, 0.5, 0.149},
+            font_color     = {1, 1, 1}
+        })
+    end
+end
+
+function deactivatePurchaseButton()
+    if PURCHASE_BUTTON_INDEX then
+        self.removeButton(PURCHASE_BUTTON_INDEX)
+        PURCHASE_BUTTON_INDEX = nil
+    end
+end
