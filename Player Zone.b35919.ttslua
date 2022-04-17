@@ -113,7 +113,7 @@ function onLoad(saved_data)
             playerAlive = not (loaded_data[1] == false)      --Standard: true, only false if loaded_data[1] is false
         end
         if loaded_data[2] then
-            attachedObjects = loaded_data[3]
+            attachedObjects = loaded_data[2]
             return
         end
     end
