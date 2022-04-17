@@ -80,9 +80,6 @@ function onStart()
     getObjectFromGUID(shopZoneGUIDs.SIX).call("deactivateZone")
     getObjectFromGUID(TREASURE_DECK_ZONE_GUID).call("activateShopButton")
 
-    shopDeck.takeObject({position={-27.21, 1.56, 0.00}, flip=true})
-    shopDeck.takeObject({position={-23.90, 1.55, 0.01}, flip=true})
-
     soulDeck.takeObject({position={-37.90, 1.57, -3.20}, flip=true})
     soulDeck.takeObject({position={-37.90, 1.57, 0.00}, flip=true})
     soulDeck.takeObject({position={-37.90, 1.57, 3.20}, flip=true})

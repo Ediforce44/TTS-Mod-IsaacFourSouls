@@ -11,7 +11,15 @@ SHOP_BUTTON_STATES = {
 SHOP_BUTTON_INDEX = nil
 
 local function printBuyPhrase(itemName)
-    --TODO
+    local phrase = nil
+    if itemName == "" then
+        printToAll("[fdd835][WARNING][-] There is no item to purchase in this zone. The attribute 'NAME' is empty.")
+    else
+        phrase = Global.call("getActivePlayerString")
+        phrase = phrase .. " bought " .. Global.getTable("PRINT_COLOR_SPECIAL").TREASURE_LIGHT .. itemName .. "[-] !!!"
+        broadcastToAll(phrase)
+    end
+    return phrase
 end
 
 local function getShopButton()
@@ -54,9 +62,12 @@ local function purchaseShopItem(zone)
         end
     end
     if boughtCard ~= nil then
-        printBuyPhrase(itemName)
-        Global.call("getActivePlayerZone").call("placeCardInZone", {card = boughtCard})
+        if printBuyPhrase(itemName) then
+            Global.call("getActivePlayerZone").call("placeCardInZone", {card = boughtCard})
+            return true
+        end
     end
+    return false
 end
 
 local function purchaseShopDeckItem()
@@ -74,7 +85,9 @@ local function purchaseShopDeckItem()
     if boughtCard ~= nil then
         Wait.frames(function () printBuyPhrase(boughtCard.getName()) end, 1)
         Global.call("getActivePlayerZone").call("placeCardInZone", {card = boughtCard})
+        return true
     end
+    return false
 end
 
 function onLoad(saved_data)
@@ -217,19 +230,20 @@ function click_function_PurchaseButton(zone, color, alt_click)
         if purchaseButton.label == PURCHASE_BUTTON_STATES.INACTIVE then
             zone.call("activateZone")
         elseif purchaseButton.label == PURCHASE_BUTTON_STATES.PURCHASE then
-            purchaseShopItem(zone)
-            Wait.frames(function ()
-                    if not zone.call("containsDeckOrCard") then
-                        placeNewTreasureCard({zone = zone})
-                    end
-                end, 60)
+            if purchaseShopItem(zone) then
+                Wait.frames(function ()
+                        if not zone.call("containsDeckOrCard") then
+                            placeNewTreasureCard({zone = zone})
+                        end
+                    end, 60)
+            end
         else
             printToAll("[fdd835][WARNING][-] Unknown shop button state: " .. tostring(attackButton.label) .. ".")
         end
     end
 end
 
-function click_function_PurchaseButton(zone, color, alt_click)
+function click_function_ShopButton(zone, color, alt_click)
     if Global.getVar("activePlayerColor") == color or Player[color].admin then
         local shopButton = getShopButton()
         if shopButton.label == SHOP_BUTTON_STATES.PURCHASE then
