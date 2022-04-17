@@ -22,6 +22,7 @@ lastState = nil
 
 MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
 ATTACK_BUTTON_STATES = {}
+ATTACK_BUTTON_COLORS = {}
 ATTACK_BUTTON_INDEX = nil
 
 local function getAttackButton()
@@ -79,6 +80,7 @@ end
 
 function onLoad(saved_data)
     ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
+    ATTACK_BUTTON_COLORS = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_COLORS")
     lastState = ATTACK_BUTTON_STATES.ATTACK
     if saved_data == "" then
         return
@@ -130,6 +132,7 @@ function activateAttackButton()
     if ATTACK_BUTTON_INDEX == nil then
         ATTACK_BUTTON_INDEX = 0
         local state = active and ATTACK_BUTTON_STATES.ATTACK or ATTACK_BUTTON_STATES.INACTIVE
+        local color = active and ATTACK_BUTTON_COLORS.ACTIVE or ATTACK_BUTTON_COLORS.INACTIVE
         self.createButton({
             click_function = "click_function_AttackButton",
             function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER),
@@ -138,7 +141,7 @@ function activateAttackButton()
             width          = 1000,
             height         = 300,
             font_size      = 200,
-            color          = {0.2, 0.157, 0.325},
+            color          = color,
             font_color     = {1, 1, 1},
             tooltip        = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = state})
         })
@@ -256,7 +259,8 @@ function activateZone()
         end
         --self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK})
         self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK
-                , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.ATTACK})})
+                , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.ATTACK})
+                , color = ATTACK_BUTTON_COLORS.ACTIVE})
         active = true
     end
 end
@@ -272,7 +276,8 @@ function deactivateZone()
     end
     --self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE})
     self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE
-            , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.INACTIVE})})})
+            , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.INACTIVE})
+            , color = ATTACK_BUTTON_COLORS.INACTIVE})
     active = false
 end
 
@@ -284,7 +289,7 @@ function changeButtonState(params)
             if params.newState == state then
                 --self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState})
                 self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState
-                        , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = params.newState})})})
+                        , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = params.newState})})
                 return true
             end
         end

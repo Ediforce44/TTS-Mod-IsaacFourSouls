@@ -13,6 +13,10 @@ ATTACK_BUTTON_STATES = {
     ATTACKING   = "Cancel",
     DIED        = "Finish Him"
 }
+ATTACK_BUTTON_COLORS = {
+    INACTIVE    = {0.114, 0.063, 0.224},
+    ACTIVE      = {0.2, 0.157, 0.325}
+}
 
 local function getChooseButton()
     if CHOOSE_BUTTON_INDEX == nil then
@@ -315,7 +319,7 @@ function click_function_ChooseButton(_, color, alt_click)
         local chooseButton = getChooseButton()
         if chooseButton.label == CHOOSE_BUTTON_STATES.ATTACK then
             --self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE})
-            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK
+            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE
                         , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.CHOOSE})})
             for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
                 changeZoneState({zone = getObjectFromGUID(guid), newState = ATTACK_BUTTON_STATES.CHOOSE})
