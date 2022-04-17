@@ -100,7 +100,9 @@ function onLoad(saved_data)
         activateShopButton()
         for _ , state in pairs(SHOP_BUTTON_STATES) do
             if state == loaded_data[1] then
-                self.editButton({index = SHOP_BUTTON_INDEX, label = state})
+                --self.editButton({index = SHOP_BUTTON_INDEX, label = state})
+                self.editButton({index = SHOP_BUTTON_INDEX, label = state
+                        , tooltip = getShopButtonTooltip({newState = state})})
             end
         end
     end
@@ -167,9 +169,21 @@ function activateShopButton()
             height         = 300,
             font_size      = 200,
             color          = {0.6, 0.5, 0.149},
-            font_color     = {1, 1, 1}
+            font_color     = {1, 1, 1},
+            tooltip        = getShopButtonTooltip({newState = state})
         })
     end
+end
+
+-- If you want state depending tooltips, there you go :D
+function getPurchaseButtonTooltip(params)
+    -- params.newState
+    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+end
+
+function getShopButtonTooltip(params)
+    -- params.newState
+    return ""
 end
 
 function deactivateShopButton()
@@ -193,7 +207,9 @@ function changeZoneState(params)
         if not zone.getVar("active") then
             zone.call("activateZone")
         else
-            zone.editButton({index = zone.getVar("PURCHASE_BUTTON_INDEX"), label = PURCHASE_BUTTON_STATES.PURCHASE})
+            --zone.editButton({index = zone.getVar("PURCHASE_BUTTON_INDEX"), label = PURCHASE_BUTTON_STATES.PURCHASE})
+            zone.editButton({index = zone.getVar("PURCHASE_BUTTON_INDEX"), label = PURCHASE_BUTTON_STATES.PURCHASE
+                    , tooltip = getPurchaseButtonTooltip({newState = PURCHASE_BUTTON_STATES.PURCHASE})})
         end
     end
 end
