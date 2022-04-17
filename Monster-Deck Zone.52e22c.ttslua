@@ -115,7 +115,7 @@ function activateChooseButton()
             width          = 1000,
             height         = 300,
             font_size      = 200,
-            color          = {0.2, 0.157, 0.325},
+            color          = ATTACK_BUTTON_COLORS.ACTIVE,
             font_color     = {1, 1, 1},
             tooltip        = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.ATTACK})
         })

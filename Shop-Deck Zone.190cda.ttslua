@@ -4,6 +4,10 @@ PURCHASE_BUTTON_STATES = {
     INACTIVE    = "Inactive",
     PURCHASE    = "Purchase"
 }
+PURCHASE_BUTTON_COLORS = {
+    INACTIVE    = {0.337, 0.27, 0.02},
+    ACTIVE      = {0.6, 0.5, 0.149}
+}
 
 SHOP_BUTTON_STATES = {
     PURCHASE    = "Purchase"
@@ -168,7 +172,7 @@ function activateShopButton()
             width          = 1000,
             height         = 300,
             font_size      = 200,
-            color          = {0.6, 0.5, 0.149},
+            color          = PURCHASE_BUTTON_COLORS.ACTIVE,
             font_color     = {1, 1, 1},
             tooltip        = getShopButtonTooltip({newState = state})
         })

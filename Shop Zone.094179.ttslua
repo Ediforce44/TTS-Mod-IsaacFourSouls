@@ -8,6 +8,7 @@ shop_item_attrs = {
 }
 
 PURCHASE_BUTTON_STATES = {}
+PURCHASE_BUTTON_COLORS = {}
 PURCHASE_BUTTON_INDEX = nil
 
 active = false
@@ -21,6 +22,7 @@ end
 
 function onLoad(saved_data)
     PURCHASE_BUTTON_STATES = TREASURE_DECK_ZONE.getTable("PURCHASE_BUTTON_STATES")
+    PURCHASE_BUTTON_COLORS = TREASURE_DECK_ZONE.getTable("PURCHASE_BUTTON_COLORS")
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         if loaded_data[1] == true then
@@ -81,7 +83,8 @@ function activateZone()
         end
         --self.editButton({index = PURCHASE_BUTTON_INDEX, label = PURCHASE_BUTTON_STATES.PURCHASE})
         self.editButton({index = PURCHASE_BUTTON_INDEX, label = PURCHASE_BUTTON_STATES.PURCHASE
-            , tooltip = TREASURE_DECK_ZONE.call("getPurchaseButtonTooltip", {newState = PURCHASE_BUTTON_STATES.PURCHASE})})
+            , tooltip = TREASURE_DECK_ZONE.call("getPurchaseButtonTooltip", {newState = PURCHASE_BUTTON_STATES.PURCHASE})
+            , color = PURCHASE_BUTTON_COLORS.ACTIVE})
         active = true
     end
 end
@@ -97,7 +100,8 @@ function deactivateZone()
     end
     --self.editButton({index = PURCHASE_BUTTON_INDEX, label = PURCHASE_BUTTON_STATES.INACTIVE})
     self.editButton({index = PURCHASE_BUTTON_INDEX, label = PURCHASE_BUTTON_STATES.INACTIVE
-        , tooltip = TREASURE_DECK_ZONE.call("getPurchaseButtonTooltip", {newState = PURCHASE_BUTTON_STATES.INACTIVE})})
+        , tooltip = TREASURE_DECK_ZONE.call("getPurchaseButtonTooltip", {newState = PURCHASE_BUTTON_STATES.INACTIVE})
+        , color = PURCHASE_BUTTON_COLORS.INACTIVE})
     active = false
 end
 
@@ -105,6 +109,7 @@ function activatePurchaseButton()
     if PURCHASE_BUTTON_INDEX == nil then
         PURCHASE_BUTTON_INDEX = 0
         local state = active and PURCHASE_BUTTON_STATES.PURCHASE or PURCHASE_BUTTON_STATES.INACTIVE
+        local color = active and PURCHASE_BUTTON_COLORS.ACTIVE or PURCHASE_BUTTON_COLORS.INACTIVE
         self.createButton({
             click_function = "click_function_PurchaseButton",
             function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE),
@@ -113,7 +118,7 @@ function activatePurchaseButton()
             width          = 1000,
             height         = 300,
             font_size      = 200,
-            color          = {0.6, 0.5, 0.149},
+            color          = color,
             font_color     = {1, 1, 1},
             tooltip        = TREASURE_DECK_ZONE.call("getPurchaseButtonTooltip", {newState = state})
         })
