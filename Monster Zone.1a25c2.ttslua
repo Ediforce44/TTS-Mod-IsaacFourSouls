@@ -92,7 +92,8 @@ function onLoad(saved_data)
         activateAttackButton()
         for _ , state in pairs(ATTACK_BUTTON_STATES) do
             if state == loaded_data[2] then
-                self.editButton({index = ATTACK_BUTTON_INDEX, label = state})
+                self.editButton({index = ATTACK_BUTTON_INDEX, label = state
+                    , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = state})})
             end
         end
     end
@@ -138,7 +139,8 @@ function activateAttackButton()
             height         = 300,
             font_size      = 200,
             color          = {0.2, 0.157, 0.325},
-            font_color     = {1, 1, 1}
+            font_color     = {1, 1, 1},
+            tooltip        = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = state})
         })
     end
 end
@@ -252,7 +254,9 @@ function activateZone()
                 return
             end
         end
-        self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK})
+        --self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK})
+        self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK
+                , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.ATTACK})})
         active = true
     end
 end
@@ -266,7 +270,9 @@ function deactivateZone()
             obj.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
         end
     end
-    self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE})
+    --self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE})
+    self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE
+            , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.INACTIVE})})})
     active = false
 end
 
@@ -276,7 +282,9 @@ function changeButtonState(params)
     else
         for _ , state in pairs(ATTACK_BUTTON_STATES) do
             if params.newState == state then
-                self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState})
+                --self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState})
+                self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState
+                        , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = params.newState})})})
                 return true
             end
         end

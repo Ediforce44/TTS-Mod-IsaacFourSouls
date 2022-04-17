@@ -85,7 +85,8 @@ function onLoad(saved_data)
         activateChooseButton()
         for _ , state in pairs(CHOOSE_BUTTON_STATES) do
             if state == loaded_data[1] then
-                self.editButton({index = CHOOSE_BUTTON_INDEX, label = state})
+                --self.editButton({index = CHOOSE_BUTTON_INDEX, label = state})
+                self.editButton({index = CHOOSE_BUTTON_INDEX, label = state, tooltip = getChooseButtonTooltip(state)})
             end
         end
     end
@@ -105,15 +106,27 @@ function activateChooseButton()
         self.createButton({
             click_function = "click_function_ChooseButton",
             function_owner = self,
-            label          = "Attack",
+            label          = CHOOSE_BUTTON_STATES.ATTACK,
             position       = {0, -0.5, 3},
             width          = 1000,
             height         = 300,
             font_size      = 200,
             color          = {0.2, 0.157, 0.325},
-            font_color     = {1, 1, 1}
+            font_color     = {1, 1, 1},
+            tooltip        = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.ATTACK})
         })
     end
+end
+
+-- If you want state depending tooltips, there you go :D
+function getAttackButtonTooltip(params)
+    -- params.newState
+    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+end
+
+function getChooseButtonTooltip(params)
+    -- params.newState
+    return ""
 end
 
 function deactivateChooseButton()
@@ -153,25 +166,32 @@ function changeZoneState(params)
         if not zone.getVar("active") then
             zone.call("activateZone")
         else
-            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+            --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK
+                    , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACK})})
         end
     elseif newState == ATTACK_BUTTON_STATES.CHOOSE then
         if zone.getVar("active") then   --change button state
-            --zone.call("activateAttackButton")
-            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE})
+            --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE})
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE
+                    , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.CHOOSE})})
         else    --deactivate buttons for inactive zones
             zone.call("deactivateAttackButton")
         end
     elseif newState == ATTACK_BUTTON_STATES.ATTACKING then
         if zone.getVar("active") then
             zone.call("activateAttackButton")
-            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.ATTACKING})
+            --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.ATTACKING})
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACKING
+                    , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACKING})})
             deactivateAllOtherMonsterButtons(zone)
         end
     elseif newState == ATTACK_BUTTON_STATES.DIED then
         if zone.getVar("active") then
             zone.call("activateAttackButton")
-            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.DIED})
+            --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.DIED})
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.DIED
+                    , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.DIED})})
             deactivateAllOtherMonsterButtons(zone)
         end
     end
@@ -294,17 +314,23 @@ function click_function_ChooseButton(_, color, alt_click)
     if Global.getVar("activePlayerColor") == color or Player[color].admin then
         local chooseButton = getChooseButton()
         if chooseButton.label == CHOOSE_BUTTON_STATES.ATTACK then
-            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE})
+            --self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE})
+            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK
+                        , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.CHOOSE})})
             for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
                 changeZoneState({zone = getObjectFromGUID(guid), newState = ATTACK_BUTTON_STATES.CHOOSE})
             end
         elseif chooseButton.label == CHOOSE_BUTTON_STATES.CHOOSE then
-            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK})
+            --self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK})
+            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK
+                        , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.ATTACK})})
             activateAllMonsterButtons()
             for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
                 local zone = getObjectFromGUID(guid)
                 if zone.getVar("active") then
-                    zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+                    --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
+                    zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK
+                                , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACK})})
                 end
             end
         else
