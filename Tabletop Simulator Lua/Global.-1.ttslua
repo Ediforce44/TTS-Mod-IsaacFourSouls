@@ -89,14 +89,13 @@ function onPlayerTurn(player, previous_player)
     -- Reset Shop Zones
     getObjectFromGUID(ZONE_GUID_DECK.TREASURE).call("resetAllShopZones")        -- In this version it does nothing :D
 
-    -- Players HP
-   for i, guid in pairs(FIRST_HEARTS_GUID) do
-     local objFirst = getObjectFromGUID(guid)
-     local isHeartActive = objFirst.getVar("isActive")
-     if isHeartActive ~= nil and isHeartActive == false then
-       local objSecond = getObjectFromGUID(SECOND_HEARTS_GUID[i])
-       objSecond.call("onPickUp")
-     end
+    -- Reset Players HP
+   for color , guid in pairs(FIRST_HEARTS_GUID) do
+       local firstHeart = getObjectFromGUID(guid)
+       local isHeartActive = firstHeart.getVar("isActive")
+       if isHeartActive ~= nil and isHeartActive == false then
+           getObjectFromGUID(SECOND_HEARTS_GUID[color]).call("onPickUp")
+       end
    end
 end
 
