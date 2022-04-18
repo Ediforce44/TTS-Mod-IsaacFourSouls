@@ -1,18 +1,27 @@
 hp = 4
 type = "superboss"
-soul = 2
+soul = 0
+fliped = false
+harbingerLeft = 4
+
+rewards = {CENTS = 0, LOOT = 0, TREASURES = 1, SOULS = 0}
+
 function onObjectRotate(object, _, flip)
     if object == self then
         if flip == 0 then
+            rewards = {CENTS = 0, LOOT = 0, TREASURES = 1, SOULS = 0}
             self.setName("The Harbingers")
             hp = 4
             soul = 0
-            flip = false
+            harbingerLeft = 4
+            fliped = false
         elseif flip == 180 then -- gotta account for an edge case i'm not foreseeing idk
+            rewards = {CENTS = 0, LOOT = 6, TREASURES = 0, SOULS = 2}
             self.setName("The Beast!")
             hp = 6
             soul = 2
-            flip = true
+            harbingerLeft = 0
+            fliped = true
         end
     end
 end
