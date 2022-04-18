@@ -8,6 +8,18 @@ This Tabletop Simulator [[1]](https://store.steampowered.com/app/286160/Tabletop
 - This repository also contains a Python 3 script tool for quickly modifing `TTS-JSON` files.\
   Is is called `JSON-Sniffer`. We use it to extract monster states from the description of a monster card and transform them into Lua code
 
+## How to use this repository with Tabletop Simulator?
+1. First of all follow the [Installation Instructions](https://api.tabletopsimulator.com/atom/) on the [Tabletop Simulator Page](https://api.tabletopsimulator.com/atom/) to install Atom and the Tabletop Simulator Plugin.
+2. Install [Git](https://git-scm.com/) and create a GitHub account
+3. Configure Atom with your local installation of Git and link your GitHub account
+4. Copy the [HTTPS](https://github.com/Ediforce44/IsaacFourSoulsEdited.git) or [SSH](git@github.com:Ediforce44/IsaacFourSoulsEdited.git) of this repository
+5. Click `Clone an existing GitHub repository...` in the GitHub tab of the Atom Texteditor
+6. Paste the repository link and select the following folder to clone the repository in:\
+   `C:\Users\Name\AppData\Local\Temp\TabletopSimulator`\
+   and press `Clone`.
+7. 
+
+
 
 ## Philosophy
 The original idea was to fully automate the whole card game with interacting scripts for each monster, loot or treasure card. The downside of this idea is that a lot of funny situation in a game session get lost. For example a player forget to use a item and change the floor etc. If the game would be fully automated each player would play with his best performance and so many player interactions and communication get lost.
@@ -41,7 +53,7 @@ You play with three random players and only one uses the voice chat and the outh
 > - The Soul-Zones and Player-Zones contain global functions to get the next free position in the zone and to place cards in them.
 > - The Coin-Counter now containes a global function to modify the coin value.
 > 
-> >**The GLOBAL script contains:**\
+> >**The GLOBAL script contains:**
 > > - Tables with GUIDs all Zones and Heart-Tokens
 > > - Tables with GUIDs of all Coin-Counters and Monster-HP-Counters
 > > - Table with the state of the auto-rewarding for each player
