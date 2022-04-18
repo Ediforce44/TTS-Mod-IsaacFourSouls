@@ -108,7 +108,7 @@ function resetAllMonsterZones()
     for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
         getObjectFromGUID(guid).call("resetMonsterZone")
     end
-    self.resetMonsterZone()
+    resetMonsterZone()
 end
 
 function resetMonsterZone()

@@ -49,6 +49,13 @@ function onSave()                   --EbyE44
     return JSON.encode({activePlayerColor, automaticRewarding})
 end
 
+HEART_TOKENS_GUID = {
+    Yellow = {"c02908", "3f81b7", "f8e991", "f825c2", "2a9dfc", "443adb"},
+    Green = {"12326f", "c326f1", "f5d095", "7e882b", "66804c", "e24915"},
+    Blue = {"78f8e7", "c9f7b2", "4b26ea", "098303", "9e8aa0", "dbcc87"},
+    Red = {"bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
+}
+
 -- Auto monster HP reset
 FIRST_HEARTS_GUID = {
   -- Blue player hearts
@@ -73,7 +80,9 @@ SECOND_HEARTS_GUID = {
 }
 
 function onPlayerTurn(player, previous_player)
-    activePlayerColor = player.color
+    if player ~= nil then
+        activePlayerColor = player.color
+    end
 
     if previous_player == nil then
         print(getPlayerString({playerColor = player.color}) .. " is going first. It's now their turn.")
