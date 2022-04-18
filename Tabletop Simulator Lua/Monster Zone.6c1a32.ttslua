@@ -121,6 +121,17 @@ function onSave()
     return JSON.encode({active, currentLabel, active_monster_attrs, active_monster_reward})
 end
 
+function resetMonsterZone()
+    if ATTACK_BUTTON_INDEX == nil then
+        activateAttackButton()
+    else
+        local state = active and ATTACK_BUTTON_STATES.ATTACK or ATTACK_BUTTON_STATES.INACTIVE
+        self.editButton({index = ATTACK_BUTTON_INDEX, label = state
+                , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = state})})
+    end
+    getObjectFromGUID(HP_COUNTER_GUID).call("reset")
+end
+
 function deactivateAttackButton()
     if ATTACK_BUTTON_INDEX then
         self.removeButton(ATTACK_BUTTON_INDEX)

@@ -14,9 +14,12 @@ function updateHP(params)
 end
 
 function reset()
-    value = zone.getTable("active_monster_attrs").HP
-    updateVal()
-    updateSave()
+    --Only resets HP-Counter, if the active monster has a HP attribute
+    if zone.getTable("active_monster_attrs").HP ~= 0 then
+        value = zone.getTable("active_monster_attrs").HP
+        updateVal()
+        updateSave()
+    end
 end
 
 function onload(saved_data)

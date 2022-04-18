@@ -52,51 +52,42 @@ end
 -- Auto monster HP reset
 FIRST_HEARTS_GUID = {
   -- Blue player hearts
-  "78f8e7",
+  HEART_TOKENS_GUID["Blue"][1],
    -- Red player hearts
-  "bcabf3",
+  HEART_TOKENS_GUID["Red"][1],
   -- Yellow player hearts
-  "c02908",
+  HEART_TOKENS_GUID["Yellow"][1],
   -- Green player hearts
-  "12326f"
+  HEART_TOKENS_GUID["Green"][1]
 }
 
 SECOND_HEARTS_GUID = {
   -- Blue player hearts
-  "c9f7b2",
+  HEART_TOKENS_GUID["Blue"][2],
    -- Red player hearts
-  "ca5135",
+  HEART_TOKENS_GUID["Red"][2],
   -- Yellow player hearts
-  "3f81b7",
+  HEART_TOKENS_GUID["Yellow"][2],
   -- Green player hearts
-  "c326f1"
+  HEART_TOKENS_GUID["Green"][2]
 }
 
 function onPlayerTurn(player, previous_player)
     activePlayerColor = player.color
-    local lootdeck = getDeckOrCard(ZONE_GUID_DECK.LOOT)
 
     if previous_player == nil then
         print(getPlayerString({playerColor = player.color}) .. " is going first. It's now their turn.")
-        lootdeck.deal(1, Turns.turn_color)
         previous_player = player
-        previous_player.color = player.color
     else
         print(getPlayerString({playerColor = previous_player.color}) .. "'s turn is over. It's now "
                 .. getPlayerString({playerColor = player.color}) .. "'s turn.")
-        lootdeck.deal(1, Turns.turn_color)
     end
 
-    -- Monster HP
+    -- Reset Monster Zones (inc. HP-Counter)
+    getObjectFromGUID(ZONE_GUID_DECK.MONSTER).call("resetAllMonsterZones")
 
-    if (getObjectFromGUID("9bb226").getVar("val") == 0) then
-        getObjectFromGUID("9bb226").call("reset")
-    end
-    getObjectFromGUID("a75691").call("reset")
-    getObjectFromGUID("fab592").call("reset")
-    getObjectFromGUID("fb5299").call("reset")
-    getObjectFromGUID("b50db5").call("reset")
-    getObjectFromGUID("bcac8d").call("reset")
+    -- Reset Shop Zones
+    --TODO
 
     -- Players HP
    for i, guid in pairs(FIRST_HEARTS_GUID) do

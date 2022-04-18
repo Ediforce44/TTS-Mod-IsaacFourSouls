@@ -51,7 +51,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Button functions ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-local function resetAttackButton(zone)
+local function altClickAttackButton(zone)
     local clickCounter = zone.getVar("altClickCounter")
     if clickCounter > 0 then
         zone.call("deactivateZone")
@@ -102,6 +102,22 @@ function onSave()
         currentLabel = getChooseButton().label
     end
     return JSON.encode({currentLabel})
+end
+
+function resetAllMonsterZones()
+    for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
+        getObjectFromGUID(guid).call("resetMonsterZone")
+    end
+    self.resetMonsterZone()
+end
+
+function resetMonsterZone()
+    if CHOOSE_BUTTON_INDEX == nil then
+        activateChooseButton()
+    else
+        self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK
+            , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.ATTACK})})
+    end
 end
 
 function activateChooseButton()
@@ -346,7 +362,7 @@ end
 function click_function_AttackButton(zone, color, alt_click)
     if Global.getVar("activePlayerColor") == color or Player[color].admin then
         if alt_click then
-            resetAttackButton(zone)
+            altClickAttackButton(zone)
             return
         end
         local attackButton = zone.getButtons()[zone.getVar("ATTACK_BUTTON_INDEX") + 1]
