@@ -52,6 +52,10 @@ function onSave()
     return JSON.encode({active, currentLabel, shop_item_attrs})
 end
 
+function resetShopZone()
+    -- Nothing
+end
+
 function updateAttributes(params)
     shop_item_attrs.NAME = params.NAME or "Unkown"
 end

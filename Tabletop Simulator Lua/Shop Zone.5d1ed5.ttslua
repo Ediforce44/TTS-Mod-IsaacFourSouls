@@ -65,6 +65,10 @@ function containsDeckOrCard()
     return false
 end
 
+function resetShopZone()
+    -- Nothing
+end
+
 function resetAltClickCounter()
     altClickCounter = 0
 end

@@ -120,6 +120,12 @@ function onSave()
     return JSON.encode({currentLabel})
 end
 
+function resetAllShopZones()
+    for _ , guid in pairs(SHOP_ZONE_GUIDS) do
+        getObjectFromGUID(guid).call("resetShopZone")
+    end
+end
+
 function onObjectEnterScriptingZone(zone, object)
     for i, guid in pairs(SHOP_ZONE_GUIDS) do
         if guid == zone.getGUID() then

@@ -83,11 +83,11 @@ function onPlayerTurn(player, previous_player)
                 .. getPlayerString({playerColor = player.color}) .. "'s turn.")
     end
 
-    -- Reset Monster Zones (inc. HP-Counter)
+    -- Reset Monster Zones (inclusive HP-Counter)
     getObjectFromGUID(ZONE_GUID_DECK.MONSTER).call("resetAllMonsterZones")
 
     -- Reset Shop Zones
-    --TODO
+    getObjectFromGUID(ZONE_GUID_DECK.TREASURE).call("resetAllShopZones")        -- In this version it does nothing :D
 
     -- Players HP
    for i, guid in pairs(FIRST_HEARTS_GUID) do
