@@ -295,24 +295,29 @@ function onObjectLeaveScriptingZone(zone, object)
         if guid == zone.getGUID() then
             local newAttributes = {}
             local rewards = {}
-            local firstObjectInZone = zone.getObjects()[1]
-            if firstObjectInZone == nil then
+            local topmostObjectInZone = nil
+            for _ , object in pairs(zone.getObjects()) do
+                if object.tag == "Deck" or object.tag == "Card" then
+                    topmostObjectInZone = object
+                end
+            end
+            if topmostObjectInZone == nil then
                 newAttributes = {NAME = "", HP = 0}
-            elseif firstObjectInZone.tag == "Card" then
+            elseif topmostObjectInZone.tag == "Card" then
                 -- Attributes
-                newAttributes.NAME = firstObjectInZone.getName()
-                newAttributes.HP = firstObjectInZone.getVar("hp") or 0
-                newAttributes.ATK = firstObjectInZone.getVar("dice")
-                newAttributes.DMG = firstObjectInZone.getVar("atk")
+                newAttributes.NAME = topmostObjectInZone.getName()
+                newAttributes.HP = topmostObjectInZone.getVar("hp") or 0
+                newAttributes.ATK = topmostObjectInZone.getVar("dice")
+                newAttributes.DMG = topmostObjectInZone.getVar("atk")
                 -- Rewards
-                rewards = firstObjectInZone.getTable("rewards") or {}
-            elseif firstObjectInZone.tag == "Deck" then
-                for _ , card in pairs(firstObjectInZone.getObjects()) do
+                rewards = topmostObjectInZone.getTable("rewards") or {}
+            elseif topmostObjectInZone.tag == "Deck" then
+                for _ , card in pairs(topmostObjectInZone.getObjects()) do
                     if card.guid == object.getGUID() then
                         return
                     end
                 end
-                local containedObjects = firstObjectInZone.getObjects()
+                local containedObjects = topmostObjectInZone.getObjects()
                 local firstCard = containedObjects[#containedObjects]
                 local script = firstCard.lua_script
                 -- Attributes
