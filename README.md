@@ -1,4 +1,4 @@
-# IsaacFourSoulsEdited
+# Isaac: Four Souls Complete (Edited)
 This Tabletop Simulator [[1]](https://store.steampowered.com/app/286160/Tabletop_Simulator/) Mod is based on the Community Mod [Isaac: Four Souls Complete](https://steamcommunity.com/sharedfiles/filedetails/?id=2526757138&searchtext=issac+four+souls+full) from Edgey [[2]](https://steamcommunity.com/id/l-l34l27_4774CK). This mod extands the original one by some quality of life changes and a lot of new features, which can be used in future versions.
 
 ## What can I find in this Depot?
@@ -16,10 +16,11 @@ This Tabletop Simulator [[1]](https://store.steampowered.com/app/286160/Tabletop
 5. Click `Clone an existing GitHub repository...` in the GitHub tab of the Atom Texteditor
 6. Paste the repository link and select the following folder to clone the repository in:\
    `C:\Users\Name\AppData\Local\Temp\TabletopSimulator`\
-   and press `Clone`.
-7. 
-
-
+   Then press `Clone`.
+    > **NOTE:** If it doesn't work and you only see the `.git` folder in Atom you have to clone the repository manually for example with the GitBash from Git or [GitKraken](https://www.gitkraken.com/) etc.
+7. Now you should see all folders of this Repository in your Atom Project folder `TabletopSimualtor`.
+8. The last step is to load a save file of this mod. Just follow the steps from the point **Working Save-Files** [here](#what-can-i-find-in-this-depot)
+9. Open Tabletop Simulator and load the copied save file.
 
 ## Philosophy
 The original idea was to fully automate the whole card game with interacting scripts for each monster, loot or treasure card. The downside of this idea is that a lot of funny situation in a game session get lost. For example a player forget to use a item and change the floor etc. If the game would be fully automated each player would play with his best performance and so many player interactions and communication get lost.
@@ -69,5 +70,14 @@ You play with three random players and only one uses the voice chat and the outh
 > > - Function for filtering variables out of a Lua-Script string
 > > **Note:** A function for filtering a Table out of a Lua-Script string is located in the Monster-Zone scripts
 
+## TODO-List
+- Overwork `onPlayerTurn()`
+- Add logic for Event-Monster-Cards
+
 ## Future work
 - Automate Bonus-Souls and there counter
+- The Language-Button-Problem
+- Add Deck-Builder System
+- Add a Shop-Modifier for each player next to their Attack-Modifier. 
+  > The Shop-Modifier reduces the cost of a Shop-Item. The players have to adjust their modifier based on their items. If he purchase a Shop-Item the price can be calculated and automatically subtract from their Coin-Counter.
+- Replace Auto-Rewarding-Button with a Checklist of various Auto-Options a player can turn ON and OFF. (For example: Auto-Rewarding, Auto-Payment for Shop etc.)
