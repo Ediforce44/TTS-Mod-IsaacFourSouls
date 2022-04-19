@@ -80,6 +80,7 @@ You play with three random players and only one uses the voice chat and the outh
 - Automate Bonus-Souls and there counter
 - The Language-Button-Problem
 - Add Deck-Builder System
+- Fix Player Turn system in the Floor Change script
 - Add a Shop-Modifier for each player next to their Attack-Modifier. 
   > The Shop-Modifier reduces the cost of a Shop-Item. The players have to adjust their modifier based on their items. If he purchase a Shop-Item the price can be calculated and automatically subtract from their Coin-Counter.
 - Replace Auto-Rewarding-Button with a Checklist of various Auto-Options a player can turn ON and OFF. (For example: Auto-Rewarding, Auto-Payment for Shop etc.)
