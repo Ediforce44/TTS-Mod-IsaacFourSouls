@@ -189,8 +189,10 @@ function finishMonster()
     for _ , object in pairs(self.getObjects()) do
         if object.tag == "Deck" then
             monsterCard = object.takeObject({index = object.getQuantity() - 1})
+            break
         elseif object.tag == "Card" then
             monsterCard = object
+            break
         end
     end
     if Global.getTable("automaticRewarding")[activePlayerColor] then
