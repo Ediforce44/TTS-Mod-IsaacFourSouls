@@ -71,6 +71,8 @@ You play with three random players and only one uses the voice chat and the outh
 > > **Note:** A function for filtering a Table out of a Lua-Script string is located in the Monster-Zone scripts
 
 ## TODO-List
+- The Beast and Harbinger
+- Fix Player Turn system (Order etc.)
 - Add logic for Event-Monster-Cards
 
 ## Future work
