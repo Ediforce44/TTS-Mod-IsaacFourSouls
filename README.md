@@ -21,6 +21,7 @@ This Tabletop Simulator [[1]](https://store.steampowered.com/app/286160/Tabletop
 7. Now you should see all folders of this Repository in your Atom Project folder `TabletopSimualtor`.
 8. The last step is to load a save file of this mod. Just follow the steps from the point **Working Save-Files** [here](#what-can-i-find-in-this-depot)
 9. Open Tabletop Simulator and load the copied save file.
+> **COMMON PROBLEM:** If you close Atom and open it again, the `.ttslua` files in folder `Tabletop Simulator Lua` have been deleted. If so, just select `Discard All Changes` in the Git-Tab from Atom. It needs a few seconds until all files are recovered. Beware that if you have this problem, you need to stage or commit all your changes before you close Atom. Otherwise all changes will be destroyed.
 
 ## Philosophy
 The original idea was to fully automate the whole card game with interacting scripts for each monster, loot or treasure card. The downside of this idea is that a lot of funny situation in a game session get lost. For example a player forget to use a item and change the floor etc. If the game would be fully automated each player would play with his best performance and so many player interactions and communication get lost.
