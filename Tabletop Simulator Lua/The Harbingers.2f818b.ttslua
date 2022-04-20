@@ -5,24 +5,31 @@ type = "superboss"
 harbingerAmount = 4
 rewards = {CENTS = 0, LOOT = 0, TREASURES = 1, SOULS = 0}
 
-local function killHarbinger(position)
-
-end
-
 function onReveal(params)
-    local spawnPosition = {params.zone.getPosition().x, 3, params.zone.getPosition().z}
-    local counter = getObjectFromGUID("bb7a32").takeObject({position = spawnPosition})
-    --counter.setRotationSmooth({0, 270, 0}, false)
+    if params.zone then
+        local spawnPosition = {params.zone.getPosition().x, 3, params.zone.getPosition().z}
+        local counter
+                = getObjectFromGUID(Global.getTable("COUNTER_BAGS_GUID").NORMAL).takeObject({position = spawnPosition})
+        counter.setRotationSmooth({0, 179, 0}, false)   -- 180 degree don't work?
+    end
 end
 
 function onDie(params)
-    local zonePosition = {params.zone.getPosition().x, 3, params.zone.getPosition().z}
-    killHarbinger(testPosition)
+    if params.zone == nil then
+        return
+    end
 
-    if harbingerLeft == 0 then
-        self.setState(2).setPositionSmooth(zonePosition)
-    else
-        self.setPositionSmooth(zonePosition)
+    local zonePosition = {x = params.zone.getPosition().x, y = 3, z = params.zone.getPosition().z}
+    self.setPositionSmooth(zonePosition)
+
+    local counter = Global.call("getCounterInZone", {zone = params.zone})
+    if counter ~= nil then
+        counter.setPositionSmooth(zonePosition, false)
+        counter.call("modifyCounter", {modifier = 1})
+        if counter.getVar("val") == 4 then
+            counter.destruct()
+            self.setState(2).setPositionSmooth(zonePosition)    --activate The Beast!
+        end
     end
     return false
 end

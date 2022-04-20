@@ -234,6 +234,10 @@ MONSTER_HP_COUNTER_GUID = {
     SIX = "bcac8d"
 }
 
+COUNTER_BAGS_GUID = {
+    NORMAL = "bb7a32"
+}
+
 DISCARD_PILE_POSITION = {
     TREASURE = {-33.91, 2.53, 0},
     FLOOR = {-6.20, 1.89, -1.70},
@@ -290,6 +294,18 @@ function switchRewardingMode(params)
     local newValue = not automaticRewarding[color]
     automaticRewarding[color] = newValue
     getObjectFromGUID(ZONE_GUID_SOUL[color]).call("onSwitchingRewardingMode", {newState = newValue})
+end
+
+function getCounterInZone(params)
+    if params.zone == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'getCounterInZone()'.")
+    else
+        for _ , object in pairs(params.zone.getObjects()) do
+            if object.getName() == "Counter\n" or object.getName() == "Counter" then
+                return object
+            end
+        end
+    end
 end
 
 --Thank you Bone White in discord for this <3       --Edited by Ediforce44
