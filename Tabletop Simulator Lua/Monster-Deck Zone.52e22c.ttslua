@@ -261,6 +261,7 @@ end
 function onObjectEnterScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
         if guid == zone.getGUID() then
+            print("E: " .. tostring(object.guid))
             local newAttributes = {}
             local rewards = {}
             if object.tag == "Deck" then
@@ -272,17 +273,33 @@ function onObjectEnterScriptingZone(zone, object)
                 if newAttributes.HP == nil then
                     newAttributes.HP = object.getVar("hp") or 0
                 end
+                newAttributes.GUID = firstCard["GUID"]
                 newAttributes.NAME = firstCard["Nickname"]
                 -- Rewards
                 rewards = findRewardsInScript(script)
+                zone.call("updateAttributes", newAttributes)
+                zone.call("updateRewards", rewards)
+                if zone.getTable("active_monster_attrs").GUID ~= firstCard["GUID"] then
+                    --print("reveal (deck) " .. tostring(firstCard["GUID"]))
+                    local card = object.takeObject({position = zone.getPosition()})
+                    --Wait.frames(function () card.call("onReveal", {zone = zone}) end)
+                end
+                return
             elseif object.tag == "Card" then
                 -- Attributes
+                newAttributes.GUID = object.getGUID()
                 newAttributes.NAME = object.getName()
                 newAttributes.HP = object.getVar("hp") or 0
                 newAttributes.ATK = object.getVar("dice")
                 newAttributes.DMG = object.getVar("atk")
                 -- Rewards
                 rewards = object.getTable("rewards") or {}
+                if zone.getTable("active_monster_attrs").GUID ~= object.getGUID() then
+                    print("reveal (card) " .. tostring(object.getGUID()))
+                    object.call("onReveal", {zone = zone})
+                end
+            else
+                return
             end
             zone.call("updateAttributes", newAttributes)
             zone.call("updateRewards", rewards)
@@ -293,13 +310,16 @@ end
 function onObjectLeaveScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
         if guid == zone.getGUID() then
+            print("L: " .. tostring(object.guid))
             local newAttributes = {}
             local rewards = {}
             local firstObjectInZone = zone.getObjects()[1]
             if firstObjectInZone == nil then
+                print("Nothing")
                 newAttributes = {NAME = "", HP = 0}
             elseif firstObjectInZone.tag == "Card" then
                 -- Attributes
+                newAttributes.GUID = firstObjectInZone.getGUID()
                 newAttributes.NAME = firstObjectInZone.getName()
                 newAttributes.HP = firstObjectInZone.getVar("hp") or 0
                 newAttributes.ATK = firstObjectInZone.getVar("dice")
@@ -312,17 +332,23 @@ function onObjectLeaveScriptingZone(zone, object)
                         return
                     end
                 end
-                local containedObjects = firstObjectInZone.getObjects()
+                local containedObjects = firstObjectInZone.getData().ContainedObjects
                 local firstCard = containedObjects[#containedObjects]
-                local script = firstCard.lua_script
+                local script = firstCard["LuaScript"]
                 -- Attributes
                 newAttributes = findAttrsInScript(script)
                 if newAttributes == {} then
                     newAttributes.HP = object.getVar("hp") or 0
                 end
+                newAttributes.GUID = firstCard["GUID"]
                 newAttributes.NAME = firstCard["Nickname"]
                 -- Rewards
                 rewards = findRewardsInScript(script)
+                print(firstCard["GUID"])
+                print(firstCard["Nickname"])
+                print("Lreveal: " .. tostring(newAttributes.GUID))
+            else
+                return
             end
             zone.call("updateAttributes", newAttributes)
             zone.call("updateRewards", rewards)

@@ -2,8 +2,26 @@ hp = 4
 atk = 1
 dice = 4
 type = "superboss"
+harbingerAmount = 4
 rewards = {CENTS = 0, LOOT = 0, TREASURES = 1, SOULS = 0}
 
-function onDie()
-    self.setState(2)
+local function killHarbinger(position)
+
+end
+
+function onReveal(params)
+    local spawnPosition = {params.zone.getPosition().x, 5, params.zone.getPosition().z}
+    local counter = getObjectFromGUID("bb7a32").takeObject({position = spawnPosition})
+    --counter.setRotationSmooth({0, 270, 0}, false)
+end
+
+function onDie(params)
+    local zonePosition = {params.zone.getPosition().x, 3, params.zone.getPosition().z}
+    killHarbinger(testPosition)
+
+    if harbingerLeft == 0 then
+        self.setState(2).setPositionSmooth(zonePosition)
+    else
+        self.setPositionSmooth(zonePosition)
+    end
 end

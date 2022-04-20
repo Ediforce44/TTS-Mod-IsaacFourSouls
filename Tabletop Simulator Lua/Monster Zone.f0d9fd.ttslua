@@ -4,6 +4,7 @@ HP_COUNTER_GUID = Global.getTable("MONSTER_HP_COUNTER_GUID").FOUR
 altClickCounter = 0
 
 active_monster_attrs = {
+    GUID    = "",
     NAME    = "",
     HP      = 0,
     ATK     = 0,
@@ -100,6 +101,7 @@ function onLoad(saved_data)
         end
     end
     if loaded_data[3] then
+        active_monster_attrs.GUID = loaded_data[3].GUID or ""
         active_monster_attrs.NAME = loaded_data[3].NAME or "Unkown"
         active_monster_attrs.HP = loaded_data[3].HP or 0
         active_monster_attrs.ATK = loaded_data[3].ATK or 0
@@ -230,6 +232,11 @@ function finishMonster()
                 end
             end
         end, 60)
+
+    if monsterCard.getGUID() == "2f818b" then
+        Wait.frames(function () monsterCard.call("onDie", {zone = self}) end)
+        --monsterCard.setPosition(self.getPosition())
+    end
 end
 
 function resetAltClickCounter()
@@ -241,6 +248,7 @@ function updateAttributes(params)
         printToAll("[fdd835][WARNING][-] Wrong parameters in monster zone function 'updateAttributes()'."
             .. " The parameter table should always contain a value for the key 'HP'")
     else
+        active_monster_attrs.GUID = params.GUID or active_monster_attrs.GUID
         active_monster_attrs.NAME = params.NAME or "Unkown"
         active_monster_attrs.HP = params.HP or 0
         active_monster_attrs.ATK = params.ATK or -1
