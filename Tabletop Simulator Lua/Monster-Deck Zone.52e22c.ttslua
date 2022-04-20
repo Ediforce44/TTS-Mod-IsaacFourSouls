@@ -18,6 +18,11 @@ ATTACK_BUTTON_COLORS = {
     ACTIVE      = {0.2, 0.157, 0.325}
 }
 
+MONSTER_TAGS = {
+    NEW     = "new",
+    DEAD    = "dead"
+}
+
 local function getChooseButton()
     if CHOOSE_BUTTON_INDEX == nil then
         return nil
@@ -277,12 +282,13 @@ function onObjectEnterScriptingZone(zone, object)
                 newAttributes.NAME = firstCard["Nickname"]
                 -- Rewards
                 rewards = findRewardsInScript(script)
-                --print("reveal (deck) " .. tostring(firstCard["GUID"]))
+                -- Take top most monster into the zone
                 if (zone.getTable("active_monster_attrs").GUID ~= firstCard["GUID"]) then
-                    local card = object.takeObject({position = zone.getPosition()})
-                    card.addTag("new")
+                    local position = zone.getPosition()
+                    position.y = 2
+                    local card = object.takeObject({position = position})
+                    card.addTag(MONSTER_TAGS.NEW)
                 end
-                --Wait.frames(function () card.call("onReveal", {zone = zone}) end)
             elseif object.tag == "Card" then
                 -- Attributes
                 newAttributes.GUID = object.getGUID()
@@ -292,9 +298,10 @@ function onObjectEnterScriptingZone(zone, object)
                 newAttributes.DMG = object.getVar("atk")
                 -- Rewards
                 rewards = object.getTable("rewards") or {}
-                if object.hasTag("new") then
-                    object.removeTag("new")
-                    print("REVEAL R")
+                -- On Reveal
+                if object.hasTag(MONSTER_TAGS.NEW) then
+                    object.removeTag(MONSTER_TAGS.NEW)
+                    object.call("onReveal", {zone = zone})
                 end
             else
                 return
@@ -322,15 +329,18 @@ function onObjectLeaveScriptingZone(zone, object)
                 newAttributes.DMG = firstObjectInZone.getVar("atk")
                 -- Rewards
                 rewards = firstObjectInZone.getTable("rewards") or {}
-                if object.hasTag("dead") then
-                    print("REVEAL L")
+                -- On Reveal
+                if object.hasTag(MONSTER_TAGS.DEAD) then
+                    object.call("onReveal", {zone = zone})
                 end
             elseif firstObjectInZone.tag == "Deck" then
+                -- Skip if card gets swallowed by a deck in the zone
                 for _ , card in pairs(firstObjectInZone.getObjects()) do
                     if card.guid == object.getGUID() then
                         return
                     end
                 end
+
                 local containedObjects = firstObjectInZone.getData().ContainedObjects
                 local firstCard = containedObjects[#containedObjects]
                 local script = firstCard["LuaScript"]
@@ -343,10 +353,12 @@ function onObjectLeaveScriptingZone(zone, object)
                 newAttributes.NAME = firstCard["Nickname"]
                 -- Rewards
                 rewards = findRewardsInScript(script)
-
-                if object.hasTag("dead") then
-                    local card = firstObjectInZone.takeObject({position = zone.getPosition()})
-                    card.addTag("new")
+                -- Take next monster into the zone
+                if object.hasTag(MONSTER_TAGS.DEAD) then
+                    local position = zone.getPosition()
+                    position.y = 2
+                    local card = firstObjectInZone.takeObject({position = position})
+                    card.addTag(MONSTER_TAGS.NEW)
                 end
             else
                 return

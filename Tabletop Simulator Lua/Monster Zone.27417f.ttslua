@@ -4,6 +4,7 @@ HP_COUNTER_GUID = Global.getTable("MONSTER_HP_COUNTER_GUID").THREE
 altClickCounter = 0
 
 active_monster_attrs = {
+    GUID    = "",
     NAME    = "",
     HP      = 0,
     ATK     = 0,
@@ -100,6 +101,7 @@ function onLoad(saved_data)
         end
     end
     if loaded_data[3] then
+        active_monster_attrs.GUID = loaded_data[3].GUID or ""
         active_monster_attrs.NAME = loaded_data[3].NAME or "Unkown"
         active_monster_attrs.HP = loaded_data[3].HP or 0
         active_monster_attrs.ATK = loaded_data[3].ATK or 0
@@ -216,13 +218,14 @@ function finishMonster()
                 .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME .. "[-] !!!")
         end
     end
-
+    -- Place discard monster card
     if active_monster_reward.SOULS ~= 0 then    -- Monster becomes soul token
         getObjectFromGUID(Global.getTable("ZONE_GUID_SOUL")[activePlayerColor]).call("placeCardInSoulZone"
             , {card = monsterCard})
     else    -- Monster just get discarded
         monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
     end
+    -- Place new monster card
     Wait.frames(function ()
             if not containsDeckOrCard() then
                 if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == false then
@@ -230,6 +233,15 @@ function finishMonster()
                 end
             end
         end, 60)
+    -- OnDie
+    Wait.frames(function ()
+            local died = not (monsterCard.call("onDie", {zone = self}) == false)    --default: true, only false on false
+            if died then        --if monster died tag as dead
+                local deadTag = MONSTER_DECK_ZONE.getTable("MONSTER_TAGS").DEAD
+                monsterCard.addTag(deadTag)
+                Wait.time(function () monsterCard.removeTag(deadTag) end, 2)
+            end
+        end)
 end
 
 function resetAltClickCounter()
@@ -241,6 +253,7 @@ function updateAttributes(params)
         printToAll("[fdd835][WARNING][-] Wrong parameters in monster zone function 'updateAttributes()'."
             .. " The parameter table should always contain a value for the key 'HP'")
     else
+        active_monster_attrs.GUID = params.GUID or active_monster_attrs.GUID
         active_monster_attrs.NAME = params.NAME or "Unkown"
         active_monster_attrs.HP = params.HP or 0
         active_monster_attrs.ATK = params.ATK or -1
