@@ -10,7 +10,7 @@ local function killHarbinger(position)
 end
 
 function onReveal(params)
-    local spawnPosition = {params.zone.getPosition().x, 5, params.zone.getPosition().z}
+    local spawnPosition = {params.zone.getPosition().x, 3, params.zone.getPosition().z}
     local counter = getObjectFromGUID("bb7a32").takeObject({position = spawnPosition})
     --counter.setRotationSmooth({0, 270, 0}, false)
 end
@@ -24,4 +24,5 @@ function onDie(params)
     else
         self.setPositionSmooth(zonePosition)
     end
+    return false
 end
