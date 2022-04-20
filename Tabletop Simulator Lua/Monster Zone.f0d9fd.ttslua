@@ -232,6 +232,7 @@ function finishMonster()
                 end
             end
         end, 60)
+    monsterCard.addTag("dead")
 
     if monsterCard.getGUID() == "2f818b" then
         Wait.frames(function () monsterCard.call("onDie", {zone = self}) end)
