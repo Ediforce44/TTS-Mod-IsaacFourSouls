@@ -2,12 +2,12 @@ import sys
 import json
 import re
 
-def getPattern(rewardType):
+def getRewardPattern(rewardType):
     return re.compile("((((\n|[+])([0-9]{1,2})\s)|([0-9]{1,2}))(" + rewardType + "s?))|((" + rewardType + "s?)\s?([0-9]{1,2}))", re.I)
 
 def getReward(rewardType, rewardsString):
     amount = 0
-    m = getPattern(rewardType).search(rewardsString)
+    m = getRewardPattern(rewardType).search(rewardsString)
     if m != None:
         amount = int(re.search("[0-9]{1,2}", m.group(0)).group(0))
     return amount
@@ -47,13 +47,36 @@ def translateRewards(rewardsString):
         + ", SOULS = " + str(souls) + "}"
     return rewardsLua
 
+def hasEventType(JSON_string):
+    pattern = re.compile("(=?(event)?[_]?type\s?=\s?)(.*\n?)", re.I)
+    eventTypePattern = re.compile("[(curse)|(goodEvent)|(badEvent)|(eventGood)|(eventBad)]", re.I)
+    m = pattern.search(JSON_string)
+    if m != None:
+        eventTypeString = m.group(0)
+        m = eventTypePattern.search(eventTypeString)
+        if m != None:
+            return True
+    return False
+
+def eventVarExist(JSON_string):
+    pattern = re.compile("isEvent\s?=\s?")
+    return pattern.search(JSON_string) != None
+
+def addEventVar(isEvent):
+    eventVarString = "isEvent = "
+    if isEvent:
+        eventVarString = eventVarString + "true"
+    else:
+        eventVarString = eventVarString + "false"
+    return eventVarString
+
 def matchesMonsterPattern(nickname):
     pattern = re.compile("(.*)monster(.*)", re.I)
     return pattern.match(nickname)
 
 def main(argv, argc):
     if argc < 2:
-        print("\033[91mTo little parameters:\033[0m\n\r\033[93mPlease pass the file name of the file you want to sniff as parameter.\033[0m\n")
+        print("To little parameters:\n\rPlease pass the file name of the file you want to sniff as parameter.\n")
         return
     fileName = str(argv[1])
     m = re.search("\.json", fileName)
@@ -62,32 +85,74 @@ def main(argv, argc):
     try:
         JSON_file = open(fileName + ".json", "r", encoding = "utf8")
     except:
-        print("\033[91mThe File with the name '" + fileName + "' doesn't exist.\033[0m\n")
+        print("The File with the name '" + fileName + "' doesn't exist.\n")
         return
     
+    rewards = False
+    mark_events = False
+
+    if argc > 2:
+        mode = argv[2]
+        if mode == "rewards":
+            rewards = True
+        elif mode == "mark_events":
+            mark_events = True
+        else:
+            rewards = True
+            mark_events = True
+    else:
+        rewards = True
+        mark_events = True
+
     JSON_data = json.load(JSON_file)
-    
+
+    # Original    
     for val in JSON_data["ObjectStates"]:
         #print(val["Name"])
-        if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
-            for card in val["ContainedObjects"]:
-                #print(card["GUID"])
-                if not rewardsVarExist(card["LuaScript"]):
-                    card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+
+        if rewards:
+            if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
+                for card in val["ContainedObjects"]:
+                    #print(card["GUID"])
+                    if not rewardsVarExist(card["LuaScript"]):
+                        card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+
+        if mark_events:
+            if val["Name"] == "Deck" and val["Nickname"] == "Happening cards":
+                for card in val["ContainedObjects"]:
+                    if not eventVarExist(card["LuaScript"]):
+                        card["LuaScript"] = card["LuaScript"] + "\n" + addEventVar(True)
+            elif val["Name"] == "Deck" and val["Nickname"] == "Monsters crads":
+                for card in val["ContainedObjects"]:
+                    if not eventVarExist(card["LuaScript"]):
+                        card["LuaScript"] = card["LuaScript"] + "\n" + addEventVar(False)
     
+    # Expansions
     for val in JSON_data["ObjectStates"]:
-        # Expansions
+        # Expansion Bag
         if val["Name"] == "Custom_Model_Infinite_Bag":
             for expansion in val["ContainedObjects"]:
                 if expansion["Name"] == "Custom_Model_Bag" or expansion["Name"] == "Bag":
                     for content in expansion["ContainedObjects"]:
-                        if (content["Nickname"] == "" or matchesMonsterPattern(content["Nickname"])):
+
+                        if rewards or mark_events:
+                            if (content["Nickname"] == "" or matchesMonsterPattern(content["Nickname"])):
+                                if content["Name"] == "Deck":
+                                    for card in content["ContainedObjects"]:
+                                        if rewards and (not rewardsVarExist(card["LuaScript"])):
+                                            card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+                                        # This marks more cards as it should, because too many decks have no Nickname
+                                        if mark_events and (not eventVarExist(card["LuaScript"])):
+                                            card["LuaScript"] = card["LuaScript"] + "\n" + addEventVar(False)    
+
+                        if mark_events:
                             if content["Name"] == "Deck":
                                 for card in content["ContainedObjects"]:
-                                    if not rewardsVarExist(card["LuaScript"]):
-                                        card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+                                    if hasEventType(card["LuaScript"]) and (not eventVarExist(card["LuaScript"])):
+                                        card["LuaScript"] = card["LuaScript"] + "\n" + addEventVar(True)
+                                    
 
-    newFile = open(fileName + "_Reward.json", "w+")
+    newFile = open(fileName + "_Sniffed.json", "w+")
     newFile.write(json.dumps(JSON_data, indent=2))
     newFile.close()
     JSON_file.close()
