@@ -20,8 +20,7 @@ ATTACK_BUTTON_COLORS = {
 
 MONSTER_TAGS = {
     NEW     = "New",
-    DEAD    = "Dead",
-    IGNORE  = "Ignore"
+    DEAD    = "Dead"
 }
 
 local function getChooseButton()
@@ -72,22 +71,6 @@ local function isObjectReallyEntering(object, zone)
         return true
     end
     return false
-end
-
--- Cover the rare case that a deck (= 2 cards) is manually put into a monster zone
-local function handleTwoCardsBug(object, zone)
-    for _ , obj in pairs(zone.getObjects()) do
-        if (obj.tag == "Card") and (obj.getGUID() ~= object.getGUID()) then
-            obj.addTag(MONSTER_TAGS.IGNORE)
-        end
-    end
-    Wait.frames(function ()
-            for _ , obj in pairs(zone.getObjects()) do
-                if obj.tag == "Card" then
-                    obj.removeTag(MONSTER_TAGS.IGNORE)
-                end
-            end
-        end, 3)
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -304,15 +287,25 @@ end
 function onObjectEnterScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
         if guid == zone.getGUID() and isObjectReallyEntering(object, zone) then
-            if object.hasTag(MONSTER_TAGS.IGNORE) then
-                object.removeTag(MONSTER_TAGS.IGNORE)
-            else
+            if not object.hasTag(MONSTER_TAGS.DEAD) then
                 if object.tag == "Deck" then
                     local containedObjects = object.getData().ContainedObjects
                     local firstCard = containedObjects[#containedObjects]
                     -- Test if topmost card is the active monster of this zone
                     if (zone.getTable("active_monster_attrs").GUID == firstCard["GUID"]) then
-                        return
+                        local script = firstCard["LuaScript"]
+                        -- Attributes
+                        newAttributes = findAttrsInScript(script)
+                        if newAttributes.HP == nil then
+                            newAttributes.HP = object.getVar("hp") or 0
+                        end
+                        newAttributes.GUID = firstCard["GUID"]
+                        newAttributes.NAME = firstCard["Nickname"]
+                        -- Rewards
+                        rewards = findRewardsInScript(script)
+
+                        zone.call("updateAttributes", newAttributes)
+                        zone.call("updateRewards", rewards)
                     else
                         -- Take top most monster into the zone
                         local position = zone.getPosition()
@@ -322,30 +315,34 @@ function onObjectEnterScriptingZone(zone, object)
                     end
                 elseif object.tag == "Card" then
                     -- Tests if this card is the active monster of this zone
-                    if zone.getTable("active_monster_attrs").GUID == object.getGUID() then
-                        return
-                    else
+                    if zone.getTable("active_monster_attrs").GUID ~= object.getGUID() then
                         -- If monster card is new call onReveal() and update attributes and rewards
                         if object.hasTag(MONSTER_TAGS.NEW) then
-                            object.removeTag(MONSTER_TAGS.NEW)
-                            print("Reveal")
-                            object.call("onReveal", {zone = zone})
 
-                            handleTwoCardsBug(object, zone)
+                            object.call("onReveal", {zone = zone})
+                            -- The wait is need for other cards to check if there is an NEW card in the zone
+                            Wait.frames(function () object.removeTag(MONSTER_TAGS.NEW) end)
+                        else
+                            -- Ignore this card if there is a object in the zone, which is NEW
+                            for _ , obj in pairs(zone.getObjects()) do
+                                if obj.hasTag(MONSTER_TAGS.NEW) then
+                                    return
+                                end
+                            end
                         end
-                        -- Attributes
-                        local newAttributes = {}
-                        newAttributes.GUID = object.getGUID()
-                        newAttributes.NAME = object.getName()
-                        newAttributes.HP = object.getVar("hp") or 0
-                        newAttributes.ATK = object.getVar("dice")
-                        newAttributes.DMG = object.getVar("atk")
-                        -- Rewards
-                        local rewards = object.getTable("rewards") or {}
-                        print("Update Attr E")
-                        zone.call("updateAttributes", newAttributes)
-                        zone.call("updateRewards", rewards)
                     end
+                    -- Attributes
+                    local newAttributes = {}
+                    newAttributes.GUID = object.getGUID()
+                    newAttributes.NAME = object.getName()
+                    newAttributes.HP = object.getVar("hp") or 0
+                    newAttributes.ATK = object.getVar("dice")
+                    newAttributes.DMG = object.getVar("atk")
+                    -- Rewards
+                    local rewards = object.getTable("rewards") or {}
+
+                    zone.call("updateAttributes", newAttributes)
+                    zone.call("updateRewards", rewards)
                 else
                     return
                 end
@@ -357,36 +354,37 @@ end
 function onObjectLeaveScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
         if guid == zone.getGUID() and isObjectReallyLeaving(object, zone) then
-            local newAttributes = {}
-            local firstObjectInZone = zone.getObjects()[2]      --first object in zone is the table, so take second
+            if object.getGUID() == zone.getTable("active_monster_attrs").GUID then
+                local newAttributes = {}
+                local firstObjectInZone = zone.getObjects()[2]      --first object in zone is the table, so take second
 
-            if firstObjectInZone == nil then
-                newAttributes = {NAME = "", HP = 0}
-                print("Update Attr L (Nothing)")
-                zone.call("updateAttributes", newAttributes)
-            elseif firstObjectInZone.tag == "Deck" then
-                -- Take the topmost monster into the zone
-                local position = zone.getPosition()
-                position.y = 2
-                local card = firstObjectInZone.takeObject({position = position})
-                card.addTag(MONSTER_TAGS.NEW)
-            elseif firstObjectInZone.tag == "Card" then
-                -- Attributes
-                newAttributes.GUID = firstObjectInZone.getGUID()
-                newAttributes.NAME = firstObjectInZone.getName()
-                newAttributes.HP = firstObjectInZone.getVar("hp") or 0
-                newAttributes.ATK = firstObjectInZone.getVar("dice")
-                newAttributes.DMG = firstObjectInZone.getVar("atk")
-                -- Rewards
-                local rewards = firstObjectInZone.getTable("rewards") or {}
-                -- On Reveal
-                print("Reveal")
-                object.call("onReveal", {zone = zone})
-                print("Update Attr L")
-                zone.call("updateAttributes", newAttributes)
-                zone.call("updateRewards", rewards)
-            else
-                return
+                if firstObjectInZone == nil then
+                    newAttributes = {NAME = "", HP = 0}
+
+                    zone.call("updateAttributes", newAttributes)
+                elseif firstObjectInZone.tag == "Deck" then
+                    -- Take the topmost monster into the zone
+                    local position = zone.getPosition()
+                    position.y = 2
+                    local card = firstObjectInZone.takeObject({position = position})
+                    card.addTag(MONSTER_TAGS.NEW)
+                elseif firstObjectInZone.tag == "Card" then
+                    -- Attributes
+                    newAttributes.GUID = firstObjectInZone.getGUID()
+                    newAttributes.NAME = firstObjectInZone.getName()
+                    newAttributes.HP = firstObjectInZone.getVar("hp") or 0
+                    newAttributes.ATK = firstObjectInZone.getVar("dice")
+                    newAttributes.DMG = firstObjectInZone.getVar("atk")
+                    -- Rewards
+                    local rewards = firstObjectInZone.getTable("rewards") or {}
+                    -- On Reveal
+                    object.call("onReveal", {zone = zone})
+
+                    zone.call("updateAttributes", newAttributes)
+                    zone.call("updateRewards", rewards)
+                else
+                    return
+                end
             end
         end
     end
