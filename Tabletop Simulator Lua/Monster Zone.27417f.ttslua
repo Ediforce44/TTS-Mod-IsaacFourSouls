@@ -150,7 +150,7 @@ function activateAttackButton()
             click_function = "click_function_AttackButton",
             function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER),
             label          = state,
-            position       = {0, -0.5, 3},
+            position       = {0, 0, 3},
             width          = 1000,
             height         = 300,
             font_size      = 200,

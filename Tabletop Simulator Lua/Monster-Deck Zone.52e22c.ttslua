@@ -19,8 +19,9 @@ ATTACK_BUTTON_COLORS = {
 }
 
 MONSTER_TAGS = {
-    NEW     = "new",
-    DEAD    = "dead"
+    NEW     = "New",
+    DEAD    = "Dead",
+    IGNORE  = "Ignore"
 }
 
 local function getChooseButton()
@@ -51,6 +52,42 @@ local function printAttackPhrase(monsterName)
         broadcastToAll(phrase)
     end
     return phrase
+end
+
+-- Determines if an object is leaving the zone or if it is just consumed by another object within the zone
+local function isObjectReallyLeaving(object, zone)
+    local distance = object.getPosition():distance(zone.getPosition())
+    if distance > 1 then
+        return true
+    end
+    return false
+end
+
+-- Determines if an object is entering the zone from outside the zone or if it is just created within the zone
+--- Except: - Deck (= 2 Cards) enters the zone and is split into 2 seperate cards in the zone
+---         - A card picked up from a deck inside the zone
+local function isObjectReallyEntering(object, zone)
+    local distance = object.getPosition():distance(zone.getPosition())
+    if distance > 0.05 then
+        return true
+    end
+    return false
+end
+
+-- Cover the rare case that a deck (= 2 cards) is manually put into a monster zone
+local function handleTwoCardsBug(object, zone)
+    for _ , obj in pairs(zone.getObjects()) do
+        if (obj.tag == "Card") and (obj.getGUID() ~= object.getGUID()) then
+            obj.addTag(MONSTER_TAGS.IGNORE)
+        end
+    end
+    Wait.frames(function ()
+            for _ , obj in pairs(zone.getObjects()) do
+                if obj.tag == "Card" then
+                    obj.removeTag(MONSTER_TAGS.IGNORE)
+                end
+            end
+        end, 3)
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -266,60 +303,73 @@ end
 
 function onObjectEnterScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
-        if guid == zone.getGUID() then
-            local newAttributes = {}
-            local rewards = {}
-            if object.tag == "Deck" then
-                local containedObjects = object.getData().ContainedObjects
-                local firstCard = containedObjects[#containedObjects]
-                local script = firstCard["LuaScript"]
-                -- Attributes
-                newAttributes = findAttrsInScript(script)
-                if newAttributes.HP == nil then
-                    newAttributes.HP = object.getVar("hp") or 0
-                end
-                newAttributes.GUID = firstCard["GUID"]
-                newAttributes.NAME = firstCard["Nickname"]
-                -- Rewards
-                rewards = findRewardsInScript(script)
-                -- Take top most monster into the zone
-                if (zone.getTable("active_monster_attrs").GUID ~= firstCard["GUID"]) then
-                    local position = zone.getPosition()
-                    position.y = 2
-                    local card = object.takeObject({position = position})
-                    card.addTag(MONSTER_TAGS.NEW)
-                end
-            elseif object.tag == "Card" then
-                -- Attributes
-                newAttributes.GUID = object.getGUID()
-                newAttributes.NAME = object.getName()
-                newAttributes.HP = object.getVar("hp") or 0
-                newAttributes.ATK = object.getVar("dice")
-                newAttributes.DMG = object.getVar("atk")
-                -- Rewards
-                rewards = object.getTable("rewards") or {}
-                -- On Reveal
-                if object.hasTag(MONSTER_TAGS.NEW) then
-                    object.removeTag(MONSTER_TAGS.NEW)
-                    object.call("onReveal", {zone = zone})
-                end
+        if guid == zone.getGUID() and isObjectReallyEntering(object, zone) then
+            if object.hasTag(MONSTER_TAGS.IGNORE) then
+                object.removeTag(MONSTER_TAGS.IGNORE)
             else
-                return
+                if object.tag == "Deck" then
+                    local containedObjects = object.getData().ContainedObjects
+                    local firstCard = containedObjects[#containedObjects]
+                    -- Test if topmost card is the active monster of this zone
+                    if (zone.getTable("active_monster_attrs").GUID == firstCard["GUID"]) then
+                        return
+                    else
+                        -- Take top most monster into the zone
+                        local position = zone.getPosition()
+                        position.y = 2
+                        local card = object.takeObject({position = position})
+                        card.addTag(MONSTER_TAGS.NEW)
+                    end
+                elseif object.tag == "Card" then
+                    -- Tests if this card is the active monster of this zone
+                    if zone.getTable("active_monster_attrs").GUID == object.getGUID() then
+                        return
+                    else
+                        -- If monster card is new call onReveal() and update attributes and rewards
+                        if object.hasTag(MONSTER_TAGS.NEW) then
+                            object.removeTag(MONSTER_TAGS.NEW)
+                            print("Reveal")
+                            object.call("onReveal", {zone = zone})
+
+                            handleTwoCardsBug(object, zone)
+                        end
+                        -- Attributes
+                        local newAttributes = {}
+                        newAttributes.GUID = object.getGUID()
+                        newAttributes.NAME = object.getName()
+                        newAttributes.HP = object.getVar("hp") or 0
+                        newAttributes.ATK = object.getVar("dice")
+                        newAttributes.DMG = object.getVar("atk")
+                        -- Rewards
+                        local rewards = object.getTable("rewards") or {}
+                        print("Update Attr E")
+                        zone.call("updateAttributes", newAttributes)
+                        zone.call("updateRewards", rewards)
+                    end
+                else
+                    return
+                end
             end
-            zone.call("updateAttributes", newAttributes)
-            zone.call("updateRewards", rewards)
         end
     end
 end
 
 function onObjectLeaveScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
-        if guid == zone.getGUID() then
+        if guid == zone.getGUID() and isObjectReallyLeaving(object, zone) then
             local newAttributes = {}
-            local rewards = {}
-            local firstObjectInZone = zone.getObjects()[1]
+            local firstObjectInZone = zone.getObjects()[2]      --first object in zone is the table, so take second
+
             if firstObjectInZone == nil then
                 newAttributes = {NAME = "", HP = 0}
+                print("Update Attr L (Nothing)")
+                zone.call("updateAttributes", newAttributes)
+            elseif firstObjectInZone.tag == "Deck" then
+                -- Take the topmost monster into the zone
+                local position = zone.getPosition()
+                position.y = 2
+                local card = firstObjectInZone.takeObject({position = position})
+                card.addTag(MONSTER_TAGS.NEW)
             elseif firstObjectInZone.tag == "Card" then
                 -- Attributes
                 newAttributes.GUID = firstObjectInZone.getGUID()
@@ -328,43 +378,16 @@ function onObjectLeaveScriptingZone(zone, object)
                 newAttributes.ATK = firstObjectInZone.getVar("dice")
                 newAttributes.DMG = firstObjectInZone.getVar("atk")
                 -- Rewards
-                rewards = firstObjectInZone.getTable("rewards") or {}
+                local rewards = firstObjectInZone.getTable("rewards") or {}
                 -- On Reveal
-                if object.hasTag(MONSTER_TAGS.DEAD) then
-                    object.call("onReveal", {zone = zone})
-                end
-            elseif firstObjectInZone.tag == "Deck" then
-                -- Skip if card gets swallowed by a deck in the zone
-                for _ , card in pairs(firstObjectInZone.getObjects()) do
-                    if card.guid == object.getGUID() then
-                        return
-                    end
-                end
-
-                local containedObjects = firstObjectInZone.getData().ContainedObjects
-                local firstCard = containedObjects[#containedObjects]
-                local script = firstCard["LuaScript"]
-                -- Attributes
-                newAttributes = findAttrsInScript(script)
-                if newAttributes == {} then
-                    newAttributes.HP = object.getVar("hp") or 0
-                end
-                newAttributes.GUID = firstCard["GUID"]
-                newAttributes.NAME = firstCard["Nickname"]
-                -- Rewards
-                rewards = findRewardsInScript(script)
-                -- Take next monster into the zone
-                if object.hasTag(MONSTER_TAGS.DEAD) then
-                    local position = zone.getPosition()
-                    position.y = 2
-                    local card = firstObjectInZone.takeObject({position = position})
-                    card.addTag(MONSTER_TAGS.NEW)
-                end
+                print("Reveal")
+                object.call("onReveal", {zone = zone})
+                print("Update Attr L")
+                zone.call("updateAttributes", newAttributes)
+                zone.call("updateRewards", rewards)
             else
                 return
             end
-            zone.call("updateAttributes", newAttributes)
-            zone.call("updateRewards", rewards)
         end
     end
 end
