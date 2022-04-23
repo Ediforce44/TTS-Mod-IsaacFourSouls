@@ -385,6 +385,19 @@ function onObjectLeaveScriptingZone(zone, object)
                 else
                     return
                 end
+                local zoneButton = zone.call("getAttackButton")
+                if zoneButton ~= nil then
+                    local activePlayerColor = Global.getVar("activePlayerColor")
+                    if zoneButton.label == ATTACK_BUTTON_STATES.CHOOSE then
+                        click_function_ChooseButton(_, activePlayerColor, false)
+                    elseif zoneButton.label == ATTACK_BUTTON_STATES.ATTACKING
+                        or zoneButton.label == ATTACK_BUTTON_STATES.DIED then
+                            changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
+                    end
+                    if zone.getVar("active") then
+                        --TODO place new monstercard if zone is empty
+                    end
+                end
             end
         end
     end
