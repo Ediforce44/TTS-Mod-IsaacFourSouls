@@ -85,9 +85,18 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Button functions ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-local function altClickAttackButton(zone)
+local function altClickAttackButton(zone, color)
     local clickCounter = zone.getVar("altClickCounter")
     if clickCounter > 0 then
+        -- Reset all Monster-Zones
+        local attackButtonState = zone.call("getAttackButton").label
+        if attackButtonState == ATTACK_BUTTON_STATES.ATTACKING then
+            click_function_AttackButton(zone, color, false)
+        elseif attackButtonState == ATTACK_BUTTON_STATES.CHOOSE then
+            click_function_ChooseButton(_, color, false)
+        elseif attackButtonState == ATTACK_BUTTON_STATES.DIED then
+            changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
+        end
         zone.call("deactivateZone")
     else
         zone.setVar("altClickCounter", clickCounter + 1)
@@ -438,10 +447,10 @@ end
 function click_function_AttackButton(zone, color, alt_click)
     if Global.getVar("activePlayerColor") == color or Player[color].admin then
         if alt_click then
-            altClickAttackButton(zone)
+            altClickAttackButton(zone, color)
             return
         end
-        local attackButton = zone.getButtons()[zone.getVar("ATTACK_BUTTON_INDEX") + 1]
+        local attackButton = zone.call("getAttackButton")
         if attackButton.label == ATTACK_BUTTON_STATES.INACTIVE then
             zone.call("activateZone")
         elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACK then
