@@ -231,7 +231,7 @@ function finishMonster()
             if died then        --if monster died it will tagged as dead
                 local deadTag = MONSTER_DECK_ZONE.getTable("MONSTER_TAGS").DEAD
                 monsterCard.addTag(deadTag)
-                Wait.time(function () monsterCard.removeTag(deadTag) end, 2)
+                Wait.time(function () monsterCard.removeTag(deadTag) end, 1)
                 -- Place new monster card
                 Wait.frames(function ()
                         if not containsDeckOrCard() then
