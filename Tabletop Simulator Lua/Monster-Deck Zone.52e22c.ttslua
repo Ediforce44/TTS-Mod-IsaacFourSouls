@@ -73,6 +73,15 @@ local function isObjectReallyEntering(object, zone)
     return false
 end
 
+local function containsDeckOrCard(zone)
+    for _ , obj in pairs(zone.getObjects()) do
+        if obj.tag == "Deck" or obj.tag == "Card" then
+            return true
+        end
+    end
+    return false
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Button functions ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
@@ -286,8 +295,8 @@ end
 
 function onObjectEnterScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
-        if guid == zone.getGUID() and isObjectReallyEntering(object, zone) then
-            if not object.hasTag(MONSTER_TAGS.DEAD) then
+        if guid == zone.getGUID() and zone.getVar("active") then
+            if (not object.hasTag(MONSTER_TAGS.DEAD)) and isObjectReallyEntering(object, zone) then
                 if object.tag == "Deck" then
                     local containedObjects = object.getData().ContainedObjects
                     local firstCard = containedObjects[#containedObjects]
@@ -308,9 +317,7 @@ function onObjectEnterScriptingZone(zone, object)
                         zone.call("updateRewards", rewards)
                     else
                         -- Take top most monster into the zone
-                        local position = zone.getPosition()
-                        position.y = 2
-                        local card = object.takeObject({position = position})
+                        local card = object.takeObject({position = zone.getPosition():setAt('y', 2)})
                         card.addTag(MONSTER_TAGS.NEW)
                     end
                 elseif object.tag == "Card" then
@@ -318,7 +325,6 @@ function onObjectEnterScriptingZone(zone, object)
                     if zone.getTable("active_monster_attrs").GUID ~= object.getGUID() then
                         -- If monster card is new call onReveal() and update attributes and rewards
                         if object.hasTag(MONSTER_TAGS.NEW) then
-
                             object.call("onReveal", {zone = zone})
                             -- The wait is need for other cards to check if there is an NEW card in the zone
                             Wait.frames(function () object.removeTag(MONSTER_TAGS.NEW) end)
@@ -353,7 +359,7 @@ end
 
 function onObjectLeaveScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
-        if guid == zone.getGUID() and isObjectReallyLeaving(object, zone) then
+        if guid == zone.getGUID() and zone.getVar("active") and isObjectReallyLeaving(object, zone) then
             if object.getGUID() == zone.getTable("active_monster_attrs").GUID then
                 local newAttributes = {}
                 local firstObjectInZone = zone.getObjects()[2]      --first object in zone is the table, so take second
@@ -364,9 +370,7 @@ function onObjectLeaveScriptingZone(zone, object)
                     zone.call("updateAttributes", newAttributes)
                 elseif firstObjectInZone.tag == "Deck" then
                     -- Take the topmost monster into the zone
-                    local position = zone.getPosition()
-                    position.y = 2
-                    local card = firstObjectInZone.takeObject({position = position})
+                    local card = firstObjectInZone.takeObject({position = zone.getPosition():setAt('y', 2)})
                     card.addTag(MONSTER_TAGS.NEW)
                 elseif firstObjectInZone.tag == "Card" then
                     -- Attributes
@@ -378,7 +382,7 @@ function onObjectLeaveScriptingZone(zone, object)
                     -- Rewards
                     local rewards = firstObjectInZone.getTable("rewards") or {}
                     -- On Reveal
-                    object.call("onReveal", {zone = zone})
+                    firstObjectInZone.call("onReveal", {zone = zone})
 
                     zone.call("updateAttributes", newAttributes)
                     zone.call("updateRewards", rewards)
@@ -395,7 +399,6 @@ function onObjectLeaveScriptingZone(zone, object)
                             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
                     end
                     if zone.getVar("active") then
-                        --TODO place new monstercard if zone is empty
                     end
                 end
             end

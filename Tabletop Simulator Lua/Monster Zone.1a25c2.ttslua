@@ -26,7 +26,7 @@ ATTACK_BUTTON_STATES = {}
 ATTACK_BUTTON_COLORS = {}
 ATTACK_BUTTON_INDEX = nil
 
-local function getAttackButton()
+function getAttackButton()
     if ATTACK_BUTTON_INDEX == nil then
         return nil
     end
@@ -277,7 +277,14 @@ function activateZone()
     if active then
         printToAll("[fdd835][WARNING][-] Can't activate Zone: " .. self.guid .. ". This Zone is already active.")
     else
-        if not containsDeckOrCard() then
+        if containsDeckOrCard() then
+            local firstObjectInZone = self.getObjects()[2]
+            if firstObjectInZone.tag == "Card" then
+                firstObjectInZone.setPositionSmooth(self.getPosition():setAt('y', 2), false)
+            elseif firstObjectInZone.tag == "Deck" then
+                firstObjectInZone.takeObject({position = self.getPosition():setAt('y', 2)})
+            end
+        else
             if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == false then
                 return
             end
