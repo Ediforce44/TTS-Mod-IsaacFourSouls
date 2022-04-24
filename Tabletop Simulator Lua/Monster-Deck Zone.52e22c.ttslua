@@ -11,7 +11,8 @@ ATTACK_BUTTON_STATES = {
     ATTACK      = "Attack",
     CHOOSE      = "This Zone",
     ATTACKING   = "Cancel",
-    DIED        = "Finish Him"
+    DIED        = "Finish Him",
+    EVENT       = "Done!"
 }
 ATTACK_BUTTON_COLORS = {
     INACTIVE    = {0.114, 0.063, 0.224},
@@ -96,6 +97,8 @@ local function altClickAttackButton(zone, color)
             click_function_ChooseButton(_, color, false)
         elseif attackButtonState == ATTACK_BUTTON_STATES.DIED then
             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
+        elseif attackButtonState == ATTACK_BUTTON_STATES.EVENT then
+            --TODO
         end
         zone.call("deactivateZone")
     else
@@ -258,6 +261,8 @@ function changeZoneState(params)
                     , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.DIED})})
             deactivateAllOtherMonsterButtons(zone)
         end
+    elseif newState == ATTACK_BUTTON_STATES.EVENT then
+        --TODO
     end
 end
 
@@ -406,8 +411,8 @@ function onObjectLeaveScriptingZone(zone, object)
                     elseif zoneButton.label == ATTACK_BUTTON_STATES.ATTACKING
                         or zoneButton.label == ATTACK_BUTTON_STATES.DIED then
                             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
-                    end
-                    if zone.getVar("active") then
+                    elseif zoneButton.label == ATTACK_BUTTON_STATES.EVENT then
+                        --TODO
                     end
                 end
             end
@@ -450,18 +455,18 @@ function click_function_AttackButton(zone, color, alt_click)
             altClickAttackButton(zone, color)
             return
         end
-        local attackButton = zone.call("getAttackButton")
-        if attackButton.label == ATTACK_BUTTON_STATES.INACTIVE then
+        local attackButtonState = zone.call("getAttackButton").label
+        if attackButtonState == ATTACK_BUTTON_STATES.INACTIVE then
             zone.call("activateZone")
-        elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACK then
+        elseif attackButtonState == ATTACK_BUTTON_STATES.ATTACK then
             if printAttackPhrase(zone.getTable("active_monster_attrs").NAME) then
                 changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACKING})
             end
-        elseif attackButton.label == ATTACK_BUTTON_STATES.CHOOSE then
+        elseif attackButtonState == ATTACK_BUTTON_STATES.CHOOSE then
             if placeNewMonsterCard({zone = zone, isTargetOfAttack = true}) then
                 changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACKING})
             end
-        elseif attackButton.label == ATTACK_BUTTON_STATES.ATTACKING then
+        elseif attackButtonState == ATTACK_BUTTON_STATES.ATTACKING then
             local monsterName = zone.getTable("active_monster_attrs").NAME
             if monsterName == "" then
                 printToAll("[fdd835][WARNING][-] There is no active monster to attack. The attribute 'NAME' is empty.")
@@ -470,9 +475,11 @@ function click_function_AttackButton(zone, color, alt_click)
                                 .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. monsterName .. "[-] !!!")
             end
             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
-        elseif attackButton.label == ATTACK_BUTTON_STATES.DIED then
+        elseif attackButtonState == ATTACK_BUTTON_STATES.DIED then
             zone.call("finishMonster")
             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
+        elseif attackButtonState == ATTACK_BUTTON_STATES.EVENT then
+            --TODO
         else
             printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
         end
