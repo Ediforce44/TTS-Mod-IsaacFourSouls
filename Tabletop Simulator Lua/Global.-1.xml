@@ -5,7 +5,7 @@
 
 <VerticalLayout
     id="colorPicker"
-    height="110"
+    height="150"
     width="210"
     allowDragging="true"
     returnToOriginalPositionWhenReleased="false"
@@ -13,7 +13,7 @@
     offsetXY="450 -50"
     active="false"
     >
-    <Text color="#EEDFD0" id="1" text="Pick Player:" fontSize="25" fontStyle="Bold" alignment="LowerLeft"> </Text>
+    <Text color="white" id="1" text="Pick Player:" fontSize="25" fontStyle="Bold" alignment="LowerLeft"> </Text>
     <HorizontalLayout
         id="colorButtons"
         height="50"
@@ -26,4 +26,7 @@
         <Button color="#2BB837"  id="Green"  class="colorButton"></Button>
         <Button color="#D0E431" id="Yellow" class="colorButton"></Button>
     </HorizontalLayout>
+    <Button color="white" id="cancel" text="Cancel" textColor="black" fontSize="20" fontStyle="Bold" onClick="cancelPick"
+            >
+    </Button>
 </VerticalLayout>

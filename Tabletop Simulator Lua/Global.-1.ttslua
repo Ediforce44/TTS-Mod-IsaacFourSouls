@@ -117,28 +117,52 @@ local colorPickerAttachment = {}
 function colorPicker_attach(params)
     if params.afterPickFunction and params.functionOwner and params.picker then
         table.insert(colorPickerAttachment, {picker = params.picker, afterPickFunction = params.afterPickFunction
-            , functionOwner = params.functionOwner, reason = params.reason})
+            , functionOwner = params.functionOwner, reason = params.reason or "Unknown"})
         if #colorPickerAttachment == 1 then
-            pickColor()
+            pickColor(false)
         end
         return true
     end
     return false
 end
 
-function pickColor()
-    if #colorPickerAttachment > 0 then
+function pickColor(falseInput)
+    if #colorPickerAttachment == 0 then
         return
     end
 
     local nextEntry = colorPickerAttachment[1]
-    UI.setAttributes("visibility", {nextEntry.picker})
-    UI.setAttribute("rollerButtons", "active", true)
-    --TODO
+    UI.setAttribute("colorPicker", "visibility", nextEntry.picker)
+    UI.setAttribute("colorPicker", "active", true)
+    if (not falseInput) then
+        broadcastToAll(getPlayerString({playerColor = nextEntry.picker}) .. " picks a Player Color for "
+            .. nextEntry.reason .. ".")
+        broadcastToColor("Please pick a Player Color for " .. nextEntry.reason .. ".", nextEntry.picker)
+    end
 end
 
 function colorPicked(player, _, idValue)
-    --TODO
+    if Player[idValue].steam_id == nil then
+        broadcastToColor(getPlayerString({playerColor = idValue}) .. " is not a active Player!", player.color)
+        pickColor(true)
+        return
+    end
+    local nextEntry = colorPickerAttachment[1]
+    nextEntry.functionOwner.call(nextEntry.afterPickFunction, {pickedColor = idValue})
+    table.remove(colorPickerAttachment, 1)
+    UI.setAttribute("colorPicker", "active", false)
+    if #colorPickerAttachment > 0 then
+        pickColor(false)
+    end
+end
+
+function cancelPick(player, _, idValue)
+    broadcastToAll(getPlayerString({playerColor = player.color}) .. " canceled the Color-Pick!", Table)
+    table.remove(colorPickerAttachment, 1)
+    UI.setAttribute("colorPicker", "active", false)
+    if #colorPickerAttachment > 0 then
+        pickColor(false)
+    end
 end
 
 activePlayerColor = "Red"
