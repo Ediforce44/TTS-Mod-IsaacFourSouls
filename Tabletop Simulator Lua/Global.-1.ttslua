@@ -112,6 +112,35 @@ end
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+local colorPickerAttachment = {}
+
+function colorPicker_attach(params)
+    if params.afterPickFunction and params.functionOwner and params.picker then
+        table.insert(colorPickerAttachment, {picker = params.picker, afterPickFunction = params.afterPickFunction
+            , functionOwner = params.functionOwner, reason = params.reason})
+        if #colorPickerAttachment == 1 then
+            pickColor()
+        end
+        return true
+    end
+    return false
+end
+
+function pickColor()
+    if #colorPickerAttachment > 0 then
+        return
+    end
+
+    local nextEntry = colorPickerAttachment[1]
+    UI.setAttributes("visibility", {nextEntry.picker})
+    UI.setAttribute("rollerButtons", "active", true)
+    --TODO
+end
+
+function colorPicked(player, _, idValue)
+    --TODO
+end
+
 activePlayerColor = "Red"
 
 automaticRewarding = {
