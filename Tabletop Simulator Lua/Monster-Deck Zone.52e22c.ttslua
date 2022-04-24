@@ -85,9 +85,9 @@ end
 
 local function onNewMonsterReveal(card, zone)
     card.call("onReveal", {zone = zone})
-    --if card.getVar("isEvent") then
+    if card.getVar("isEvent") then
         changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.EVENT})
-    --end
+    end
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -114,12 +114,24 @@ local function altClickAttackButton(zone, color)
     end
 end
 
-local function deactivateAllOtherMonsterButtons(zone)
-    for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
+local function deactivateMonsterButtons(zone, ignoreOwnButton, exceptionStates)
+    ignoreOwnButton = ignoreOwnButton == true
+    exceptionStates = exceptionStates or {}
+    for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
         local monsterZone = getObjectFromGUID(guid)
-        if monsterZone.getGUID() ~= zone.guid then
+        if (not ignoreOwnButton) or (monsterZone.getGUID() ~= zone.guid) then
+            local zoneState = monsterZone.call("getState")
+            for _ , state in pairs(exceptionStates) do
+                if zoneState == state then
+                    goto continue
+                end
+            end
             monsterZone.call("deactivateAttackButton")
         end
+        ::continue::
+    end
+    if not ignoreOwnButton then
+        zone.call("deactivateAttackButton")
     end
     deactivateChooseButton()
 end
@@ -258,7 +270,7 @@ function changeZoneState(params)
             --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.ATTACKING})
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACKING
                     , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACKING})})
-            deactivateAllOtherMonsterButtons(zone)
+            deactivateMonsterButtons(zone, true)
         end
     elseif newState == ATTACK_BUTTON_STATES.DIED then
         if zone.getVar("active") then
@@ -266,11 +278,15 @@ function changeZoneState(params)
             --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.DIED})
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.DIED
                     , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.DIED})})
-            deactivateAllOtherMonsterButtons(zone)
+            deactivateMonsterButtons(zone, true)
         end
     elseif newState == ATTACK_BUTTON_STATES.EVENT then
-        --TODO
-        print(zone.getTable("active_monster_attrs").NAME)
+        if zone.getVar("active") then
+            zone.call("activateAttackButton")
+            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.EVENT
+                    , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.EVENT})})
+            deactivateMonsterButtons(zone, true, {ATTACK_BUTTON_STATES.EVENT})
+        end
     end
 end
 
@@ -416,16 +432,30 @@ function onObjectLeaveScriptingZone(zone, object)
                 else
                     return
                 end
-                local zoneButton = zone.call("getAttackButton")
-                if zoneButton ~= nil then
+                local zoneState = zone.call("getState")
+                if zoneState ~= nil then
                     local activePlayerColor = Global.getVar("activePlayerColor")
-                    if zoneButton.label == ATTACK_BUTTON_STATES.CHOOSE then
+                    if zoneState == ATTACK_BUTTON_STATES.CHOOSE then
                         click_function_ChooseButton(_, activePlayerColor, false)
-                    elseif zoneButton.label == ATTACK_BUTTON_STATES.ATTACKING
-                        or zoneButton.label == ATTACK_BUTTON_STATES.DIED then
+                    elseif zoneState == ATTACK_BUTTON_STATES.ATTACKING
+                        or zoneState == ATTACK_BUTTON_STATES.DIED then
                             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
-                    elseif zoneButton.label == ATTACK_BUTTON_STATES.EVENT then
-                        --TODO
+                    elseif zoneState == ATTACK_BUTTON_STATES.EVENT then
+                        local moreEventsToResolve = false
+                        for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
+                            local monsterZone = getObjectFromGUID(guid)
+                            if monsterZone.call("getState") == ATTACK_BUTTON_STATES.EVENT then
+                                if monsterZone ~= zone then
+                                    moreEventsToResolve = true
+                                    break
+                                end
+                            end
+                        end
+                        if moreEventsToResolve then
+                            zone.call("deactivateAttackButton")
+                        else
+                            changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
+                        end
                     end
                 end
             end
@@ -468,7 +498,7 @@ function click_function_AttackButton(zone, color, alt_click)
             altClickAttackButton(zone, color)
             return
         end
-        local attackButtonState = zone.call("getAttackButton").label
+        local attackButtonState = zone.call("getState")
         if attackButtonState == ATTACK_BUTTON_STATES.INACTIVE then
             zone.call("activateZone")
         elseif attackButtonState == ATTACK_BUTTON_STATES.ATTACK then

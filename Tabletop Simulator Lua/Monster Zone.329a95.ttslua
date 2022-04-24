@@ -19,6 +19,8 @@ active_monster_reward = {
 }
 
 active = false
+
+-- Don't use it. It is only used for monster reanimation
 lastState = nil
 
 MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
@@ -32,6 +34,14 @@ function getAttackButton()
     end
 
     return self.getButtons()[ATTACK_BUTTON_INDEX + 1]
+end
+
+function getState()
+    local attackButton = getAttackButton()
+    if attackButton == nil then
+        return nil
+    end
+    return attackButton.label
 end
 
 local function containsDeckOrCard()
