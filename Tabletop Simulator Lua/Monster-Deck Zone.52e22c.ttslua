@@ -83,6 +83,13 @@ local function containsDeckOrCard(zone)
     return false
 end
 
+local function onNewMonsterReveal(card, zone)
+    card.call("onReveal", {zone = zone})
+    --if card.getVar("isEvent") then
+        changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.EVENT})
+    --end
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Button functions ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
@@ -263,6 +270,7 @@ function changeZoneState(params)
         end
     elseif newState == ATTACK_BUTTON_STATES.EVENT then
         --TODO
+        print(zone.getTable("active_monster_attrs").NAME)
     end
 end
 
@@ -335,13 +343,12 @@ function onObjectEnterScriptingZone(zone, object)
                         card.addTag(MONSTER_TAGS.NEW)
                     end
                 elseif object.tag == "Card" then
+                    local isMonsterNew = false
                     -- Tests if this card is the active monster of this zone
                     if zone.getTable("active_monster_attrs").GUID ~= object.getGUID() then
                         -- If monster card is new call onReveal() and update attributes and rewards
                         if object.hasTag(MONSTER_TAGS.NEW) then
-                            object.call("onReveal", {zone = zone})
-                            -- The wait is need for other cards to check if there is an NEW card in the zone
-                            Wait.frames(function () object.removeTag(MONSTER_TAGS.NEW) end)
+                            isMonsterNew = true
                         else
                             -- Ignore this card if there is a object in the zone, which is NEW
                             for _ , obj in pairs(zone.getObjects()) do
@@ -363,6 +370,12 @@ function onObjectEnterScriptingZone(zone, object)
 
                     zone.call("updateAttributes", newAttributes)
                     zone.call("updateRewards", rewards)
+
+                    if isMonsterNew then
+                        onNewMonsterReveal(object, zone)
+                        -- The wait is need for other cards to check if there is an NEW card in the zone
+                        Wait.frames(function () object.removeTag(MONSTER_TAGS.NEW) end)
+                    end
                 else
                     return
                 end
@@ -395,11 +408,11 @@ function onObjectLeaveScriptingZone(zone, object)
                     newAttributes.DMG = firstObjectInZone.getVar("atk")
                     -- Rewards
                     local rewards = firstObjectInZone.getTable("rewards") or {}
-                    -- On Reveal
-                    firstObjectInZone.call("onReveal", {zone = zone})
 
                     zone.call("updateAttributes", newAttributes)
                     zone.call("updateRewards", rewards)
+                    -- On Reveal
+                    onNewMonsterReveal(firstObjectInZone, zone)
                 else
                     return
                 end
