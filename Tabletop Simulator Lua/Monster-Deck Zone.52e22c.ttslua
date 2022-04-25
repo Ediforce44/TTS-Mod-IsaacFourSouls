@@ -105,7 +105,7 @@ local function altClickAttackButton(zone, color)
         elseif attackButtonState == ATTACK_BUTTON_STATES.DIED then
             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
         elseif attackButtonState == ATTACK_BUTTON_STATES.EVENT then
-            --TODO
+            --TODO maybe nothing (test if the other states are also useless)
         end
         zone.call("deactivateZone")
     else
@@ -176,6 +176,42 @@ function resetAllMonsterZones()
     resetMonsterZone()
 end
 
+function discardActiveMonsterCard(params)
+    if params.zone == nil then
+        return
+    end
+
+    local monsterCard = nil
+    for _ , object in pairs(zone.getObjects()) do
+        if object.tag == "Deck" then
+            monsterCard = object.takeObject({index = object.getQuantity() - 1})
+            break
+        elseif object.tag == "Card" then
+            monsterCard = object
+            break
+        end
+    end
+    if monsterCard then
+        monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+        Wait.frames(function ()
+                local died = not (monsterCard.call("onDie", {zone = self}) == false)    --default: true, only false on false
+                if died then        --if monster died it will tagged as dead
+                    local deadTag = MONSTER_TAGS.DEAD
+                    monsterCard.addTag(deadTag)
+                    Wait.time(function () monsterCard.removeTag(deadTag) end, 1)
+                    -- Place new monster card
+                    Wait.frames(function ()
+                            if not containsDeckOrCard() then
+                                if placeNewMonsterCard({zone = self, isTargetOfAttack = false}) == false then
+                                    return
+                                end
+                            end
+                        end, 60)
+                end
+            end)
+    end
+end
+
 function resetMonsterZone()
     if CHOOSE_BUTTON_INDEX == nil then
         activateChooseButton()
@@ -230,7 +266,12 @@ function placeNewMonsterCard(params)
         newMonsterCard.addTag("new")
         newMonsterCard.flip()
         newMonsterCard.setPositionSmooth({params.zone.getPosition().x, 5, params.zone.getPosition().z}, false)
-        if params.isTargetOfAttack then Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end, 1) end
+        if params.isTargetOfAttack then
+            if newMonsterCard.getVar("isEvent") then
+                --TODO print
+            else
+                Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end, 1) end
+            end
         return true
     end
     return false
@@ -522,7 +563,8 @@ function click_function_AttackButton(zone, color, alt_click)
             zone.call("finishMonster")
             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
         elseif attackButtonState == ATTACK_BUTTON_STATES.EVENT then
-            --TODO
+            discardActiveMonsterCard({zone = zone})
+            --TODO print
         else
             printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
         end
