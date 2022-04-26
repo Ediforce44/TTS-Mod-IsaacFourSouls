@@ -85,6 +85,18 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Button functions ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+local function hasMoreActiveEvents(zone)
+    for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
+        local monsterZone = getObjectFromGUID(guid)
+        if monsterZone.call("getState") == ATTACK_BUTTON_STATES.EVENT then
+            if monsterZone ~= zone then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 local function altClickAttackButton(zone, color)
     local clickCounter = zone.getVar("altClickCounter")
     if clickCounter > 0 then
@@ -97,7 +109,13 @@ local function altClickAttackButton(zone, color)
         elseif attackButtonState == ATTACK_BUTTON_STATES.DIED then
             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
         elseif attackButtonState == ATTACK_BUTTON_STATES.EVENT then
-            --TODO maybe nothing (test if the other states are also useless)
+            if hasMoreActiveEvents(zone) then
+                zone.call("deactivateZone")
+                zone.call("deactivateAttackButton")
+                return
+            else
+                changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
+            end
         end
         zone.call("deactivateZone")
     else
@@ -212,7 +230,7 @@ function discardActiveMonsterCard(params)
                 if died then
                     -- Place new monster card
                     Wait.frames(function ()
-                            if not containsDeckOrCard({zone = zone}) then
+                            if not zone.call("containsDeckOrCard") then
                                 if placeNewMonsterCard({zone = zone, isTargetOfAttack = false}) == false then
                                     return
                                 end
@@ -495,17 +513,7 @@ function onObjectLeaveScriptingZone(zone, object)
                         or zoneState == ATTACK_BUTTON_STATES.DIED then
                             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
                     elseif zoneState == ATTACK_BUTTON_STATES.EVENT then
-                        local moreEventsToResolve = false
-                        for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
-                            local monsterZone = getObjectFromGUID(guid)
-                            if monsterZone.call("getState") == ATTACK_BUTTON_STATES.EVENT then
-                                if monsterZone ~= zone then
-                                    moreEventsToResolve = true
-                                    break
-                                end
-                            end
-                        end
-                        if moreEventsToResolve then
+                        if hasMoreActiveEvents(zone) then
                             zone.call("deactivateAttackButton")
                         else
                             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})

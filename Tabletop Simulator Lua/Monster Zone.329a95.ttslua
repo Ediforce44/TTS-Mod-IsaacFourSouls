@@ -44,7 +44,7 @@ function getState()
     return attackButton.label
 end
 
-local function containsDeckOrCard()
+function containsDeckOrCard()
     for _ , obj in pairs(self.getObjects()) do
         if obj.tag == "Deck" or obj.tag == "Card" then
             return true
@@ -308,24 +308,22 @@ function activateZone()
 end
 
 function deactivateZone()
-    if ATTACK_BUTTON_INDEX == nil then
-        activateAttackButton()
-    end
-    local ignoreTag = MONSTER_DECK_ZONE.getTable("MONSTER_TAGS").DEAD
     for _ , obj in pairs(self.getObjects()) do
         if obj.tag == "Deck" or obj.tag == "Card" then
-            obj.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
-            obj.addTag(ignoreTag)
-            Wait.time(function () obj.removeTag(ignoreTag) end, 1)
+            MONSTER_DECK_ZONE.call("discardMonsterObject", {object = obj})
         end
     end
-    --self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE})
-    self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE
+    updateAttributes({HP = 0, GUID = ""})
+
+    active = false
+
+    if ATTACK_BUTTON_INDEX == nil then
+        activateAttackButton()
+    else
+        self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE
             , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.INACTIVE})
             , color = ATTACK_BUTTON_COLORS.INACTIVE})
-
-    updateAttributes({HP = 0, GUID = ""})
-    active = false
+    end
 end
 
 function changeButtonState(params)
