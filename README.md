@@ -84,53 +84,53 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > > (Current value: 0.3 sec)
 > > 
 > > Colors (often used for prints and broadcasts):
-> > - `REAL_PLAYER_COLOR` containes HTML color codes with all four player colors. The keys are the ingame player colors `Red`, `Blue`, `Green` and `Yellow`
-> > - `REAL_PLAYER_COLOR_RGB` containes RGB percentage values for the `REAL_PLAYER_COLOR` entries. It has the same keys as `REAL_PLAYER_COLOR`.
-> > - `PRINT_COLOR_PLAYER` simular to `REAL_PLAYER_COLOR`, but the keys are in caps.
+> > - `REAL_PLAYER_COLOR` containes HTML color codes with all four player colors. The keys are the ingame player colors **Red**, **Blue**, **Green** and **Yellow**.
+> > - `REAL_PLAYER_COLOR_RGB` containes RGB percentage values for the **REAL_PLAYER_COLOR** entries. It has the same keys as **REAL_PLAYER_COLOR**.
+> > - `PRINT_COLOR_PLAYER` simular to **REAL_PLAYER_COLOR**, but the keys are in caps.
 > > - `PRINT_COLOR_SPECIAL` containes many types of HTML color codes for all types of game components. The keys are also written in caps.
 > >
 > > GUIDs of Zones:
 > > - `ZONE_GUID_DECK` containes the GUIDs of all deck zones in the game.
-> > - `ZONE_GUID_SHOP` containes the GUIDs of the six Shop Zones. The keys are `ONE` to `SIX`.
-> > - `ZONE_GUID_MONSTER` containes the GUIDs of the six Monster Zones. The keys are `ONE` to `SIX`.
-> > - `ZONE_GUID_PLAYER` containes the GUIDs of the Player Zones in front of each player. The keys are the ingame player colors `Red`, `Blue`, `Green` and `Yellow`
+> > - `ZONE_GUID_SHOP` containes the GUIDs of the six Shop Zones. The keys are **ONE** to **SIX**.
+> > - `ZONE_GUID_MONSTER` containes the GUIDs of the six Monster Zones. The keys are **ONE** to **SIX**.
+> > - `ZONE_GUID_PLAYER` containes the GUIDs of the Player Zones in front of each player. The keys are the ingame player colors **Red**, **Blue**, **Green** and **Yellow**
 > > - `ZONE_GUID_SOUL` containes the GUIDs of the Soul Zones in front of each player next to their Player Zone. The keys are the ingame player colors.
 > >
 > > GUIDs of game components:\
 > > - `HEART_TOKENS_GUID` containes Tables of GUIDs corresponding to the Heart Tokens in front of each player. The GUIDs of the Heart Tokens are in the correct order. The keys are the player colors.
 > > - `FIRST_HEARTS_GUID`. The keys are the player colors.
 > > - `COIN_COUNTER_GUID`. The keys are the player colors.
-> > - `MONSTER_HP_COUNTER_GUID` containes the GUIDs of the HP Counters for the six Monster Zones. The keys are `ONE` to `SIX`.
+> > - `MONSTER_HP_COUNTER_GUID` containes the GUIDs of the HP Counters for the six Monster Zones. The keys are **ONE** to **SIX**.
 > > - `COUNTER_BAGS_GUID` containes the GUIDs of the ingame bags of counters. The keys are in caps.
 > >
 > > Positions:
 > > - `DISCARD_PILE_POSITION` containes the positions of the discard piles for each deck. The keys are in caps.
 > >
 > > Other Tables:
-> > - `automaticRewarding` containes the `true` or `false` if the automatic rewarding is activated for a player. The keys are the player colors.
+> > - `automaticRewarding` containes the *true* or *false* if the automatic rewarding is activated for a player. The keys are the player colors.
 >
 > > ### <u><b>Variables</b></u>
-> > - `activePlayerColor` containes the player color `string` of the player who is the active player.
+> > - `activePlayerColor` containes the player color *string* of the player who is the active player.
 > 
 > > ### <u><b>Getter Functions</b></u>
-> > - `getDeckFromZone(zoneGUID) : object` returns the first deck or card in the zone with the GUID `zoneGUID`. If there is no deck or card, it will return `nil`.
-> > - `getMonsterDeck() : object` returns the first deck or card in the Monster Zone. If there is no deck or card it will return `nil`.
+> > - `getDeckFromZone(zoneGUID) : object` returns the first deck or card in the zone with the GUID **zoneGUID**. If there is no deck or card, it will return *nil*.
+> > - `getMonsterDeck() : object` returns the first deck or card in the Monster Zone. If there is no deck or card it will return *nil*.
 > > - `getHappenDeck() : object` ...
 > > - `getTreasureDeck() : object` ...
 > > - `getLootDeck() : object` ...
 > > - `getBonusSoulDeck() : object` ...
 > > - `getFloorDeck() : object` ...
 > > - `getSoulTokenDeck() : object` ...
-> > - `getActivePlayerString() : string` returns the color of the active player as a `string` tinted in the same color.
+> > - `getActivePlayerString() : string` returns the color of the active player as a *string* tinted in the same color.
 > > - `getActivePlayerZone() : zone` returns the Player Zone of the active player.
 > > ### <u><b>Other Functions</b></u>
-> > - `getCardFromDeck({deck}) : object` takes a card from the `deck` and return a reference on this card. If `deck` is a card it will return `deck`.
-> > - `getPlayerString({playerColor}) : string` returns a the `playerColor` as a `string` tinted in the same color.
-> > - `getCounterInZone({zone}) : object` returns the first object in `zone` with the name "Counter".
-> > - `isPlayerAuthorized({playerColor or player, ownerPlayer}) : bool` returns `true` if the the player `player` or player with the `playerColor` equals `ownerPlayer`. It will return also `true` if `player` or the player with the `playerColor` is an admin.
-> > - `findIntInScript({scriptString, varName}) : int` searches in the `scriptString` for a variable with the name `varName` and returns the value of it.
-> > - `switchRewardingMode({playerColor or player})` switches the Rewarding Mode for `player` or the player with the `playerColor`.
-> > - `placeSoulToken({ownerColor})` takes a Soul Token from the soul token deck and places it in the Soul Zone of the player with the color `ownerColor`. Prints a INFO-MSG.
+> > - `getCardFromDeck({deck}) : object` takes a card from the **deck** and return a reference on this card. If **deck** is a card it will return **deck**.
+> > - `getPlayerString({playerColor}) : string` returns a the **playerColor** as a *string* tinted in the same color.
+> > - `getCounterInZone({zone}) : object` returns the first object in **zone** with the name "Counter".
+> > - `isPlayerAuthorized({playerColor or player, ownerPlayer}) : bool` returns *true* if the the player **player** or player with the **playerColor** equals **ownerPlayer**. It will return also *true* if **player** or the player with the **playerColor** is an admin.
+> > - `findIntInScript({scriptString, varName}) : int` searches in the **scriptString** for a variable with the name **varName** and returns the value of it.
+> > - `switchRewardingMode({playerColor or player})` switches the Rewarding Mode for **player** or the player with the **playerColor**.
+> > - `placeSoulToken({ownerColor})` takes a Soul Token from the soul token deck and places it in the Soul Zone of the player with the color **ownerColor**. Prints a INFO-MSG.
 
 # Things to do
 ## TODO-List
