@@ -75,15 +75,6 @@ local function isObjectReallyEntering(object, zone)
     return false
 end
 
-local function containsDeckOrCard(zone)
-    for _ , obj in pairs(zone.getObjects()) do
-        if obj.tag == "Deck" or obj.tag == "Card" then
-            return true
-        end
-    end
-    return false
-end
-
 local function onNewMonsterReveal(card, zone)
     card.call("onReveal", {zone = zone})
     --if card.getVar("isEvent") then
@@ -171,6 +162,19 @@ function onSave()
     return JSON.encode({currentLabel})
 end
 
+function containsDeckOrCard(params)
+    if params.zone == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'containsDeckOrCard()'.")
+    else
+        for _ , obj in pairs(params.zone.getObjects()) do
+            if obj.tag == "Deck" or obj.tag == "Card" then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 function discardMonsterObject(params)
     if params.object == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'discardMonsterObject()'.")
@@ -202,13 +206,13 @@ function discardActiveMonsterCard(params)
         end
     end
     if monsterCard then
-        discardMonsterObject({object = monsterCard})
         Wait.frames(function ()
+                discardMonsterObject({object = monsterCard})
                 local died = not (monsterCard.call("onDie", {zone = self}) == false)    --default: true, only false on false
                 if died then
                     -- Place new monster card
                     Wait.frames(function ()
-                            if not containsDeckOrCard(zone) then
+                            if not containsDeckOrCard({zone = zone}) then
                                 if placeNewMonsterCard({zone = zone, isTargetOfAttack = false}) == false then
                                     return
                                 end

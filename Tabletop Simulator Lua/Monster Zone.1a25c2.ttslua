@@ -228,15 +228,15 @@ function finishMonster()
                 .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME .. "[-] !!!")
         end
     end
-    -- Place discard monster card
-    if active_monster_reward.SOULS ~= 0 then    -- Monster becomes soul token
-        getObjectFromGUID(Global.getTable("ZONE_GUID_SOUL")[activePlayerColor]).call("placeCardInSoulZone"
-            , {card = monsterCard})
-    else    -- Monster just get discarded
-        monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
-    end
     -- OnDie
     Wait.frames(function ()
+            -- Place discard monster card
+            if active_monster_reward.SOULS ~= 0 then    -- Monster becomes soul token
+                getObjectFromGUID(Global.getTable("ZONE_GUID_SOUL")[activePlayerColor]).call("placeCardInSoulZone"
+                    , {card = monsterCard})
+            else    -- Monster just get discarded
+                monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+            end
             local died = not (monsterCard.call("onDie", {zone = self}) == false)    --default: true, only false on false
             if died then        --if monster died it will tagged as dead
                 local deadTag = MONSTER_DECK_ZONE.getTable("MONSTER_TAGS").DEAD

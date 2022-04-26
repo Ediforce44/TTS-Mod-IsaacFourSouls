@@ -434,6 +434,7 @@ end
 function placeSoulToken(params)
     if params.ownerColor == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeSoulToken()'.")
+        return
     end
     local soulToken = getCardFromDeck({deck = getSoulTokenDeck()})
     if soulToken ~= nil then
