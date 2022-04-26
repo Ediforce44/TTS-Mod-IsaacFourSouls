@@ -1,5 +1,6 @@
 --- Written by Ediforce44
 MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
+DISCARD_PILE_POSITION = {}
 CHOOSE_BUTTON_STATES = {
     ATTACK      = "Attack",
     CHOOSE      = "Cancel"
@@ -85,9 +86,9 @@ end
 
 local function onNewMonsterReveal(card, zone)
     card.call("onReveal", {zone = zone})
-    if card.getVar("isEvent") then
+    --if card.getVar("isEvent") then
         changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.EVENT})
-    end
+    --end
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -145,6 +146,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 function onLoad(saved_data)
+    DISCARD_PILE_POSITION = Global.getTable("DISCARD_PILE_POSITION").MONSTER
     if saved_data == "" then
         return
     end
@@ -169,6 +171,14 @@ function onSave()
     return JSON.encode({currentLabel})
 end
 
+function discardMonsterObject(params)
+    if params.object == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'discardMonsterObject()'.")
+    end
+    params.object.setPositionSmooth(DISCARD_PILE_POSITION)
+    params.object.addTag(MONSTER_TAGS.DEAD)
+end
+
 function resetAllMonsterZones()
     for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
         getObjectFromGUID(guid).call("resetMonsterZone")
@@ -180,7 +190,7 @@ function discardActiveMonsterCard(params)
     if params.zone == nil then
         return
     end
-
+    local zone = params.zone
     local monsterCard = nil
     for _ , object in pairs(zone.getObjects()) do
         if object.tag == "Deck" then
@@ -192,21 +202,20 @@ function discardActiveMonsterCard(params)
         end
     end
     if monsterCard then
-        monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+        discardMonsterObject({object = monsterCard})
         Wait.frames(function ()
                 local died = not (monsterCard.call("onDie", {zone = self}) == false)    --default: true, only false on false
-                if died then        --if monster died it will tagged as dead
-                    local deadTag = MONSTER_TAGS.DEAD
-                    monsterCard.addTag(deadTag)
-                    Wait.time(function () monsterCard.removeTag(deadTag) end, 1)
+                if died then
                     -- Place new monster card
                     Wait.frames(function ()
-                            if not containsDeckOrCard() then
-                                if placeNewMonsterCard({zone = self, isTargetOfAttack = false}) == false then
+                            if not containsDeckOrCard(zone) then
+                                if placeNewMonsterCard({zone = zone, isTargetOfAttack = false}) == false then
                                     return
                                 end
                             end
                         end, 60)
+                else
+                    monsterCard.removeTag(MONSTER_TAGS.DEAD)
                 end
             end)
     end
@@ -564,7 +573,6 @@ function click_function_AttackButton(zone, color, alt_click)
             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
         elseif attackButtonState == ATTACK_BUTTON_STATES.EVENT then
             discardActiveMonsterCard({zone = zone})
-            --TODO print
         else
             printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
         end
