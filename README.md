@@ -123,6 +123,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > > - `getSoulTokenDeck() : object` ...
 > > - `getActivePlayerString() : string` returns the color of the active player as a *string* tinted in the same color.
 > > - `getActivePlayerZone() : zone` returns the Player Zone of the active player.
+> 
 > > ### <u><b>Other Functions</b></u>
 > > - `getCardFromDeck({deck}) : object` takes a card from the **deck** and return a reference on this card. If **deck** is a card it will return **deck**.
 > > - `getPlayerString({playerColor}) : string` returns a the **playerColor** as a *string* tinted in the same color.
@@ -131,6 +132,60 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > > - `findIntInScript({scriptString, varName}) : int` searches in the **scriptString** for a variable with the name **varName** and returns the value of it.
 > > - `switchRewardingMode({playerColor or player})` switches the Rewarding Mode for **player** or the player with the **playerColor**.
 > > - `placeSoulToken({ownerColor})` takes a Soul Token from the soul token deck and places it in the Soul Zone of the player with the color **ownerColor**. Prints a INFO-MSG.
+
+> ## <b>Coins</b>
+> > ### <u><b>Variables</b></u>
+> > - `value` is the current amount of coins. \
+> > (Minimum: 0, Maximum: 999)
+> 
+> > ### <u><b>Functions</b></u>
+> > - `modifyCoins({modifier})` adds or subtracts the **modifier** based on its sign to the current amount of coins.
+
+> ## <b>HP (Monster)</b>
+> > ### <u><b>Variables</b></u>
+> > - `value` is the current HP of the active monster in the corresponding zone. \
+> > (Minimum: 0, Maximum: 9)
+> 
+> > ### <u><b>Functions</b></u>
+> > - `updateHP({HP})` sets the *value* of this HP-Counter to **HP**. **HP** has to be positiv and lower than 10.
+> > - `reset()` sets the *value* of this HP-Counter to the HP-Value of the active monster in the corresponding zone, if it isn't 0. \
+> > (This function uses the *active_monster_attrs* from the Monster Zone)
+
+> ## <b>Monster Zone</b>
+> > ### <u><b>Tables</b></u>
+> > - `active_monster_attrs` containes the attributes of the active monster in this zone. The keys are **GUID**, **NAME**, **HP**, **ATK** and **DMG**.
+> > - `active_monster_reward` containes the amount of rewards of the active monster in this zone. The keys are **CENTS**, **LOOT**, **TREASURES** and **SOULS**.
+> 
+> > ### <u><b>Variables</b></u>
+> > - `active` is *true*, if this zone is an active monster zone.
+> 
+> > ### <u><b>Getter Functions</b></u>
+> > - `getAttackButton() : button` returns a reference of the monster button of this zone. If the monster button is deactivated if will return *nil*.
+> > - `getState() : string` returns the state of this zone. The state of a zone is the same as the state of its monster button. And the state of a monster button is its *label*. \
+> If the monster button of this zone is deactivated it will return *nil*. \
+> All states of a monster zone and its monster button are listet in the *Table* **ATTACK_BUTTON_STATES** in the Monster-Deck Zone script.
+> 
+>
+> > ### <u><b>Other Functions</b></u>
+> > - `containsDeckOrCard() : bool` returns *true* if this zone containes a *deck* or *card*.
+> > - `resetMonsterZone()` sets the state/*label* of the monster button of this zone to *ATTACK* if this zone is *active*, otherwise to *INACTIVE*. If the monster button of this zone is deactivated the button will be activated. \
+> > The HP-Counter of this zone will also be reseted.
+> > - `deactivateAttackButton()`
+> > - `activateAttackButton()`
+> > - `monsterDied()`
+> > - `monsterReanimated()`
+> > - `finishMonster()`
+> > - `updateAttributes()`
+> > - `updateRewards()`
+> > - `deactivateZone()`
+> > - `activateZone()`
+> > - `changeButtonState()`
+
+> ## <b>Monster Zone</b>
+> > ### <u><b>Variables</b></u>
+>
+> > ### <u><b>Functions</b></u>
+
 
 # Things to do
 ## TODO-List
