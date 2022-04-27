@@ -25,6 +25,12 @@ MONSTER_TAGS = {
     DEAD    = "Dead"
 }
 
+EVENT_TYPES = {
+    CURSE   = "curse",
+    GOOD    = "eventGood",
+    BAD     = "eventBad"
+}
+
 local function getChooseButton()
     if CHOOSE_BUTTON_INDEX == nil then
         return nil
@@ -41,6 +47,10 @@ local function getDoubleAltClickParameters(zone)
         ["delay"] = Global.getVar("CLICK_DELAY")
     }
     return DOUBLE_CLICK_PARAMETERS
+end
+
+local function printEventPhrase(eventName, eventType)
+    --TODO
 end
 
 local function printAttackPhrase(monsterName)
@@ -76,10 +86,10 @@ local function isObjectReallyEntering(object, zone)
 end
 
 local function onNewMonsterReveal(card, zone)
-    card.call("onReveal", {zone = zone})
-    --if card.getVar("isEvent") then
+    local revealed = not (card.call("onReveal", {zone = zone}) == false)    -- Standard is true
+    if card.getVar("isEvent") and revealed then
         changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.EVENT})
-    --end
+    end
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -299,10 +309,15 @@ function placeNewMonsterCard(params)
         newMonsterCard.setPositionSmooth({params.zone.getPosition().x, 5, params.zone.getPosition().z}, false)
         if params.isTargetOfAttack then
             if newMonsterCard.getVar("isEvent") then
-                --TODO print
+                local eventType = newMonsterCard.getVar("type")
+                if eventType == nil then
+                    eventType = newMonsterCard.getVar("eventType")
+                end
+                Wait.frames(function () printEventPhrase(newMonsterCard.getName(), eventType) end)
             else
-                Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end, 1) end
+                Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end)
             end
+        end
         return true
     end
     return false
