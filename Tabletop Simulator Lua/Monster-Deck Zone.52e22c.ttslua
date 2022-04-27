@@ -318,13 +318,17 @@ function placeNewMonsterCard(params)
         newMonsterCard.addTag(MONSTER_TAGS.NEW)
         newMonsterCard.flip()
         newMonsterCard.setPositionSmooth({params.zone.getPosition().x, 5, params.zone.getPosition().z}, false)
-        if newMonsterCard.getVar("isEvent") then
+        if true then --newMonsterCard.getVar("isEvent") then
             Wait.frames(function ()
                     local eventType = newMonsterCard.getVar("type")
                     if eventType == nil then
                         eventType = newMonsterCard.getVar("eventType")
                     end
                     printEventPhrase(newMonsterCard.getName(), eventType)
+                    if eventType == EVENT_TYPES.CURSE then
+                        Global.call("colorPicker_attach", {picker = "Red", afterPickFunction = "test", functionOwner = self
+                            , reason = newMonsterCard.getName()})
+                    end
                 end)
         elseif params.isTargetOfAttack then
             Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end)
@@ -332,6 +336,10 @@ function placeNewMonsterCard(params)
         return true
     end
     return false
+end
+
+function test()
+    print("Klappt")
 end
 
 function changeZoneState(params)
