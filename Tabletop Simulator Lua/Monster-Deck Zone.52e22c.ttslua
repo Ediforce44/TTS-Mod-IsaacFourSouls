@@ -50,14 +50,25 @@ local function getDoubleAltClickParameters(zone)
 end
 
 local function printEventPhrase(eventName, eventType)
-    --TODO
+    local eventPhrase = ""
+    local activePlayerString = Global.call("getActivePlayerString")
+    if eventType == EVENT_TYPES.CURSE then
+        eventPhrase = eventPhrase .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. "CURSE TIME !!!"
+    elseif eventType == EVENT_TYPES.GOOD then
+        eventPhrase = eventPhrase .. "Nice! " .. activePlayerString .. " got a "
+            .. Global.getTable("PRINT_COLOR_SPECIAL").GRAY .. eventName .. "[-]."
+    elseif eventType == EVENT_TYPES.BAD then
+        eventPhrase = eventPhrase .. "Ohhhh! " .. activePlayerString .. " got a "
+            .. Global.getTable("PRINT_COLOR_SPECIAL").GRAY .. eventName .. "[-]."
+    else
+        eventPhrase = "An " .. Global.getTable("PRINT_COLOR_SPECIAL").GRAY .. "Event[-] occurred."
+    end
+    broadcastToAll(eventPhrase)
 end
 
 local function printAttackPhrase(monsterName)
     local phrase = nil
-    if monsterName == "" then
-        printToAll("[fdd835][WARNING][-] There is no active monster to attack. The attribute 'NAME' is empty.")
-    else
+    if monsterName ~= "" then
         phrase = Global.call("getActivePlayerString")
         phrase = phrase .. " attacks " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. monsterName .. "[-] !!!"
         broadcastToAll(phrase)
@@ -304,23 +315,31 @@ function placeNewMonsterCard(params)
     end
     local newMonsterCard = Global.call("getCardFromDeck", {deck = Global.call("getMonsterDeck")})
     if newMonsterCard ~= nil then
-        newMonsterCard.addTag("new")
+        newMonsterCard.addTag(MONSTER_TAGS.NEW)
         newMonsterCard.flip()
         newMonsterCard.setPositionSmooth({params.zone.getPosition().x, 5, params.zone.getPosition().z}, false)
-        if params.isTargetOfAttack then
-            if newMonsterCard.getVar("isEvent") then
-                local eventType = newMonsterCard.getVar("type")
-                if eventType == nil then
-                    eventType = newMonsterCard.getVar("eventType")
-                end
-                Wait.frames(function () printEventPhrase(newMonsterCard.getName(), eventType) end)
-            else
-                Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end)
-            end
+        if true then --newMonsterCard.getVar("isEvent") then
+            Wait.frames(function ()
+                    local eventType = newMonsterCard.getVar("type")
+                    if eventType == nil then
+                        eventType = newMonsterCard.getVar("eventType")
+                    end
+                    printEventPhrase(newMonsterCard.getName(), eventType)
+                    if eventType == EVENT_TYPES.CURSE then
+                        Global.call("colorPicker_attach", {picker = "Red", afterPickFunction = "test", functionOwner = self
+                            , reason = newMonsterCard.getName()})
+                    end
+                end)
+        elseif params.isTargetOfAttack then
+            Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end)
         end
         return true
     end
     return false
+end
+
+function test()
+    print("Klappt")
 end
 
 function changeZoneState(params)
