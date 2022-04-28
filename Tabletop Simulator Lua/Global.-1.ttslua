@@ -258,6 +258,13 @@ ZONE_GUID_PLAYER = {
     Red = "b35919"
 }
 
+ZONE_GUID_PILL = {
+    Yellow = "53dd4c",
+    Green = "e3361a",
+    Blue = "9af794",
+    Red = "d12e48"
+}
+
 ZONE_GUID_SOUL = {
     Yellow = "92610d",
     Green = "f95f84",
@@ -451,6 +458,27 @@ function placeSoulToken(params)
     else
         printToAll("[fdd835][WARNING][-] Can't find the Soul Token deck: Maybe the soul tokens are empty. " ..
                     "Place the soul tokens on its starting position.")
+    end
+end
+
+function placeCardInPillZone(params)
+    if (params.playerColor == nil) or (params.card == nil) then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeCardInPillZone()'.")
+    else
+        getObjectFromGUID(ZONE_GUID_PILL[params.playerColor]).call("placeCardInZone", {card = params.card})
+    end
+end
+
+function placeCardsInPlayerZone(params)
+    if (params.playerColor == nil) or (params.cards == nil) then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeCardsInPlayerZone()'.")
+    else
+        local cards = params.cards
+        if #cards > 1 then
+            --TODO
+        elseif #cards == 1 then
+            --TODO
+        end
     end
 end
 ------------------------------------------------------------------------------------------------------------------------

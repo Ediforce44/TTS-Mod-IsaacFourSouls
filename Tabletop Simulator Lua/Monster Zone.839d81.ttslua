@@ -28,6 +28,8 @@ ATTACK_BUTTON_STATES = {}
 ATTACK_BUTTON_COLORS = {}
 ATTACK_BUTTON_INDEX = nil
 
+EVENT_TYPES = {}
+
 function getAttackButton()
     if ATTACK_BUTTON_INDEX == nil then
         return nil
@@ -90,8 +92,9 @@ local function payOutSouls(playerColor, amount)
 end
 
 function onLoad(saved_data)
-    ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
+    ATTACK_BUTTON_STATES = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_STATES")
     ATTACK_BUTTON_COLORS = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_COLORS")
+    EVENT_TYPES = MONSTER_DECK_ZONE.getTable("EVENT_TYPES")
     lastState = ATTACK_BUTTON_STATES.ATTACK
     if saved_data == "" then
         return
@@ -131,6 +134,26 @@ function onSave()
         currentLabel = getAttackButton().label
     end
     return JSON.encode({active, currentLabel, active_monster_attrs, active_monster_reward})
+end
+
+function dealCurseToPlayer(params)
+    if params.pickedColor then
+        local card = nil
+        for _ , obj in pairs(self.getObjects()) do
+            if obj.tag == "Deck" then
+                card = obj.takeObject()
+                break
+            elseif obj.tag == "Card" then
+                card = obj
+                break
+            end
+        end
+        Wait.frames(function ()
+                if card.getVar("type") == EVENT_TYPES.CURSE then
+                    Global.call("placeCardInPillZone", {playerColor = pickedColor, card = card})
+                end
+            end)
+    end
 end
 
 function resetMonsterZone()

@@ -1,1 +1,131 @@
+-- Written by Ediforce44
 owner_color = "Green"
+
+ZONE_EDGES = {
+    {x=-18.7, z=4.8},      -- 1 = |""  ""| = 3
+    {x=-18.7, z=7.7},      -- 2 = |__  __| = 4
+    {x=-27.7, z=4.8},
+    {x=-27.7, z=7.7}
+}
+
+attachedObjects = {}
+indexTable = {}
+
+local function attachObject(object)
+    attachedObjects[object.getGUID()] = 1     --Insert item attributes like "active", "loot", "happen", "ethernal", etc.
+end
+
+local function detachObject(object)
+    attachedObjects[object.getGUID()] = nil
+end
+
+local function insertIndexEntry(newEntry)
+    local newIndex = #indexTable + 1
+    for index , entry in pairs(indexTable) do
+        if entry.position.x > newEntry.position.x then
+            newIndex = index
+            break
+        end
+    end
+    table.insert(indexTable, newIndex, newEntry)
+end
+
+local function initIndexTable()
+    indexTable = {}
+
+    local position = {}
+    for _ , snapPoint in pairs(Global.getSnapPoints()) do
+        position = snapPoint.position
+        if position.x < ZONE_EDGES[1].x and position.z > ZONE_EDGES[1].z then
+            if position.x > ZONE_EDGES[4].x and position.z < ZONE_EDGES[4].z then
+                insertIndexEntry({free = true, position = position})
+            end
+        end
+    end
+end
+
+local function resetIndexTable()
+    for column = 1, 2 do
+        indexTable[column].free = true
+    end
+end
+
+local function calculateIndexTable()
+    resetIndexTable()
+    local marginOffset = 0.7
+    for _ , object in pairs(self.getObjects()) do
+        if object.tag == "Card" or object.tag == "Deck" then
+            local objectPosition = object.getPosition()
+            for column = 1, 2 do
+                if math.abs(objectPosition.x - indexTable[column].position.x) < marginOffset then
+                    indexTable[column].free = false
+                end
+            end
+        end
+    end
+end
+
+local function getRealPosition(indexPosition)
+    return {indexPosition.x, 5, indexPosition.z}
+end
+
+local function getNextFreePosition()
+    calculateIndexTable()
+    for column = 1, 2 do
+        if indexTable[column].free then
+            return getRealPosition(indexTable[column].position)
+        end
+    end
+    return nil
+end
+
+function onLoad(saved_data)
+    initIndexTable()
+    calculateIndexTable()
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        if loaded_data[1] then
+            attachedObjects = loaded_data[1]
+            return
+        end
+    end
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Card" then
+            attachObject(obj)
+        end
+    end
+end
+
+function onSave()
+    return JSON.encode({attachedObjects})
+end
+
+function onObjectEnterZone(zone, enteringObject)
+    if zone.getGUID() == self.guid then
+        if enteringObject.tag == "Card" then
+            attachObject(enteringObject)
+        end
+    end
+end
+
+function onObjectLeaveZone(zone, leavingObject)
+    if zone.getGUID() == self.guid then
+        if leavingObject.tag == "Card" then
+            detachObject(leavingObject)
+        end
+    end
+end
+
+function placeCardInZone(params)
+    if params.card == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeCardInPlayerZone()'.")
+        return
+    end
+    local freePosition = getNextFreePosition()
+    if freePosition ~= nil then
+        params.card.setRotationSmooth({x=0, y=90, z=0}, false)
+        params.card.setPositionSmooth(freePosition, false)
+    else
+        params.card.deal(1, owner_color)
+    end
+end
