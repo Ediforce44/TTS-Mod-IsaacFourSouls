@@ -191,10 +191,32 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > > - `updateRewards()` updates the Table **active_monster_reward** to the given values. \
 > If this function is called with some unset parameters, the attributes will be set to 0.
 
-> ## <b>Monster Zone</b>
-> > ### <u><b>Variables</b></u>
+> ## <b>Monster-Deck Zone</b>
+> > ### <u><b>Tables</b></u>
+> > - `CHOOSE_BUTTON_STATES` contains all valid states for the monster button of this Monster-Deck Zone. The keys are **ATTACK** and **CHOOSE**.
+> > - `ATTACK_BUTTON_STATES` contains all valid states for the monster buttons of the Monster Zones and the Monster Zone itself. The keys are **INACTIVE**, **ATTACK**, **ATTACKING**, **CHOOSE**, **DIED** and **EVENT**.
+> > - `MONSTER_TAGS` contains all tags which are used to tag a monster card. The keys are **NEW** and **DEAD**. \
+> The tag **NEW** will be removed from a object if it enters a monster zone. The tag **DEAD** will be removed from a object if it enters the discard pile for monster cards.
 >
-> > ### <u><b>Functions</b></u>
+> > ### <u><b>Techincal Functions</b></u>
+> > - `containsDeckOrCard({zone}) : bool` returns *true* if the monster zone **zone** contains a *deck* or a *card*.
+> > - `deactivateChooseButton()` let the monster button of this zone disappear. (This function removes the button)
+> > - `activateChooseButton()` let the monster button reappear in the state **ATTACK**. (This function creates the button)
+> > - `resetMonsterZone()` sets the state/*label* of the monster button of this zone to **ATTACK**. If the monster button of this zone is deactivated the button will be activated.
+> > - `resetAllMonsterZones()` resets the Monster-Deck Zone and all other Monster-Zones. (Have a look at the **resetMonsterZone()** functions)
+> > - `changeZoneState({zone, newState})` changes the state of the Monster Zone **zone** to **newState**. The **newState** has to a state from **ATTACK_BUTTON_STATES**. What will happen on a state change depends on the **newState**. In some cases, all other monster buttons will be activated etc.
+>
+> > ### <u><b>Monster Functions</b></u>
+> > - `discardActiveMonsterCard({zone})` is simular to **finishMonster()** from Monster Zone. 
+> >   - It takes the topmost *card* of the first *deck* in the **zone** or the first *card* in the **zone** and discards it (no matter if it has a **SOULS** attribute).
+> >   - The **onDie()** functions of the taken monster card will be called and if it returns *true* a new monster card will be placed in the **zone** if the **zone** is now empty. \
+> If **onDie()** returns *false* the tag **DEAD** is removed from the taken monster card.
+> > - `discardMonsterObject({object})` places the **object** on to the discard pile for monster cards and adds the tag **DEAD** to the object.
+> > - `placeNewMonsterCard({zone, isTargetOfAttack}) : bool` takes the topmost *card* from the monster deck, flips it and places it in the Monster Zone **zone**.
+> >   - If the new card has a variable `isEvent` and if it is *true*, an INFO-MSG will be printed. \
+> >  If the new card also has an variable called `type` and if it equals the *EVENT_TYPE* **CURSE**, ... TODO
+> >   - If the new card is not a event and **isTargetOfAttack** is *true*, another INFO-MSG will be printed.
+> >   - This function will only return *false* if it couldn't find a new monster card to place it in the **zone**.
 
 > ## <b>Player Zone</b>
 > > ### <u><b>Variables</b></u>
