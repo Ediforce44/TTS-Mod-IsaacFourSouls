@@ -132,6 +132,9 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > > - `findIntInScript({scriptString, varName}) : int` searches in the **scriptString** for a variable with the name **varName** and returns the value of it.
 > > - `switchRewardingMode({playerColor or player})` switches the Rewarding Mode for **player** or the player with the **playerColor**.
 > > - `placeSoulToken({ownerColor})` takes a Soul Token from the soul token deck and places it in the Soul Zone of the player with the color **ownerColor**. Prints a INFO-MSG.
+> > - `colorPicker_attach({afterPickFunction, functionOwner, picker, reason}) : bool` attaches **afterPickFunction** to the **Color-Picker System**. The **Color-Picker** is explained in chapter [Color-Picker](#color-picker). \
+> Only **afterPickFunction** and **functionOwner** have to be set. If picker is unset, the active player will be the picker. \
+> Returns *true* if **afterPickFunction** could be attached successfully.
 
 > ## <b>Coins</b>
 > > ### <u><b>Variables</b></u>
@@ -165,27 +168,62 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > If the monster button of this zone is deactivated it will return *nil*. \
 > All states of a monster zone and its monster button are listet in the *Table* **ATTACK_BUTTON_STATES** in the Monster-Deck Zone script.
 > 
->
-> > ### <u><b>Other Functions</b></u>
+> > ### <u><b>Technical Functions</b></u>
 > > - `containsDeckOrCard() : bool` returns *true* if this zone containes a *deck* or *card*.
-> > - `resetMonsterZone()` sets the state/*label* of the monster button of this zone to *ATTACK* if this zone is *active*, otherwise to *INACTIVE*. If the monster button of this zone is deactivated the button will be activated. \
+> > - `resetMonsterZone()` sets the state/*label* of the monster button of this zone to **ATTACK** if this zone is *active*, otherwise to **INACTIVE**. If the monster button of this zone is deactivated the button will be activated. \
 > > The HP-Counter of this zone will also be reseted.
-> > - `deactivateAttackButton()`
-> > - `activateAttackButton()`
-> > - `monsterDied()`
-> > - `monsterReanimated()`
-> > - `finishMonster()`
-> > - `updateAttributes()`
-> > - `updateRewards()`
-> > - `deactivateZone()`
-> > - `activateZone()`
-> > - `changeButtonState()`
+> > - `deactivateAttackButton()` let the monster button of this zone disappear. (This function removes the button)
+> > - `activateAttackButton()` let the monster button reappear in the state **ATTACK** if the zone is active and **INACTIVE** otherwise. (This function creates the button)
+> > - `deactivateZone()` discards all *decks* or *cards* in this zone and sets the monster attributes of this zone to zero. It activates the monster button of this zone and sets it to the state **INACTIVE**.
+> > - `activateZone()` places a new monster card in this zone if there is no *deck* or *card*. It activates the monster button of this zone and sets it to the state **ATTACK**.
+> > - `changeButtonState({newState}) : bool` changes the state of the monster button of this zone to **newState** and return *true*. If the monster button of this zone is deactivated or the **newState** is no valid state, it will return *false*. 
+> 
+> > ### <u><b>Monster Functions</b></u>
+> > - `monsterDied()` sets the HP-Counter of this zone to 0 and the state of this zone to **DIED** and prints an *INFO-MSG*. Only works if the monster button of this zone is activated.
+> > - `monsterReanimated()` prints an *INFO-MSG* and sets the state of this zone to the last state of this zone before **monsterDied()** was called. (So you have to use it in combination with **monsterDied()**)
+> > - `finishMonster()` pays out the reward of the active monster to the active player if Auto-Rewarding for the active player is activated. /
+> >   - It takes the first *card* in this zone or the topmost *card* of the first *deck* in this zone and discard the card if the reward **SOULS** is 0. Otherwise the card will be placed in the soul zone of the active player.
+> >   - The `onDie()` function of the card will be executed and if it returns *true* or *nothing*, the card will be taged as **DEAD** and a new monster card will be placed in this zone it is empty.
+> > - `updateAttributes({HP, GUID, NAME, ATK, DMG})` updates the Table **active_monster_attrs** to the given values. All parameters are optional except **HP**. **HP** has to be set otherwise this function does nothing. \
+> The HP-Counter for this zone will also be updated. \
+> If this function is called with some unset parameters, the attributes will be set their standard value. \
+> (Strandard: GUID = last GUID, NAME = "", ATK = -1, DMG = -1)
+> > - `updateRewards()` updates the Table **active_monster_reward** to the given values. \
+> If this function is called with some unset parameters, the attributes will be set to 0.
 
 > ## <b>Monster Zone</b>
 > > ### <u><b>Variables</b></u>
 >
 > > ### <u><b>Functions</b></u>
 
+> ## <b>Player Zone</b>
+> > ### <u><b>Variables</b></u>
+>
+> > ### <u><b>Functions</b></u>
+
+> ## <b>Soul Zone</b>
+> > ### <u><b>Variables</b></u>
+>
+> > ### <u><b>Functions</b></u>
+
+> ## <b>Shop Zone</b>
+> > ### <u><b>Variables</b></u>
+>
+> > ### <u><b>Functions</b></u>
+
+> ## <b>Shop-Deck Zone</b>
+> > ### <u><b>Variables</b></u>
+>
+> > ### <u><b>Functions</b></u>
+
+> ## <b>Souls</b>
+> > ### <u><b>Variables</b></u>
+>
+> > ### <u><b>Functions</b></u>
+
+## Color-Picker
+## onReveal()
+## onDie()
 
 # Things to do
 ## TODO-List
