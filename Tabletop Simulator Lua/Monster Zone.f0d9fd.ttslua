@@ -173,6 +173,7 @@ end
 
 function monsterDied()
     if active then
+        getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = 0})
         local attackButton = getAttackButton()
         if attackButton then
             lastState = attackButton.label
@@ -184,7 +185,7 @@ function monsterDied()
 end
 
 function monsterReanimated()
-    if active and active_monster_attrs ~= 0 then
+    if active and active_monster_attrs.HP ~= 0 then
         broadcastToAll(Global.call("getActivePlayerString") .. " fucked up. "
             .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME .. "[-] is undead ???")
         if lastState == ATTACK_BUTTON_STATES.ATTACKING then
@@ -281,9 +282,6 @@ function updateRewards(params)
 end
 
 function activateZone()
-    if ATTACK_BUTTON_INDEX == nil then
-        activateAttackButton()
-    end
     if active then
         printToAll("[fdd835][WARNING][-] Can't activate Zone: " .. self.guid .. ". This Zone is already active.")
     else
@@ -299,11 +297,15 @@ function activateZone()
                 return
             end
         end
-        --self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK})
-        self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK
+        active = true
+
+        if ATTACK_BUTTON_INDEX == nil then
+            activateAttackButton()
+        else
+            self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK
                 , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.ATTACK})
                 , color = ATTACK_BUTTON_COLORS.ACTIVE})
-        active = true
+        end
     end
 end
 
@@ -327,20 +329,25 @@ function deactivateZone()
 end
 
 function changeButtonState(params)
+    if ATTACK_BUTTON_INDEX == nil then
+        return false
+    end
+
     if params.newState == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'changeButtonState()'.")
     else
         for _ , state in pairs(ATTACK_BUTTON_STATES) do
-            if (params.newState == state) and (ATTACK_BUTTON_INDEX ~= nil) then
+            if params.newState == state then
                 local buttonColor = (state == ATTACK_BUTTON_STATES.INACTIVE) and ATTACK_BUTTON_COLOR.INACTIVE
                     or ATTACK_BUTTON_COLORS.ACTIVE
                 --self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState})
-                self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState
-                        , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = params.newState})
+                self.editButton({index = ATTACK_BUTTON_INDEX, label = state
+                        , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = state})
                         , color = buttonColor})
                 return true
             end
         end
     end
+
     return false
 end
