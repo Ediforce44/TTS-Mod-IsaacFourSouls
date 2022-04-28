@@ -150,7 +150,7 @@ function dealCurseToPlayer(params)
         end
         Wait.frames(function ()
                 if card.getVar("type") == EVENT_TYPES.CURSE then
-                    Global.call("placeCardInPillZone", {playerColor = pickedColor, card = card})
+                    Global.call("placeCardInPillZone", {playerColor = params.pickedColor, card = card})
                 end
             end)
     end
