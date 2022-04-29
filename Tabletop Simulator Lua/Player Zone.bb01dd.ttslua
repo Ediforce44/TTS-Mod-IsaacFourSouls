@@ -35,7 +35,7 @@ local function insertIndexEntry(newEntry)
     end
     local newIndex = #indexTable[row] + 1
     for index , entry in pairs(indexTable[row]) do
-        if entry.position.x > newEntry.position.x then
+        if entry.position.x < newEntry.position.x then
             newIndex = index
             break
         end
