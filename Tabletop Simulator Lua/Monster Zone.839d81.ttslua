@@ -19,6 +19,8 @@ active_monster_reward = {
 }
 
 active = false
+
+-- Don't use it. It is only used for monster reanimation
 lastState = nil
 
 MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
@@ -26,7 +28,9 @@ ATTACK_BUTTON_STATES = {}
 ATTACK_BUTTON_COLORS = {}
 ATTACK_BUTTON_INDEX = nil
 
-local function getAttackButton()
+EVENT_TYPES = {}
+
+function getAttackButton()
     if ATTACK_BUTTON_INDEX == nil then
         return nil
     end
@@ -34,7 +38,15 @@ local function getAttackButton()
     return self.getButtons()[ATTACK_BUTTON_INDEX + 1]
 end
 
-local function containsDeckOrCard()
+function getState()
+    local attackButton = getAttackButton()
+    if attackButton == nil then
+        return nil
+    end
+    return attackButton.label
+end
+
+function containsDeckOrCard()
     for _ , obj in pairs(self.getObjects()) do
         if obj.tag == "Deck" or obj.tag == "Card" then
             return true
@@ -79,9 +91,21 @@ local function payOutSouls(playerColor, amount)
     end
 end
 
+local function placeNewMonsterIfEmpty()
+    Wait.frames(function ()
+            if not containsDeckOrCard() then
+                if MONSTER_DECK_ZONE.call("placeNewMonsterCard"
+                    , {zone = self, isTargetOfAttack = false}) == false then
+                    return
+                end
+            end
+        end, 60)
+end
+
 function onLoad(saved_data)
-    ATTACK_BUTTON_STATES = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("ATTACK_BUTTON_STATES")
+    ATTACK_BUTTON_STATES = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_STATES")
     ATTACK_BUTTON_COLORS = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_COLORS")
+    EVENT_TYPES = MONSTER_DECK_ZONE.getTable("EVENT_TYPES")
     lastState = ATTACK_BUTTON_STATES.ATTACK
     if saved_data == "" then
         return
@@ -123,6 +147,34 @@ function onSave()
     return JSON.encode({active, currentLabel, active_monster_attrs, active_monster_reward})
 end
 
+function getActiveMonsterCard()
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Deck" then
+            local containedObjects = obj.getData().ContainedObjects
+            if containedObjects[#containedObjects]["GUID"] == active_monster_attrs.GUID then
+                return obj.takeObject()
+            end
+        elseif obj.tag == "Card" then
+            if obj.getGUID() == active_monster_attrs.GUID then
+                return obj
+            end
+        end
+    end
+    return nil
+end
+
+function dealEventToPlayer(params)
+    if params.pickedColor then
+        local card = getActiveMonsterCard()
+        Wait.frames(function ()
+                if card.getVar("isEvent") and (card ~= nil) then
+                    Global.call("placeCardInPillZone", {playerColor = params.pickedColor, card = card})
+                    placeNewMonsterIfEmpty()
+                end
+            end)
+    end
+end
+
 function resetMonsterZone()
     if ATTACK_BUTTON_INDEX == nil then
         activateAttackButton()
@@ -150,7 +202,7 @@ function activateAttackButton()
             click_function = "click_function_AttackButton",
             function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER),
             label          = state,
-            position       = {0, -0.5, 3},
+            position       = {0, 0, 3},
             width          = 1000,
             height         = 300,
             font_size      = 200,
@@ -163,6 +215,7 @@ end
 
 function monsterDied()
     if active then
+        getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = 0})
         local attackButton = getAttackButton()
         if attackButton then
             lastState = attackButton.label
@@ -174,7 +227,7 @@ function monsterDied()
 end
 
 function monsterReanimated()
-    if active and active_monster_attrs ~= 0 then
+    if active and active_monster_attrs.HP ~= 0 then
         broadcastToAll(Global.call("getActivePlayerString") .. " fucked up. "
             .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME .. "[-] is undead ???")
         if lastState == ATTACK_BUTTON_STATES.ATTACKING then
@@ -187,15 +240,9 @@ end
 
 function finishMonster()
     local activePlayerColor = Global.getVar("activePlayerColor")
-    local monsterCard = nil
-    for _ , object in pairs(self.getObjects()) do
-        if object.tag == "Deck" then
-            monsterCard = object.takeObject({index = object.getQuantity() - 1})
-            break
-        elseif object.tag == "Card" then
-            monsterCard = object
-            break
-        end
+    local monsterCard = getActiveMonsterCard()
+    if monsterCard == nil then
+        return
     end
     if Global.getTable("automaticRewarding")[activePlayerColor] then
         local rewarded = false
@@ -218,29 +265,22 @@ function finishMonster()
                 .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME .. "[-] !!!")
         end
     end
-    -- Place discard monster card
-    if active_monster_reward.SOULS ~= 0 then    -- Monster becomes soul token
-        getObjectFromGUID(Global.getTable("ZONE_GUID_SOUL")[activePlayerColor]).call("placeCardInSoulZone"
-            , {card = monsterCard})
-    else    -- Monster just get discarded
-        monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
-    end
     -- OnDie
     Wait.frames(function ()
+            -- Place discard monster card
+            if active_monster_reward.SOULS ~= 0 then    -- Monster becomes soul token
+                getObjectFromGUID(Global.getTable("ZONE_GUID_SOUL")[activePlayerColor]).call("placeCardInSoulZone"
+                    , {card = monsterCard})
+            else    -- Monster just get discarded
+                monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+            end
             local died = not (monsterCard.call("onDie", {zone = self}) == false)    --default: true, only false on false
             if died then        --if monster died it will tagged as dead
                 local deadTag = MONSTER_DECK_ZONE.getTable("MONSTER_TAGS").DEAD
                 monsterCard.addTag(deadTag)
-                Wait.time(function () monsterCard.removeTag(deadTag) end, 2)
+                Wait.time(function () monsterCard.removeTag(deadTag) end, 1)
                 -- Place new monster card
-                Wait.frames(function ()
-                        if not containsDeckOrCard() then
-                            if MONSTER_DECK_ZONE.call("placeNewMonsterCard"
-                                , {zone = self, isTargetOfAttack = false}) == false then
-                                return
-                            end
-                        end
-                    end, 60)
+                placeNewMonsterIfEmpty()
             end
         end)
 end
@@ -271,53 +311,72 @@ function updateRewards(params)
 end
 
 function activateZone()
-    if ATTACK_BUTTON_INDEX == nil then
-        activateAttackButton()
-    end
     if active then
         printToAll("[fdd835][WARNING][-] Can't activate Zone: " .. self.guid .. ". This Zone is already active.")
     else
-        if not containsDeckOrCard() then
+        if containsDeckOrCard() then
+            local firstObjectInZone = self.getObjects()[2]
+            if firstObjectInZone.tag == "Card" then
+                firstObjectInZone.setPositionSmooth(self.getPosition():setAt('y', 2), false)
+            elseif firstObjectInZone.tag == "Deck" then
+                firstObjectInZone.takeObject({position = self.getPosition():setAt('y', 2)})
+            end
+        else
             if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == false then
                 return
             end
         end
-        --self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK})
-        self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK
+        active = true
+
+        if ATTACK_BUTTON_INDEX == nil then
+            activateAttackButton()
+        else
+            self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK
                 , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.ATTACK})
                 , color = ATTACK_BUTTON_COLORS.ACTIVE})
-        active = true
+        end
     end
 end
 
 function deactivateZone()
-    if ATTACK_BUTTON_INDEX == nil then
-        activateAttackButton()
-    end
     for _ , obj in pairs(self.getObjects()) do
         if obj.tag == "Deck" or obj.tag == "Card" then
-            obj.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+            MONSTER_DECK_ZONE.call("discardMonsterObject", {object = obj})
         end
     end
-    --self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE})
-    self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE
+    updateAttributes({HP = 0, GUID = ""})
+
+    active = false
+
+    if ATTACK_BUTTON_INDEX == nil then
+        activateAttackButton()
+    else
+        self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INACTIVE
             , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.INACTIVE})
             , color = ATTACK_BUTTON_COLORS.INACTIVE})
-    active = false
+    end
 end
 
 function changeButtonState(params)
+    if ATTACK_BUTTON_INDEX == nil then
+        return false
+    end
+
     if params.newState == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'changeButtonState()'.")
     else
         for _ , state in pairs(ATTACK_BUTTON_STATES) do
             if params.newState == state then
+                local buttonColor = (state == ATTACK_BUTTON_STATES.INACTIVE) and ATTACK_BUTTON_COLOR.INACTIVE
+                    or ATTACK_BUTTON_COLORS.ACTIVE
                 --self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState})
-                self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState
-                        , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = params.newState})})
+                self.editButton({index = ATTACK_BUTTON_INDEX, label = state
+                        , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = state})
+                        , color = buttonColor})
                 return true
             end
         end
     end
+
     return false
 end

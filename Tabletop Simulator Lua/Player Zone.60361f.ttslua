@@ -160,6 +160,7 @@ function placeCardInZone(params)
     end
     local freePosition = getNextFreePosition()
     if freePosition ~= nil then
+        params.card.setRotationSmooth({0, 180, 0}, false)
         params.card.setPositionSmooth(freePosition, false)
     else
         params.card.deal(1, owner_color)
@@ -179,6 +180,7 @@ function placeMultipleCardsInZone(params)
     for row = 1, 2 do
         for column = 1, 7 do
             if indexTable[row][column].free then
+                params.cards[nextCardIndex].setRotationSmooth({0, 0, 0}, false)
                 params.cards[nextCardIndex].setPositionSmooth(getRealPosition(indexTable[row][column].position), false)
                 nextCardIndex = nextCardIndex + 1
                 if nextCardIndex > maxCardIndex then

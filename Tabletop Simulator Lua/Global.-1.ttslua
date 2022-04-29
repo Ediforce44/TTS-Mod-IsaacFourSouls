@@ -112,6 +112,63 @@ end
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+local colorPickerAttachment = {}
+
+function colorPicker_attach(params)
+    if params.afterPickFunction and params.functionOwner then
+        table.insert(colorPickerAttachment, {picker = params.picker or activePlayerColor
+            , afterPickFunction = params.afterPickFunction, functionOwner = params.functionOwner
+            , reason = params.reason or "Unknown"})
+        if #colorPickerAttachment == 1 then
+            pickColor(false)
+        end
+        return true
+    end
+    return false
+end
+
+function pickColor(falseInput)
+    if #colorPickerAttachment == 0 then
+        return
+    end
+
+    local nextEntry = colorPickerAttachment[1]
+    UI.setAttribute("colorPicker", "visibility", nextEntry.picker)
+    UI.setAttribute("colorPicker", "active", true)
+    if (not falseInput) then
+        broadcastToAll(getPlayerString({playerColor = nextEntry.picker}) .. " picks a Player Color for "
+            .. nextEntry.reason .. ".")
+        broadcastToColor("Please pick a Player Color for " .. nextEntry.reason .. ".", nextEntry.picker)
+    end
+end
+
+function colorPicked(player, _, idValue)
+    local picker = getPlayerString({playerColor = player.color})
+    local picked = getPlayerString({playerColor = idValue})
+    if Player[idValue].steam_id == nil then
+        broadcastToColor(picked .. " is not a active Player!", player.color)
+        pickColor(true)
+        return
+    end
+    broadcastToAll(picker .. " picked " .. picked .. "!")
+    local nextEntry = colorPickerAttachment[1]
+    nextEntry.functionOwner.call(nextEntry.afterPickFunction, {pickedColor = idValue})
+    table.remove(colorPickerAttachment, 1)
+    UI.setAttribute("colorPicker", "active", false)
+    if #colorPickerAttachment > 0 then
+        pickColor(false)
+    end
+end
+
+function cancelPick(player, _, idValue)
+    broadcastToAll(getPlayerString({playerColor = player.color}) .. " canceled the Color-Pick!", Table)
+    table.remove(colorPickerAttachment, 1)
+    UI.setAttribute("colorPicker", "active", false)
+    if #colorPickerAttachment > 0 then
+        pickColor(false)
+    end
+end
+
 activePlayerColor = "Red"
 
 automaticRewarding = {
@@ -202,6 +259,13 @@ ZONE_GUID_PLAYER = {
     Green = "19df91",
     Blue = "60361f",
     Red = "b35919"
+}
+
+ZONE_GUID_PILL = {
+    Yellow = "53dd4c",
+    Green = "e3361a",
+    Blue = "9af794",
+    Red = "d12e48"
 }
 
 ZONE_GUID_SOUL = {
@@ -381,6 +445,7 @@ end
 function placeSoulToken(params)
     if params.ownerColor == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeSoulToken()'.")
+        return
     end
     local soulToken = getCardFromDeck({deck = getSoulTokenDeck()})
     if soulToken ~= nil then
@@ -396,6 +461,28 @@ function placeSoulToken(params)
     else
         printToAll("[fdd835][WARNING][-] Can't find the Soul Token deck: Maybe the soul tokens are empty. " ..
                     "Place the soul tokens on its starting position.")
+    end
+end
+
+function placeCardInPillZone(params)
+    if (params.playerColor == nil) or (params.card == nil) then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeCardInPillZone()'.")
+    else
+        getObjectFromGUID(ZONE_GUID_PILL[params.playerColor]).call("placeCardInZone", {card = params.card})
+    end
+end
+
+function placeCardsInPlayerZone(params)
+    if (params.playerColor == nil) or (params.cards == nil) then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeCardsInPlayerZone()'.")
+    else
+        local cards = params.cards
+        if #cards > 1 then
+            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeMultipleCardsInZone"
+                , {cards = params.cards})
+        elseif #cards == 1 then
+            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeCardInZone", {card = params.cards[1]})
+        end
     end
 end
 ------------------------------------------------------------------------------------------------------------------------

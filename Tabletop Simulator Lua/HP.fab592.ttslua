@@ -6,8 +6,9 @@ MIN_VALUE = 0
 MAX_VALUE = 9
 
 function updateHP(params)
-    if params.HP ~= nil and params.HP >= 0 then
-        value = params.HP
+    local newValue = params.HP
+    if newValue ~= nil and newValue >= 0 and newValue < 10 then
+        value = newValue
         updateVal()
         updateSave()
     end

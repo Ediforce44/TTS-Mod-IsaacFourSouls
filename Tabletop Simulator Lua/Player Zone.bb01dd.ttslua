@@ -28,14 +28,14 @@ end
 local function insertIndexEntry(newEntry)
     local midZ = ZONE_EDGES[1].z + ((ZONE_EDGES[2].z - ZONE_EDGES[1].z) / 2)
     local row = 0
-    if newEntry.position.z < midZ then               -- Lower row
+    if newEntry.position.z > midZ then               -- Lower row
         row = 1
     else
         row = 2
     end
     local newIndex = #indexTable[row] + 1
     for index , entry in pairs(indexTable[row]) do
-        if entry.position.x > newEntry.position.x then
+        if entry.position.x < newEntry.position.x then
             newIndex = index
             break
         end
@@ -160,6 +160,7 @@ function placeCardInZone(params)
     end
     local freePosition = getNextFreePosition()
     if freePosition ~= nil then
+        params.card.setRotationSmooth({0, 0, 0}, false)
         params.card.setPositionSmooth(freePosition, false)
     else
         params.card.deal(1, owner_color)
@@ -179,6 +180,7 @@ function placeMultipleCardsInZone(params)
     for row = 1, 2 do
         for column = 1, 7 do
             if indexTable[row][column].free then
+                params.cards[nextCardIndex].setRotationSmooth({0, 0, 0}, false)
                 params.cards[nextCardIndex].setPositionSmooth(getRealPosition(indexTable[row][column].position), false)
                 nextCardIndex = nextCardIndex + 1
                 if nextCardIndex > maxCardIndex then

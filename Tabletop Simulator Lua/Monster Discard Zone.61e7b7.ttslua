@@ -1,0 +1,12 @@
+
+MONSTER_TAGS = {}
+
+function onLoad()
+    MONSTER_TAGS = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER).getTable("MONSTER_TAGS")
+end
+
+function onObjectEnterZone(zone, object)
+    if zone == self then
+        object.removeTag(MONSTER_TAGS.DEAD)
+    end
+end
