@@ -147,20 +147,27 @@ function onSave()
     return JSON.encode({active, currentLabel, active_monster_attrs, active_monster_reward})
 end
 
-function dealEventToPlayer(params)
-    if params.pickedColor then
-        local card = nil
-        for _ , obj in pairs(self.getObjects()) do
-            if obj.tag == "Deck" then
-                card = obj.takeObject()
-                break
-            elseif obj.tag == "Card" then
-                card = obj
-                break
+function getActiveMonsterCard()
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Deck" then
+            local containedObjects = obj.getData().ContainedObjects
+            if containedObjects[#containedObjects]["GUID"] == active_monster_attrs.GUID then
+                return obj.takeObject()
+            end
+        elseif obj.tag == "Card" then
+            if obj.getGUID() == active_monster_attrs.GUID then
+                return obj
             end
         end
+    end
+    return nil
+end
+
+function dealEventToPlayer(params)
+    if params.pickedColor then
+        local card = getActiveMonsterCard()
         Wait.frames(function ()
-                if card.getVar("isEvent") then
+                if card.getVar("isEvent") and (card ~= nil) then
                     Global.call("placeCardInPillZone", {playerColor = params.pickedColor, card = card})
                     placeNewMonsterIfEmpty()
                 end
@@ -233,15 +240,9 @@ end
 
 function finishMonster()
     local activePlayerColor = Global.getVar("activePlayerColor")
-    local monsterCard = nil
-    for _ , object in pairs(self.getObjects()) do
-        if object.tag == "Deck" then
-            monsterCard = object.takeObject({index = object.getQuantity() - 1})
-            break
-        elseif object.tag == "Card" then
-            monsterCard = object
-            break
-        end
+    local monsterCard = getActiveMonsterCard()
+    if monsterCard == nil then
+        return
     end
     if Global.getTable("automaticRewarding")[activePlayerColor] then
         local rewarded = false

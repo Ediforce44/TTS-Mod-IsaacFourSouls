@@ -103,6 +103,40 @@ local function onNewMonsterReveal(card, zone)
     end
 end
 
+local function getTopMostDeckOrCard(zone, except)
+    local blocked = false
+    local zoneObjects = zone.getObjects()
+    for index = #zoneObjects, 1, -1 do
+        local object = zoneObjects[index]
+        if object.tag == "Deck" or object.tag == "Card" then
+            blocked = false
+            for _ , blockedObject in pairs(except) do
+                if object.getGUID() == blockedObject.getGUID() then
+                    blocked = true
+                    break
+                end
+            end
+            if blocked == false then
+                return object
+            end
+        end
+    end
+    return nil
+end
+
+local function objectContainsGUID(object, GUID)
+    if object.getGUID() == GUID then
+        return true
+    elseif object.tag == "Deck" then
+        for _ , jsonObj in pairs(object.getData().ContainedObjects) do
+            if jsonObj["GUID"] == GUID then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Button functions ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
@@ -234,16 +268,7 @@ function discardActiveMonsterCard(params)
         return
     end
     local zone = params.zone
-    local monsterCard = nil
-    for _ , object in pairs(zone.getObjects()) do
-        if object.tag == "Deck" then
-            monsterCard = object.takeObject({index = object.getQuantity() - 1})
-            break
-        elseif object.tag == "Card" then
-            monsterCard = object
-            break
-        end
-    end
+    local monsterCard = zone.call("getActiveMonsterCard")
     if monsterCard then
         Wait.frames(function ()
                 discardMonsterObject({object = monsterCard})
@@ -507,32 +532,32 @@ end
 function onObjectLeaveScriptingZone(zone, object)
     for i, guid in pairs(MONSTER_ZONE_GUIDS) do
         if guid == zone.getGUID() and zone.getVar("active") and isObjectReallyLeaving(object, zone) then
-            if object.getGUID() == zone.getTable("active_monster_attrs").GUID then
+            if objectContainsGUID(object, zone.getTable("active_monster_attrs").GUID) then
                 local newAttributes = {}
-                local firstObjectInZone = zone.getObjects()[2]      --first object in zone is the table, so take second
+                local topObjectInZone = getTopMostDeckOrCard(zone, {object})
 
-                if firstObjectInZone == nil then
+                if topObjectInZone == nil then
                     newAttributes = {NAME = "", HP = 0}
 
                     zone.call("updateAttributes", newAttributes)
-                elseif firstObjectInZone.tag == "Deck" then
+                elseif topObjectInZone.tag == "Deck" then
                     -- Take the topmost monster into the zone
-                    local card = firstObjectInZone.takeObject({position = zone.getPosition():setAt('y', 2)})
+                    local card = topObjectInZone.takeObject({position = zone.getPosition():setAt('y', 2)})
                     card.addTag(MONSTER_TAGS.NEW)
-                elseif firstObjectInZone.tag == "Card" then
+                elseif topObjectInZone.tag == "Card" then
                     -- Attributes
-                    newAttributes.GUID = firstObjectInZone.getGUID()
-                    newAttributes.NAME = firstObjectInZone.getName()
-                    newAttributes.HP = firstObjectInZone.getVar("hp") or 0
-                    newAttributes.ATK = firstObjectInZone.getVar("dice")
-                    newAttributes.DMG = firstObjectInZone.getVar("atk")
+                    newAttributes.GUID = topObjectInZone.getGUID()
+                    newAttributes.NAME = topObjectInZone.getName()
+                    newAttributes.HP = topObjectInZone.getVar("hp") or 0
+                    newAttributes.ATK = topObjectInZone.getVar("dice")
+                    newAttributes.DMG = topObjectInZone.getVar("atk")
                     -- Rewards
-                    local rewards = firstObjectInZone.getTable("rewards") or {}
+                    local rewards = topObjectInZone.getTable("rewards") or {}
 
                     zone.call("updateAttributes", newAttributes)
                     zone.call("updateRewards", rewards)
                     -- On Reveal
-                    onNewMonsterReveal(firstObjectInZone, zone)
+                    onNewMonsterReveal(topObjectInZone, zone)
                 else
                     return
                 end
