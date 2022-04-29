@@ -478,9 +478,10 @@ function placeCardsInPlayerZone(params)
     else
         local cards = params.cards
         if #cards > 1 then
-            --TODO
+            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeMultipleCardsInZone"
+                , {cards = params.cards})
         elseif #cards == 1 then
-            --TODO
+            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeCardInZone", {card = params.cards[1]})
         end
     end
 end
