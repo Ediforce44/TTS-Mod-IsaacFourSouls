@@ -328,7 +328,7 @@ function placeNewMonsterCard(params)
                     if eventType == EVENT_TYPES.CURSE then
                         local coloredCurseName = Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT
                             .. newMonsterCard.getName()
-                        Global.call("colorPicker_attach", {afterPickFunction = "dealCurseToPlayer"
+                        Global.call("colorPicker_attach", {afterPickFunction = "dealEventToPlayer"
                             , functionOwner = params.zone, reason = coloredCurseName})
                     end
                 elseif params.isTargetOfAttack then
