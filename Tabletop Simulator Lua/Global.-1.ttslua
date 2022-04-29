@@ -143,11 +143,14 @@ function pickColor(falseInput)
 end
 
 function colorPicked(player, _, idValue)
+    local picker = getPlayerString({playerColor = player.color})
+    local picked = getPlayerString({playerColor = idValue})
     if Player[idValue].steam_id == nil then
-        broadcastToColor(getPlayerString({playerColor = idValue}) .. " is not a active Player!", player.color)
+        broadcastToColor(picked .. " is not a active Player!", player.color)
         pickColor(true)
         return
     end
+    broadcastToAll(picker .. " picked " .. picked .. "!")
     local nextEntry = colorPickerAttachment[1]
     nextEntry.functionOwner.call(nextEntry.afterPickFunction, {pickedColor = idValue})
     table.remove(colorPickerAttachment, 1)

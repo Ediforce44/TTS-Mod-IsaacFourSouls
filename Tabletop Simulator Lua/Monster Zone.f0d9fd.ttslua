@@ -91,6 +91,17 @@ local function payOutSouls(playerColor, amount)
     end
 end
 
+local function placeNewMonsterIfEmpty()
+    Wait.frames(function ()
+            if not containsDeckOrCard() then
+                if MONSTER_DECK_ZONE.call("placeNewMonsterCard"
+                    , {zone = self, isTargetOfAttack = false}) == false then
+                    return
+                end
+            end
+        end, 60)
+end
+
 function onLoad(saved_data)
     ATTACK_BUTTON_STATES = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_STATES")
     ATTACK_BUTTON_COLORS = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_COLORS")
@@ -136,7 +147,7 @@ function onSave()
     return JSON.encode({active, currentLabel, active_monster_attrs, active_monster_reward})
 end
 
-function dealCurseToPlayer(params)
+function dealEventToPlayer(params)
     if params.pickedColor then
         local card = nil
         for _ , obj in pairs(self.getObjects()) do
@@ -149,8 +160,9 @@ function dealCurseToPlayer(params)
             end
         end
         Wait.frames(function ()
-                if card.getVar("type") == EVENT_TYPES.CURSE then
+                if card.getVar("isEvent") then
                     Global.call("placeCardInPillZone", {playerColor = params.pickedColor, card = card})
+                    placeNewMonsterIfEmpty()
                 end
             end)
     end
@@ -266,15 +278,8 @@ function finishMonster()
                 local deadTag = MONSTER_DECK_ZONE.getTable("MONSTER_TAGS").DEAD
                 monsterCard.addTag(deadTag)
                 Wait.time(function () monsterCard.removeTag(deadTag) end, 1)
-                -- Place new monster card
-                Wait.frames(function ()
-                        if not containsDeckOrCard() then
-                            if MONSTER_DECK_ZONE.call("placeNewMonsterCard"
-                                , {zone = self, isTargetOfAttack = false}) == false then
-                                return
-                            end
-                        end
-                    end, 60)
+                -- Place new monster card if this zone is empty
+                placeNewMonsterIfEmpty()
             end
         end)
 end
