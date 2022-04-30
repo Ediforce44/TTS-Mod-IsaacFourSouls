@@ -168,7 +168,7 @@ function dealEventToPlayer(params)
         local card = getActiveMonsterCard()
         Wait.frames(function ()
                 if card.getVar("isEvent") and (card ~= nil) then
-                    Global.call("placeCardInPillZone", {playerColor = params.pickedColor, card = card})
+                    Global.call("placeObjectInPillZone", {playerColor = params.pickedColor, object = card})
                     placeNewMonsterIfEmpty()
                 end
             end)

@@ -8,8 +8,24 @@ ZONE_EDGES = {
     {x=-27.7, z=7.7}
 }
 
+INDEX_MAX = 2
+
 attachedObjects = {}
 indexTable = {}
+
+local function getTimerParameters(blockedIndex)
+    local timerParameters = {
+        ["identifier"] = "PillBlockedIndexTimer" .. self.guid .. tostring(blockedIndex),
+        ["function_name"] = "resetBlockedIndex",
+        ["parameters"] = {index = blockedIndex},
+        ["delay"] = 2,
+    }
+    return timerParameters
+end
+
+function resetBlockedIndex(params)
+    indexTable[params.index].tempBlocked = false
+end
 
 local function attachObject(object)
     attachedObjects[object.getGUID()] = 1     --Insert item attributes like "active", "loot", "happen", "ethernal", etc.
@@ -38,15 +54,15 @@ local function initIndexTable()
         position = snapPoint.position
         if position.x < ZONE_EDGES[1].x and position.z > ZONE_EDGES[1].z then
             if position.x > ZONE_EDGES[4].x and position.z < ZONE_EDGES[4].z then
-                insertIndexEntry({free = true, position = position})
+                insertIndexEntry({free = true, position = position, tempBlocked = false})
             end
         end
     end
 end
 
 local function resetIndexTable()
-    for column = 1, 2 do
-        indexTable[column].free = true
+    for index = 1, 2 do
+        indexTable[index].free = true
     end
 end
 
@@ -56,9 +72,9 @@ local function calculateIndexTable()
     for _ , object in pairs(self.getObjects()) do
         if object.tag == "Card" or object.tag == "Deck" then
             local objectPosition = object.getPosition()
-            for column = 1, 2 do
-                if math.abs(objectPosition.x - indexTable[column].position.x) < marginOffset then
-                    indexTable[column].free = false
+            for index = 1, INDEX_MAX do
+                if math.abs(objectPosition.x - indexTable[index].position.x) < marginOffset then
+                    indexTable[index].free = false
                 end
             end
         end
@@ -71,9 +87,11 @@ end
 
 local function getNextFreePosition()
     calculateIndexTable()
-    for column = 1, 2 do
-        if indexTable[column].free then
-            return getRealPosition(indexTable[column].position)
+    for index = 1, INDEX_MAX do
+        if indexTable[index].free and (not indexTable[index].tempBlocked) then
+            indexTable[index].tempBlocked = true
+            Timer.create(getTimerParameters(index))
+            return getRealPosition(indexTable[index].position)
         end
     end
     return nil
@@ -116,16 +134,16 @@ function onObjectLeaveZone(zone, leavingObject)
     end
 end
 
-function placeCardInZone(params)
-    if params.card == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeCardInPlayerZone()'.")
+function placeObjectInZone(params)
+    if params.object == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeObjectInPlayerZone()'.")
         return
     end
     local freePosition = getNextFreePosition()
     if freePosition ~= nil then
-        params.card.setRotationSmooth({x=0, y=90, z=0}, false)
-        params.card.setPositionSmooth(freePosition, false)
+        params.object.setRotationSmooth({x=0, y=90, z=0}, false)
+        params.object.setPositionSmooth(freePosition, false)
     else
-        params.card.deal(1, owner_color)
+        params.object.deal(1, owner_color)
     end
 end

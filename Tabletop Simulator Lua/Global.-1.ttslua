@@ -464,11 +464,11 @@ function placeObjectInSoulZone(params)
     end
 end
 
-function placeCardInPillZone(params)
-    if (params.playerColor == nil) or (params.card == nil) then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeCardInPillZone()'.")
+function placeObjectInPillZone(params)
+    if (params.playerColor == nil) or (params.object == nil) then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeObjectInPillZone()'.")
     else
-        getObjectFromGUID(ZONE_GUID_PILL[params.playerColor]).call("placeCardInZone", {card = params.card})
+        getObjectFromGUID(ZONE_GUID_PILL[params.playerColor]).call("placeObjectInZone", {object = params.object})
     end
 end
 
