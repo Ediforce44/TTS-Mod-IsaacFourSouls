@@ -6,8 +6,9 @@ function deal_soul_token(object, color)         --EbyE44
     if not Global.call("isPlayerAuthorized", {playerColor = color, ownerPlayer = Player[owner_color]}) then
         return
     end
-    Global.call("placeSoulToken", {ownerColor = owner_color})
+    Global.call("placeSoulToken", {playerColor = owner_color})
 end
+
 function onObjectEnterScriptingZone(zone, object)
     if zone ~= getObjectFromGUID(zone_guid) then return end
     Wait.frames(function()

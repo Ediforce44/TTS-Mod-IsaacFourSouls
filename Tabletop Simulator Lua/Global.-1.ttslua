@@ -443,24 +443,24 @@ function getCardFromDeck(params)
 end
 
 function placeSoulToken(params)
-    if params.ownerColor == nil then
+    if params.playerColor == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeSoulToken()'.")
         return
     end
     local soulToken = getCardFromDeck({deck = getSoulTokenDeck()})
     if soulToken ~= nil then
-        local soulZoneGUID = ZONE_GUID_SOUL[params.ownerColor]
-        if soulZoneGUID ~= nil then
-            if not getObjectFromGUID(soulZoneGUID).call("placeCardInSoulZone", {card = soulToken}) then
-                soulToken.setPosition(getSoulTokenDeck().getPosition())
-            end
-        else
-            broadcastToAll(PRINT_COLOR_SPECIAL.SOUL .. "Nobody earned a soul. Hurray???")
-            printToAll("[fdd835][WARNING][-] '" .. tostring(params.ownerColor) .. "' isn't a player color.")
-        end
+        placeObjectInSoulZone({playerColor = params.playerColor, object = soulToken})
     else
         printToAll("[fdd835][WARNING][-] Can't find the Soul Token deck: Maybe the soul tokens are empty. " ..
                     "Place the soul tokens on its starting position.")
+    end
+end
+
+function placeObjectInSoulZone(params)
+    if (params.playerColor == nil) or (params.object == nil) then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeCardInSoulZone()'.")
+    else
+        getObjectFromGUID(ZONE_GUID_SOUL[params.playerColor]).call("placeObjectInZone", {object = params.object})
     end
 end
 

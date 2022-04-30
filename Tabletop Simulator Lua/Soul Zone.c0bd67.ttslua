@@ -1,16 +1,17 @@
---- Written by Ediforce44
+-- Written by Ediforce44
 owner_color = "Blue"
-INDEX_ZERO_POSITION = Vector(-2.78, 1.5, -6.23)
-INDEX_OFFSET = -3.23
-INDEX_THRESHOLDS = {    --INDEX 1
-                        -7.8,
-                        --INDEX 2
-                        -11.1,
-                        --INDEX 3
-                        -14.3
-                        --INDEX 4
-                    }
-INDEX_BLOCKED = {false, false, false, false}
+
+ZONE_EDGES = {
+    {x=-4.9, z=-4.8},       -- 1 = |""  ""| = 3
+    {x=-4.9, z=-17.3},      -- 2 = |__  __| = 4
+    {x=-0.7, z=-4.8},
+    {x=-0.7, z=-17.3}
+}
+
+local maxIndex = 4
+
+attachedObjects = {}
+indexTable = {}
 
 BACK_SCALING = {0.225, 1, 0.078}
 
@@ -28,7 +29,7 @@ REWARDING_BUTTON_TEXT = {
 
 local function getTimerParameters(blockedIndex)
     local timerParameters = {
-        ["identifier"] = "SoulIndexTimer" .. self.guid .. tostring(blockedIndex),
+        ["identifier"] = "SoulBlockedIndexTimer" .. self.guid .. tostring(blockedIndex),
         ["function_name"] = "resetBlockedIndex",
         ["parameters"] = {index = blockedIndex},
         ["delay"] = 2,
@@ -37,23 +38,7 @@ local function getTimerParameters(blockedIndex)
 end
 
 function resetBlockedIndex(params)
-    INDEX_BLOCKED[params.index] = false
-end
-
-local function getIndexFromZCoord(zCoord)
-    if zCoord >= INDEX_THRESHOLDS[2] then
-        if zCoord > INDEX_THRESHOLDS[1] then
-            return 1
-        else
-            return 2
-        end
-    else
-        if zCoord < INDEX_THRESHOLDS[3] then
-            return 4
-        else
-            return 3
-        end
-    end
+    indexTable[params.index].tempBlocked = false
 end
 
 local function getTooltipStringRB()
@@ -61,18 +46,102 @@ local function getTooltipStringRB()
             .. "------------\n\n - Right-Click: (Un-)lock Button\n - Left-Click: Switch mode\n"
 end
 
-function onLoad(saved_data)
-    local autoRewardingON = true
-    if saved_data ~= "" then
-        local loaded_data = JSON.decode(saved_data)
-        if loaded_data[1] == false then
-            autoRewardingON = loaded_data[1]
+local function attachObject(object)
+    attachedObjects[object.getGUID()] = 1
+end
+
+local function detachObject(object)
+    attachedObjects[object.getGUID()] = nil
+end
+
+local function insertIndexEntry(newEntry)
+    local newIndex = #indexTable + 1
+    for index , entry in pairs(indexTable) do
+        if entry.position.z < newEntry.position.z then
+            newIndex = index
+            break
         end
+    end
+    table.insert(indexTable, newIndex, newEntry)
+end
+
+local function initIndexTable()
+    indexTable = {}
+
+    local position = {}
+    for _ , snapPoint in pairs(Global.getSnapPoints()) do
+        position = snapPoint.position
+        if position.x > ZONE_EDGES[1].x and position.z < ZONE_EDGES[1].z then
+            if position.x < ZONE_EDGES[4].x and position.z > ZONE_EDGES[4].z then
+                insertIndexEntry({free = true, position = position, tempBlocked = false})
+            end
+        end
+    end
+end
+
+local function resetIndexTable()
+    for index = 1, maxIndex do
+        indexTable[index].free = true
+    end
+end
+
+local function calculateIndexTable()
+    resetIndexTable()
+    local marginOffset = 0.7
+    for _ , object in pairs(self.getObjects()) do
+        if object.tag == "Card" or object.tag == "Deck" then
+            local objectPosition = object.getPosition()
+            for index = 1, maxIndex do
+                if math.abs(objectPosition.z - indexTable[index].position.z) < marginOffset then
+                    indexTable[index].free = false
+                end
+            end
+        end
+    end
+end
+
+local function getRealPosition(indexPosition)
+    return {x = indexPosition.x, y = 5, z = indexPosition.z}
+end
+
+local function getNextFreePosition()
+    calculateIndexTable()
+    for index = 1, maxIndex do
+        if indexTable[index].free and (not indexTable[index].tempBlocked) then
+            indexTable[index].tempBlocked = true
+            Timer.create(getTimerParameters(index))
+            return getRealPosition(indexTable[index].position)
+        end
+    end
+    return nil
+end
+
+function onLoad(saved_data)
+    initIndexTable()
+    calculateIndexTable()
+
+    local autoRewardingON = true
+
+    if saved_data ~= "" and false then
+        local loaded_data = JSON.decode(saved_data)
         if loaded_data[2] == false then
-            rewardingButtonLocked = loaded_data[2]
+            autoRewardingON = loaded_data[2]
+        end
+        if loaded_data[3] == false then
+            rewardingButtonLocked = loaded_data[3]
+        end
+        if loaded_data[1] then
+            attachedObjects = loaded_data[1]
+            goto skip
+        end
+    end
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Card" then
+            attachObject(obj)
         end
     end
 
+    ::skip::
     self.createButton({
         click_function = "click_function_SwitchRewardingMode",
         function_owner = self,
@@ -89,7 +158,23 @@ function onLoad(saved_data)
 end
 
 function onSave()
-    return JSON.encode({Global.getTable("automaticRewarding")[owner_color], rewardingButtonLocked})
+    return JSON.encode({attachedObjects, Global.getTable("automaticRewarding")[owner_color], rewardingButtonLocked})
+end
+
+function onObjectEnterZone(zone, enteringObject)
+    if zone.getGUID() == self.guid then
+        if enteringObject.tag == "Card" then
+            attachObject(enteringObject)
+        end
+    end
+end
+
+function onObjectLeaveZone(zone, leavingObject)
+    if zone.getGUID() == self.guid then
+        if leavingObject.tag == "Card" then
+            detachObject(leavingObject)
+        end
+    end
 end
 
 function click_function_SwitchRewardingMode(_, color, alt_click)
@@ -126,53 +211,33 @@ function onSwitchingRewardingMode(params)
     broadcastToColor(msg, owner_color)
 end
 
--- You have two seconds to place a object on the returned position.
--- Otherwise the position will no longer be reserved.
-function nextFreeSoulPosition()         --EbyE44
-    local indexTable = {}
-    for i = 1, 4 do
-        indexTable[i] = not INDEX_BLOCKED[i]
+function placeObjectInZone(params)
+    if params.object == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeCardInPlayerZone()'.")
+        return
     end
-    for _ , obj in pairs(self.getObjects()) do
-        if obj.getVar("soul") ~= nil then
-            indexTable[getIndexFromZCoord(obj.getPosition().z)] = false
-        end
-    end
-    for index = 1, 4 do
-        if indexTable[index] then
-            INDEX_BLOCKED[index] = true
-            Timer.create(getTimerParameters(index))
-            return INDEX_ZERO_POSITION + Vector(0, 0, (index - 1) * INDEX_OFFSET)
-        end
-    end
-    printToAll("[fdd835][WARNING][-] Can't find a free position in " .. Global.getTable("REAL_PLAYER_COLOR")[owner_color]
-                .. "Soul Zone.")
-    return nil
-end
-
-function placeCardInSoulZone(params)
-    if params.card == nil or params.card.tag ~= "Card" then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in " .. Global.getTable("REAL_PLAYER_COLOR")[owner_color]
-                    .. "Soul Zone[-]" .. " function 'placeCardInSoulZone()'. Maybe parameter isn't a card.")
-    else
-        local position = nextFreeSoulPosition()
-        if position ~= nil then
-            Wait.frames(
-                function ()
-                local soulAmount = "0 Souls"
-                    if params.card.getTable("rewards").SOULS == 1 then
+    local freePosition = getNextFreePosition()
+    if freePosition ~= nil then
+        Wait.frames(function ()
+                local rewards = params.object.getTable("rewards")
+                if rewards then
+                    local soulAmount = "Souls"
+                    if rewards.SOULS == 0 then
+                        soulAmount = "no Soul"
+                    elseif rewards.SOULS == 1 then
                         soulAmount = "1 Soul"
-                    elseif params.card.getTable("rewards").SOULS == 2 then
-                        soulAmount = "2 Souls"
+                    elseif rewards.SOULS > 1 then
+                        soulAmount = tostring(rewards.SOULS) .. " Souls"
+                    else
+                        return
                     end
                     broadcastToAll(Global.call("getPlayerString", {playerColor = owner_color}) .. " earned "
-                                    .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. soulAmount .. "[-]. Hurray !!!")
+                        .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. soulAmount .. "[-]. Hurray !!!")
                 end
-            , 1)
-            params.card.setRotationSmooth({x=0, y=270, z=0}, false)
-            params.card.setPositionSmooth(position, false)
-            return true
-        end
+            end)
+        params.object.setRotationSmooth({x=0, y=270, z=0}, false)
+        params.object.setPositionSmooth(freePosition, false)
+    else
+        params.object.deal(1, owner_color)
     end
-    return false
 end
