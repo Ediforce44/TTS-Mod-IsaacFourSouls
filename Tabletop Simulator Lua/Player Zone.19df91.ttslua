@@ -8,9 +8,29 @@ ZONE_EDGES = {
     {x=-27.5, z=17}
 }
 
+INDEX_MAX = 14
+ROW_MAX = 2
+INDICES_PER_ROW = INDEX_MAX / ROW_MAX
+
 playerAlive = true
 attachedObjects = {}
 indexTable = {}
+
+local function getTimerParameters(blockedIndex)
+    local timerParameters = {
+        ["identifier"] = "PlayerBlockedIndexTimer" .. self.guid .. tostring(blockedIndex),
+        ["function_name"] = "resetBlockedIndex",
+        ["parameters"] = {index = blockedIndex},
+        ["delay"] = 2,
+    }
+    return timerParameters
+end
+
+function resetBlockedIndex(params)
+    local row = math.floor((params.index - 1) / INDICES_PER_ROW) + 1
+    local column = params.index - (INDICES_PER_ROW * (row - 1))
+    indexTable[row][column].tempBlocked = false
+end
 
 local function payDeathPenalty()
     --TODO
@@ -18,7 +38,7 @@ local function payDeathPenalty()
 end
 
 local function attachObject(object)
-    attachedObjects[object.getGUID()] = 1     --Insert item attributes like "active", "loot", "happen", "ethernal", etc.
+    attachedObjects[object.getGUID()] = 1
 end
 
 local function detachObject(object)
@@ -26,12 +46,13 @@ local function detachObject(object)
 end
 
 local function insertIndexEntry(newEntry)
-    local midZ = ZONE_EDGES[1].z + ((ZONE_EDGES[2].z - ZONE_EDGES[1].z) / 2)
+    local ROW_WIDTH = math.abs(((ZONE_EDGES[2].z - ZONE_EDGES[1].z) / 2))
     local row = 0
-    if newEntry.position.z > midZ then               -- Lower row
-        row = 1
-    else
-        row = 2
+    for r = 1, ROW_MAX do
+        if newEntry.position.z > (ZONE_EDGES[2].z - (ROW_WIDTH * r)) then
+            row = r
+            break
+        end
     end
     local newIndex = #indexTable[row] + 1
     for index , entry in pairs(indexTable[row]) do
@@ -44,22 +65,25 @@ local function insertIndexEntry(newEntry)
 end
 
 local function initIndexTable()
-    indexTable = {{}, {}}
+    indexTable = {}
+    for row = 1, ROW_MAX do
+        table.insert(indexTable, {})
+    end
 
     local position = {}
     for _ , snapPoint in pairs(Global.getSnapPoints()) do
         position = snapPoint.position
         if position.x < ZONE_EDGES[1].x and position.z > ZONE_EDGES[1].z then
             if position.x > ZONE_EDGES[4].x and position.z < ZONE_EDGES[4].z then
-                insertIndexEntry({free = true, position = position})
+                insertIndexEntry({free = true, position = position, tempBlocked = false})
             end
         end
     end
 end
 
 local function resetIndexTable()
-    for row = 1, 2 do
-        for column = 1, 7 do
+    for row = 1, ROW_MAX do
+        for column = 1, INDICES_PER_ROW do
             indexTable[row][column].free = true
         end
     end
@@ -72,13 +96,15 @@ local function calculateIndexTable()
         if object.tag == "Card" or object.tag == "Deck" then
             local objectPosition = object.getPosition()
             local row = 0
-            if math.abs(objectPosition.z - indexTable[1][1].position.z) < marginOffset then
-                row = 1
-            elseif math.abs(objectPosition.z - indexTable[2][1].position.z) < marginOffset then
-                row = 2
+            for r = 1, ROW_MAX do
+                if math.abs(objectPosition.z - indexTable[r][1].position.z) < marginOffset then
+                    row = r
+                    break
+                end
             end
+
             if row > 0 then
-                for column = 1, 7 do
+                for column = 1, INDICES_PER_ROW do
                     if math.abs(objectPosition.x - indexTable[row][column].position.x) < marginOffset then
                         indexTable[row][column].free = false
                     end
@@ -94,9 +120,11 @@ end
 
 local function getNextFreePosition()
     calculateIndexTable()
-    for row = 1, 2 do
-        for column = 1, 7 do
-            if indexTable[row][column].free then
+    for row = 1, ROW_MAX do
+        for column = 1, INDICES_PER_ROW do
+            if indexTable[row][column].free and (not indexTable[row][column].tempBlocked) then
+                indexTable[row][column].tempBlocked = true
+                Timer.create(getTimerParameters((INDICES_PER_ROW * (row - 1)) + column))
                 return getRealPosition(indexTable[row][column].position)
             end
         end
@@ -177,8 +205,8 @@ function placeMultipleCardsInZone(params)
     calculateIndexTable()
     local maxCardIndex = #params.cards
     local nextCardIndex = 1
-    for row = 1, 2 do
-        for column = 1, 7 do
+    for row = 1, ROW_MAX do
+        for column = 1, INDICES_PER_ROW do
             if indexTable[row][column].free then
                 params.cards[nextCardIndex].setRotationSmooth({0, 0, 0}, false)
                 params.cards[nextCardIndex].setPositionSmooth(getRealPosition(indexTable[row][column].position), false)
