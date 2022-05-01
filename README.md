@@ -131,10 +131,12 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > > - `isPlayerAuthorized({playerColor or player, ownerPlayer}) : bool` returns *true* if the the player **player** or player with the **playerColor** equals **ownerPlayer**. It will return also *true* if **player** or the player with the **playerColor** is an admin.
 > > - `findIntInScript({scriptString, varName}) : int` searches in the **scriptString** for a variable with the name **varName** and returns the value of it.
 > > - `switchRewardingMode({playerColor or player})` switches the Rewarding Mode for **player** or the player with the **playerColor**.
-> > - `placeSoulToken({ownerColor})` takes a Soul Token from the soul token deck and places it in the Soul Zone of the player with the color **ownerColor**. Prints a INFO-MSG.
 > > - `colorPicker_attach({afterPickFunction, functionOwner, picker, reason}) : bool` attaches **afterPickFunction** to the **Color-Picker System**. The **Color-Picker** is explained in chapter [Color-Picker](#color-picker). \
 > Only **afterPickFunction** and **functionOwner** have to be set. If picker is unset, the active player will be the picker. \
 > Returns *true* if **afterPickFunction** could be attached successfully.
+> > - `placeSoulToken({playerColor})` takes a Soul Token from the soul token deck and places it in the Soul Zone of the player with the color **playerColor**. Prints a INFO-MSG. If the soul zone is full the Soul Token will be dealed to the Hand Zone of the player.
+> > - `placeObjectInSoulZone({playerColor, object})` places **object** in the Soul Zone of the player with color **playerColor**. If the Soul Zone is full the **object** will be dealed to the Hand Zone of the player.
+> > - `placeObjectInPillZone({playerColor, object})` places **object** in the Pill Zone of the player with color **playerColor**. If the Pill Zone is full the **object** will be dealed to the Hand Zone of the player.
 
 > ## <b>Coins</b>
 > > ### <u><b>Variables</b></u>
@@ -218,25 +220,52 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > >   - If the new card is not a event and **isTargetOfAttack** is *true*, another INFO-MSG will be printed.
 > >   - This function will only return *false* if it couldn't find a new monster card to place it in the **zone**.
 
+> ## <b>Shop Zone</b>
+> > ### <u><b>Variables</b></u>
+> > - `active` is *true*, if this zone is an active shop zone
+>
+> > ### <u><b>Functions</b></u>
+> > - `containsDeckOrCard() : bool` returns *true*, if this zone containes a *deck* or *card*.
+> > - `deactivateZone()` discards all *decks* or *cards* in this zone. It activates the purchase button of this zone and sets it to the state **INACTIVE**.
+> > - `activateZone()` places a new treasure card in this zone if there is no *deck* or *card*. It activates the purchase button of this zone and sets it to the state **PURCHASE**.
+> > - `deactivatePurchaseButton()` let the purchase button of this zone disappear. (This function removes the button)
+> > - `activatePurchaseButton()` let the purchase button reappear in the state **PURCHASE** if the zone is active and **INACTIVE** otherwise. (This function creates the button)
+
+> ## <b>Shop-Deck Zone</b>
+> > ### <u><b>Tables</b></u>
+> > - `PURCHASE_BUTTON_STATES` contains all valid states for the purchase button of the shop zones. The keys are **PURCHASE** and **INACTIVE**.
+> > - `SHOP_BUTTON_STATES` contains all valid states for the shop button of this Shop-Deck Zone. The keys are **PURCHASE** and nothing else.
+>
+> > ### <u><b>Functions</b></u>
+> > - `deactivateShopButton()` let the shop button of this zone disappear. (This function removes the button)
+> > - `activateShopButton()` let the shop button reappear in the state **PURCHASE**.
+> > - `changeZoneState({zone, newState})` changes the state of the Shop Zone **zone** to **newState**. The **newState** has to be a state from **ATTACK_BUTTON_STATES**. What will happen on a state change depends on the **newState**.
+> > - `placeNewTreasureCard({zone}) : bool` takes the first *card* or the topmost *card* of the first *deck* in the treasure zone. It filps this card and put it into the shop zone **zone**. It returs *false* if no card was found in the treasure zone.
+
 > ## <b>Player Zone</b>
 > > ### <u><b>Variables</b></u>
 >
 > > ### <u><b>Functions</b></u>
 
+> ## <b>Pill Zone</b>
+> > ### <u><b>Tables</b></u>
+> > - `attachedObjects` contains all objects that are currently in this Pill Zone. The keys are the *GUIDs* of the objects. The value for a *GUID* is 1 if the corresponding object is in this Pill Zone and *nil* otherwise.
+>
+> > ### <u><b>Variables</b></u>
+> > - `INDEX_MAX` is the maximum index in this Pill Zone. For every Pill Zone it is 2. Every index belongs to a fixed position in this zone.
+>
+> > ### <u><b>Functions</b></u>
+> > - `placeObjectInZone({object})` places **object** in this Pill Zone. If this Pill Zone is full the **object** will be dealed to the Hand Zone of the player.
+
 > ## <b>Soul Zone</b>
+> > ### <u><b>Tables</b></u>
+> > - `attachedObjects` contains all objects that are currently in this Soul Zone. The keys are the *GUIDs* of the objects. The value for a *GUID* is 1 if the corresponding object is in this Soul Zone and *nil* otherwise.
+>
 > > ### <u><b>Variables</b></u>
+> > - `INDEX_MAX` is the maximum index in this Soul Zone. For every Soul Zone it is 4. Every index belongs to a fixed position in this zone.
 >
 > > ### <u><b>Functions</b></u>
-
-> ## <b>Shop Zone</b>
-> > ### <u><b>Variables</b></u>
->
-> > ### <u><b>Functions</b></u>
-
-> ## <b>Shop-Deck Zone</b>
-> > ### <u><b>Variables</b></u>
->
-> > ### <u><b>Functions</b></u>
+> > - `placeObjectInZone({object})` places **object** in this Soul Zone. If this Soul Zone is full the **object** will be dealed to the Hand Zone of the player.
 
 > ## <b>Souls</b>
 > > ### <u><b>Variables</b></u>
