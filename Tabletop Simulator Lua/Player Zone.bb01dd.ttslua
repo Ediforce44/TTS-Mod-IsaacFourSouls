@@ -181,35 +181,35 @@ function killPlayer()
     playerAlive = false
 end
 
-function placeCardInZone(params)
-    if params.card == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeCardInPlayerZone()'.")
+function placeObjectInZone(params)
+    if params.object == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeObjectInPlayerZone()'.")
         return
     end
     local freePosition = getNextFreePosition()
     if freePosition ~= nil then
-        params.card.setRotationSmooth({0, 0, 0}, false)
-        params.card.setPositionSmooth(freePosition, false)
+        params.object.setRotationSmooth({0, 0, 0}, false)
+        params.object.setPositionSmooth(freePosition, false)
     else
-        params.card.deal(1, owner_color)
+        params.object.deal(1, owner_color)
     end
 end
 
 -- More efficent for multi card placing
-function placeMultipleCardsInZone(params)
-    if (params.cards == nil) or (#params.cards == 0) then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeMultipleCardsInPlayerZone()'.")
+function placeMultipleObjectsInZone(params)
+    if (params.objects == nil) or (#params.objects == 0) then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeMultipleObjectsInPlayerZone()'.")
         return
     end
 
     calculateIndexTable()
-    local maxCardIndex = #params.cards
+    local maxCardIndex = #params.objects
     local nextCardIndex = 1
     for row = 1, ROW_MAX do
         for column = 1, INDICES_PER_ROW do
             if indexTable[row][column].free then
-                params.cards[nextCardIndex].setRotationSmooth({0, 0, 0}, false)
-                params.cards[nextCardIndex].setPositionSmooth(getRealPosition(indexTable[row][column].position), false)
+                params.objects[nextCardIndex].setRotationSmooth({0, 0, 0}, false)
+                params.objects[nextCardIndex].setPositionSmooth(getRealPosition(indexTable[row][column].position), false)
                 nextCardIndex = nextCardIndex + 1
                 if nextCardIndex > maxCardIndex then
                     return
@@ -219,6 +219,6 @@ function placeMultipleCardsInZone(params)
     end
     -- Not enough free fields for cards
     for index = nextCardIndex , maxCardIndex do
-        params.cards[index].deal(1, owner_color)
+        params.objects[index].deal(1, owner_color)
     end
 end

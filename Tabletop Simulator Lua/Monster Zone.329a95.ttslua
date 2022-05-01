@@ -79,9 +79,9 @@ local function payOutTreasures(playerColor, amount)
         for n = 1, amount do
             cards[n] = treasureDeck.takeObject({flip = true})
         end
-        Global.call("getActivePlayerZone").call("placeMultipleCardsInZone", {cards = cards})
+        Global.call("getActivePlayerZone").call("placeMultipleObjectsInZone", {objects = cards})
     elseif amount == 1 then
-        Global.call("getActivePlayerZone").call("placeCardInZone", {card = treasureDeck.takeObject({flip = true})})
+        Global.call("getActivePlayerZone").call("placeObjectInZone", {object = treasureDeck.takeObject({flip = true})})
     end
 end
 
@@ -269,8 +269,7 @@ function finishMonster()
     Wait.frames(function ()
             -- Place discard monster card
             if active_monster_reward.SOULS ~= 0 then    -- Monster becomes soul token
-                getObjectFromGUID(Global.getTable("ZONE_GUID_SOUL")[activePlayerColor]).call("placeCardInSoulZone"
-                    , {card = monsterCard})
+                Global.call("placeObjectInSoulZone", {playerColor = activePlayerColor, object = monsterCard})
             else    -- Monster just get discarded
                 monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
             end

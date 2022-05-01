@@ -8,7 +8,7 @@ ZONE_EDGES = {
     {x=35.4, z=-17.3}
 }
 
-local maxIndex = 4
+INDEX_MAX = 4
 
 attachedObjects = {}
 indexTable = {}
@@ -80,7 +80,7 @@ local function initIndexTable()
 end
 
 local function resetIndexTable()
-    for index = 1, maxIndex do
+    for index = 1, INDEX_MAX do
         indexTable[index].free = true
     end
 end
@@ -91,7 +91,7 @@ local function calculateIndexTable()
     for _ , object in pairs(self.getObjects()) do
         if object.tag == "Card" or object.tag == "Deck" then
             local objectPosition = object.getPosition()
-            for index = 1, maxIndex do
+            for index = 1, INDEX_MAX do
                 if math.abs(objectPosition.z - indexTable[index].position.z) < marginOffset then
                     indexTable[index].free = false
                 end
@@ -106,7 +106,7 @@ end
 
 local function getNextFreePosition()
     calculateIndexTable()
-    for index = 1, maxIndex do
+    for index = 1, INDEX_MAX do
         if indexTable[index].free and (not indexTable[index].tempBlocked) then
             indexTable[index].tempBlocked = true
             Timer.create(getTimerParameters(index))

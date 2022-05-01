@@ -118,7 +118,7 @@ function colorPicker_attach(params)
     if params.afterPickFunction and params.functionOwner then
         table.insert(colorPickerAttachment, {picker = params.picker or activePlayerColor
             , afterPickFunction = params.afterPickFunction, functionOwner = params.functionOwner
-            , reason = params.reason or "Unknown"})
+            , reason = params.reason or "Unknown", functionParams = params.functionParams or {}})
         if #colorPickerAttachment == 1 then
             pickColor(false)
         end
@@ -152,7 +152,9 @@ function colorPicked(player, _, idValue)
     end
     broadcastToAll(picker .. " picked " .. picked .. "!")
     local nextEntry = colorPickerAttachment[1]
-    nextEntry.functionOwner.call(nextEntry.afterPickFunction, {pickedColor = idValue})
+    local functionParams = nextEntry.functionParams or {}
+    functionParams.pickedColor = idValue
+    nextEntry.functionOwner.call(nextEntry.afterPickFunction, functionParams)
     table.remove(colorPickerAttachment, 1)
     UI.setAttribute("colorPicker", "active", false)
     if #colorPickerAttachment > 0 then
@@ -458,7 +460,7 @@ end
 
 function placeObjectInSoulZone(params)
     if (params.playerColor == nil) or (params.object == nil) then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeCardInSoulZone()'.")
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeObjectInSoulZone()'.")
     else
         getObjectFromGUID(ZONE_GUID_SOUL[params.playerColor]).call("placeObjectInZone", {object = params.object})
     end
@@ -472,16 +474,16 @@ function placeObjectInPillZone(params)
     end
 end
 
-function placeCardsInPlayerZone(params)
-    if (params.playerColor == nil) or (params.cards == nil) then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeCardsInPlayerZone()'.")
+function placeObjectsInPlayerZone(params)
+    if (params.playerColor == nil) or (params.objects == nil) then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeObjectsInPlayerZone()'.")
     else
-        local cards = params.cards
+        local cards = params.objects
         if #cards > 1 then
-            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeMultipleCardsInZone"
-                , {cards = params.cards})
+            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeMultipleObjectsInZone"
+                , {cards = params.objects})
         elseif #cards == 1 then
-            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeCardInZone", {card = params.cards[1]})
+            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeObjectInZone", {card = params.objects[1]})
         end
     end
 end
