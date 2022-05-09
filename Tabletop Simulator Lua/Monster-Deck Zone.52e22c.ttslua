@@ -21,8 +21,9 @@ ATTACK_BUTTON_COLORS = {
 }
 
 MONSTER_TAGS = {
-    NEW     = "New",
-    DEAD    = "Dead"
+    NEW         = "New",
+    DEAD        = "Dead",
+    INDOMITABLE = "Indomitable"
 }
 
 EVENT_TYPES = {
@@ -135,6 +136,15 @@ local function objectContainsGUID(object, GUID)
         end
     end
     return false
+end
+
+local function getNextInactiveZone()
+    for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
+        if getObjectFromGUID(guid).getVar("active") == false then
+            return getObjectFromGUID(guid)
+        end
+    end
+    return getObjectFromGUID(MONSTER_ZONE_GUIDS.SIX)
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -277,7 +287,7 @@ function discardActiveMonsterCard(params)
                     -- Place new monster card
                     Wait.frames(function ()
                             if not zone.call("containsDeckOrCard") then
-                                if placeNewMonsterCard({zone = zone, isTargetOfAttack = false}) == false then
+                                if placeNewMonsterCard({zone = zone, isTargetOfAttack = false}) == nil then
                                     return
                                 end
                             end
@@ -338,11 +348,35 @@ function placeNewMonsterCard(params)
     if params.zone == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'placeNewMonsterCard()'.")
     end
-    local newMonsterCard = Global.call("getCardFromDeck", {deck = Global.call("getMonsterDeck")})
+    if params.zone.getTable("active_monster_attrs").INDOMITABLE then
+        return nil
+    end
+    local monsterDeck = Global.call("getMonsterDeck")
+    --local cardsInMonsterDeck = monsterDeck.getData().ContainedObjects
+    --local newMonsterScript = cardsInMonsterDeck[#cardsInMonsterDeck]
+    --local isIndomitable = (Global.call("findIntInScript"
+    --                        , {scriptString = newMonsterCard["LuaScript"], varName = "indomitable"}) == 1)
+    --[[if newMonsterScript--isIndomitable then
+        local nextInactiveZone
+        -- determine next inactive zone
+        nextIndactiveZone.call("activateZone")
+        if params.zone.getVar("active") == false then
+            return
+        end
+
+    else]]
+    local newMonsterCard = Global.call("getCardFromDeck", {deck = monsterDeck})
+    local placingZone = params.zone
     if newMonsterCard ~= nil then
         newMonsterCard.addTag(MONSTER_TAGS.NEW)
         newMonsterCard.flip()
-        newMonsterCard.setPositionSmooth({params.zone.getPosition().x, 5, params.zone.getPosition().z}, false)
+        if newMonsterCard.hasTag("Indomitable") then
+            local nextInactiveZone = nil
+            nextInactiveZone = getNextInactiveZone()
+            nextInactiveZone.call("activateZone", {drawCard = false})
+            placingZone = nextInactiveZone
+        end
+        newMonsterCard.setPositionSmooth({placingZone.getPosition():setAt("y", 5)}, false)
         Wait.frames(function ()
                 if newMonsterCard.getVar("isEvent") then
                     local eventType = newMonsterCard.getVar("type")
@@ -353,16 +387,16 @@ function placeNewMonsterCard(params)
                     if eventType == EVENT_TYPES.CURSE then
                         local coloredCurseName = Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT
                             .. newMonsterCard.getName()
-                        Global.call("colorPicker_attach", {afterPickFunction = "dealEventToPlayer"
+                            Global.call("colorPicker_attach", {afterPickFunction = "dealEventToPlayer"
                             , functionOwner = params.zone, reason = coloredCurseName})
                     end
                 elseif params.isTargetOfAttack then
                     Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end)
                 end
             end)
-        return true
+        return placingZone
     end
-    return false
+    return nil
 end
 
 function changeZoneState(params)
@@ -471,7 +505,10 @@ function onObjectEnterScriptingZone(zone, object)
                     if (zone.getTable("active_monster_attrs").GUID == firstCard["GUID"]) then
                         local script = firstCard["LuaScript"]
                         -- Attributes
-                        newAttributes = findAttrsInScript(script)
+                        local newAttributes = findAttrsInScript(script)
+                        if firstCard["Tags"] then
+                            newAttributes.INDOMITABLE = (firstCard["Tags"][MONSTER_TAGS.INDOMITABLE] == true)
+                        end
                         if newAttributes.HP == nil then
                             newAttributes.HP = object.getVar("hp") or 0
                         end
@@ -510,6 +547,7 @@ function onObjectEnterScriptingZone(zone, object)
                     newAttributes.HP = object.getVar("hp") or 0
                     newAttributes.ATK = object.getVar("dice")
                     newAttributes.DMG = object.getVar("atk")
+                    newAttributes.INDOMITABLE = object.hasTag(MONSTER_TAGS.INDOMITABLE)
                     -- Rewards
                     local rewards = object.getTable("rewards") or {}
 
@@ -551,6 +589,7 @@ function onObjectLeaveScriptingZone(zone, object)
                     newAttributes.HP = topObjectInZone.getVar("hp") or 0
                     newAttributes.ATK = topObjectInZone.getVar("dice")
                     newAttributes.DMG = topObjectInZone.getVar("atk")
+                    newAttributes.INDOMITABLE = object.hasTag(MONSTER_TAGS.INDOMITABLE)
                     -- Rewards
                     local rewards = topObjectInZone.getTable("rewards") or {}
 
@@ -625,8 +664,9 @@ function click_function_AttackButton(zone, color, alt_click)
                 changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACKING})
             end
         elseif attackButtonState == ATTACK_BUTTON_STATES.CHOOSE then
-            if placeNewMonsterCard({zone = zone, isTargetOfAttack = true}) then
-                changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACKING})
+            local placedZone = placeNewMonsterCard({zone = zone, isTargetOfAttack = true})
+            if placedZone ~= nil then
+                changeZoneState({zone = placedZone, newState = ATTACK_BUTTON_STATES.ATTACKING})
             end
         elseif attackButtonState == ATTACK_BUTTON_STATES.ATTACKING then
             local monsterName = zone.getTable("active_monster_attrs").NAME

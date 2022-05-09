@@ -4,11 +4,12 @@ HP_COUNTER_GUID = Global.getTable("MONSTER_HP_COUNTER_GUID").FOUR
 altClickCounter = 0
 
 active_monster_attrs = {
-    GUID    = "",
-    NAME    = "",
-    HP      = 0,
-    ATK     = 0,
-    DMG     = 0
+    GUID        = "",
+    NAME        = "",
+    HP          = 0,
+    ATK         = 0,
+    DMG         = 0,
+    INDOMITABLE = false
 }
 
 active_monster_reward = {
@@ -95,7 +96,7 @@ local function placeNewMonsterIfEmpty()
     Wait.frames(function ()
             if not containsDeckOrCard() then
                 if MONSTER_DECK_ZONE.call("placeNewMonsterCard"
-                    , {zone = self, isTargetOfAttack = false}) == false then
+                    , {zone = self, isTargetOfAttack = false}) == nil then
                     return
                 end
             end
@@ -130,6 +131,7 @@ function onLoad(saved_data)
         active_monster_attrs.HP = loaded_data[3].HP or 0
         active_monster_attrs.ATK = loaded_data[3].ATK or 0
         active_monster_attrs.DMG = loaded_data[3].DMG or 0
+        active_monster_attrs.INDOMITABLE = loaded_data[3].INDOMITABLE or false
     end
     if loaded_data[4] then
         active_monster_reward.CENTS = loaded_data[4].CENTS or 0
@@ -298,6 +300,7 @@ function updateAttributes(params)
         active_monster_attrs.HP = params.HP or 0
         active_monster_attrs.ATK = params.ATK or -1
         active_monster_attrs.DMG = params.DMG or -1
+        active_monster_attrs.INDOMITABLE = params.INDOMITABLE or false
         getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = active_monster_attrs.HP})
     end
 end
@@ -309,7 +312,7 @@ function updateRewards(params)
     active_monster_reward.SOULS = params.SOULS or 0
 end
 
-function activateZone()
+function activateZone(params)
     if active then
         printToAll("[fdd835][WARNING][-] Can't activate Zone: " .. self.guid .. ". This Zone is already active.")
     else
@@ -320,8 +323,8 @@ function activateZone()
             elseif firstObjectInZone.tag == "Deck" then
                 firstObjectInZone.takeObject({position = self.getPosition():setAt('y', 2)})
             end
-        else
-            if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == false then
+        elseif (params.drawCard == true) or (params.drawCard == nil) then
+            if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == nil then
                 return
             end
         end
