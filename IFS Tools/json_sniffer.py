@@ -48,7 +48,7 @@ def translateRewards(rewardsString):
     return rewardsLua
 
 def hasEventType(JSON_string):
-    pattern = re.compile("(=?(event)?[_]?type\s?=\s?)(.*\n?)", re.I)
+    pattern = re.compile("(?=(event)?[_]?type\s?=\s?)(.*\n?)", re.I)
     eventTypePattern = re.compile("[(curse)|(goodEvent)|(badEvent)|(eventGood)|(eventBad)]", re.I)
     m = pattern.search(JSON_string)
     if m != None:
@@ -62,7 +62,7 @@ def eventVarExist(JSON_string):
     pattern = re.compile("isEvent\s?=\s?")
     return pattern.search(JSON_string) != None
 
-def addEventVar(isEvent):
+def getEventVar(isEvent):
     eventVarString = "isEvent = "
     if isEvent:
         eventVarString = eventVarString + "true"
@@ -70,13 +70,55 @@ def addEventVar(isEvent):
         eventVarString = eventVarString + "false"
     return eventVarString
 
+def addEventVar(eventValue, JSON_data):
+    JSON_data["LuaScript"] = JSON_data["LuaScript"] + "\n" + getEventVar(eventValue)
+
+def removeEventVar(JSON_data):
+    JSON_data["LuaScript"] = re.sub("\n[(" + getEventVar(True) + ")|(" + getEventVar(False) + ")]", "", JSON_data["LuaScript"])
+
+def isIndomitable(description):
+    pattern = re.compile("(.)*[-]\s?Indomitable\s?[-]?(.)*", re.I | re.DOTALL)
+    return pattern.match(description)
+
+# WARNING: No Prefix resistance. 
+#   - Returns also True if JSON_data has a Tag which containes tag as a prefix
+def tagExist(refTag, JSON_data):
+    try:
+        tags = JSON_data["Tags"]
+    except:
+        return False
+    else:
+        pattern = re.compile(refTag, re.I)
+        for tag in tags:
+            if pattern.match(tag):
+                return True
+                
+
+def addTag(tagToAdd, JSON_data):
+    try:
+        tags = JSON_data["Tags"]
+    except:
+        JSON_data["Tags"] = [tagToAdd]
+    else:
+        tags.insert(0, tagToAdd)
+
+def removeTag(tagToRemove, JSON_data):
+    try:
+        tags = JSON_data["Tags"]
+    except:
+        return
+    else:
+        tags.remove(tagToRemove)
+        if not tags:
+            del JSON_data["Tags"]
+
 def matchesMonsterPattern(nickname):
     pattern = re.compile("(.*)monster(.*)", re.I)
     return pattern.match(nickname)
 
 def main(argv, argc):
     if argc < 2:
-        print("To little parameters:\n\rPlease pass the file name of the file you want to sniff as parameter.\n")
+        print("To little parameters:\n\t1: File name of the file you want to sniff.\n\tRest: The mode. (rewards, tags, mark_events, remove)")
         return
     fileName = str(argv[1])
     m = re.search("\.json", fileName)
@@ -89,19 +131,37 @@ def main(argv, argc):
         return
     
     rewards = False
+    tags = False
     mark_events = False
 
+    remove = False
+
     if argc > 2:
-        mode = argv[2]
-        if mode == "rewards":
+        removeAll = None
+        for i in range(2,argc-1):
+            mode = argv[i]
+            if mode == "rewards":
+                rewards = True
+                if removeAll:
+                    removeAll = False
+            elif mode == "tags":
+                tags = True
+                if removeAll:
+                    removeAll = False
+            elif mode == "mark_events":
+                mark_events = True
+                if removeAll:
+                    removeAll = False
+            elif mode == "remove":
+                remove = True
+                removeAll = True
+        if removeAll == True:
             rewards = True
-        elif mode == "mark_events":
-            mark_events = True
-        else:
-            rewards = True
+            tags = True
             mark_events = True
     else:
         rewards = True
+        tags = True
         mark_events = True
 
     JSON_data = json.load(JSON_file)
@@ -109,23 +169,38 @@ def main(argv, argc):
     # Original    
     for val in JSON_data["ObjectStates"]:
         #print(val["Name"])
-
         if rewards:
             if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
                 for card in val["ContainedObjects"]:
                     #print(card["GUID"])
                     if not rewardsVarExist(card["LuaScript"]):
                         card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
+                    elif remove:
+                        card["LuaScript"] = re.sub("\n" + translateRewards(card["Description"]), "", card["LuaScript"])
+        
+        if tags:
+            if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
+                for card in val["ContainedObjects"]:
+                    if isIndomitable(card["Description"]):
+                        if not tagExist("Indomitable", card):
+                            addTag("Indomitable", card)
+                        elif remove:
+                            removeTag("Indomitable", card)
 
         if mark_events:
             if val["Name"] == "Deck" and val["Nickname"] == "Happening cards":
                 for card in val["ContainedObjects"]:
                     if not eventVarExist(card["LuaScript"]):
-                        card["LuaScript"] = card["LuaScript"] + "\n" + addEventVar(True)
+                        addEventVar(True, card)
+                    elif remove:
+                        removeEventVar(card)
+
             elif val["Name"] == "Deck" and val["Nickname"] == "Monsters crads":
                 for card in val["ContainedObjects"]:
                     if not eventVarExist(card["LuaScript"]):
-                        card["LuaScript"] = card["LuaScript"] + "\n" + addEventVar(False)
+                        addEventVar(False, card)
+                    elif remove:
+                        removeEventVar(card)
     
     # Expansions
     for val in JSON_data["ObjectStates"]:
@@ -134,25 +209,40 @@ def main(argv, argc):
             for expansion in val["ContainedObjects"]:
                 if expansion["Name"] == "Custom_Model_Bag" or expansion["Name"] == "Bag":
                     for content in expansion["ContainedObjects"]:
-
-                        if rewards or mark_events:
+                        # Only Decks with no Nickname or 'monster' in their Nickname
+                        if rewards or mark_events or tags:
                             if (content["Nickname"] == "" or matchesMonsterPattern(content["Nickname"])):
                                 if content["Name"] == "Deck":
                                     for card in content["ContainedObjects"]:
                                         if rewards and (not rewardsVarExist(card["LuaScript"])):
                                             card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
                                         # This marks more cards as it should, because too many decks have no Nickname
-                                        if mark_events and (not eventVarExist(card["LuaScript"])):
-                                            card["LuaScript"] = card["LuaScript"] + "\n" + addEventVar(False)    
+                                        if mark_events:
+                                            if not eventVarExist(card["LuaScript"]):
+                                                addEventVar(False, card)
+                                            elif remove:
+                                                removeEventVar(card)
+                                        if tags:
+                                            if isIndomitable(card["Description"]) and (not tagExist("Indomitable", card)):
+                                                addTag("Indomitable", card)
+                                            elif remove:
+                                                removeTag("Indomitable", card)
 
                         if mark_events:
                             if content["Name"] == "Deck":
                                 for card in content["ContainedObjects"]:
-                                    if hasEventType(card["LuaScript"]) and (not eventVarExist(card["LuaScript"])):
-                                        card["LuaScript"] = card["LuaScript"] + "\n" + addEventVar(True)
+                                    if hasEventType(card["LuaScript"]):
+                                        if not eventVarExist(card["LuaScript"]):
+                                            addEventVar(True, card)
+                                        elif remove:
+                                            removeEventVar(card)
                                     
-
-    newFile = open(fileName + "_Sniffed.json", "w+")
+    newFileName = fileName
+    if remove:
+        newFileName += "_Unsniffed.json"
+    else:
+        newFileName += "_Sniffed.json"
+    newFile = open(newFileName, "w+")
     newFile.write(json.dumps(JSON_data, indent=2))
     newFile.close()
     JSON_file.close()
