@@ -93,6 +93,12 @@ function onStart()
 
     monsterDeck.shuffle()
 
+    for _, color in pairs(getSeatedPlayers()) do
+        Global.call("deactivateCharacter", {playerColor = color})
+    end
+
+    -- INSERT other setup steps
+
     self.editButton({
         index = 0,
         click_function = "dummy",

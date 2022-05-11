@@ -172,11 +172,20 @@ function onObjectLeaveZone(zone, leavingObject)
     end
 end
 
+function deactivateCharacter()
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.hasTag("Character") then
+            obj.setRotationSmooth({0, 90, 0}, false)
+        end
+    end
+end
+
 function reanimatePlayer()
     playerAlive = true
 end
 
 function killPlayer()
+    deactivateCharacter()
     payDeathPenalty()
     playerAlive = false
 end

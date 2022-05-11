@@ -345,6 +345,14 @@ function isPlayerAuthorized(params)
     return player == params.ownerPlayer or player.admin
 end
 
+function deactivateCharacter(params)
+    if params.playerColor == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'deactivateCharacter()'.")
+        return
+    end
+    getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("deactivateCharacter")
+end
+
 function switchRewardingMode(params)
     local color = ""
     if params.playerColor == nil then
