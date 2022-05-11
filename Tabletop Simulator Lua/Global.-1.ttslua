@@ -145,7 +145,7 @@ end
 function colorPicked(player, _, idValue)
     local picker = getPlayerString({playerColor = player.color})
     local picked = getPlayerString({playerColor = idValue})
-    if Player[idValue].steam_id == nil then
+    if not Player[idValue].seated then
         broadcastToColor(picked .. " is not a active Player!", player.color)
         pickColor(true)
         return

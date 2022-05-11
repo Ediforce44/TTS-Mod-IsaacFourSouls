@@ -20,7 +20,7 @@ local function printBuyPhrase(itemName)
         printToAll("[fdd835][WARNING][-] There is no item to purchase in this zone. The attribute 'NAME' is empty.")
     else
         phrase = Global.call("getActivePlayerString")
-        phrase = phrase .. " bought " .. Global.getTable("PRINT_COLOR_SPECIAL").TREASURE_LIGHT .. itemName .. "[-] !!!"
+        phrase = phrase .. " got " .. Global.getTable("PRINT_COLOR_SPECIAL").TREASURE_LIGHT .. itemName .. "[-] !!!"
         broadcastToAll(phrase)
     end
     return phrase
