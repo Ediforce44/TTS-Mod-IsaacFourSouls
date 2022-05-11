@@ -95,10 +95,10 @@ end
 local function placeNewMonsterIfEmpty()
     Wait.frames(function ()
             if not containsDeckOrCard() then
-                if MONSTER_DECK_ZONE.call("placeNewMonsterCard"
-                    , {zone = self, isTargetOfAttack = false}) == nil then
-                    return
-                end
+                repeat
+                    local placedZone =
+                        MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false})
+                until ((placedZone == self) or (placedZone == nil))
             end
         end, 60)
 end
@@ -323,7 +323,7 @@ function activateZone(params)
             elseif firstObjectInZone.tag == "Deck" then
                 firstObjectInZone.takeObject({position = self.getPosition():setAt('y', 2)})
             end
-        elseif (params.drawCard == true) or (params.drawCard == nil) then
+        elseif (params == nil) or (params.drawCard == nil) or (params.drawCard == true) then
             if MONSTER_DECK_ZONE.call("placeNewMonsterCard", {zone = self, isTargetOfAttack = false}) == nil then
                 return
             end

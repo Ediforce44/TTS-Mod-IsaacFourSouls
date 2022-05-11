@@ -208,7 +208,7 @@ function placeMultipleObjectsInZone(params)
     for row = 1, ROW_MAX do
         for column = 1, INDICES_PER_ROW do
             if indexTable[row][column].free then
-                params.objects[nextCardIndex].setRotationSmooth({0, 0, 0}, false)
+                params.objects[nextCardIndex].setRotationSmooth({0, 180, 0}, false)
                 params.objects[nextCardIndex].setPositionSmooth(getRealPosition(indexTable[row][column].position), false)
                 nextCardIndex = nextCardIndex + 1
                 if nextCardIndex > maxCardIndex then

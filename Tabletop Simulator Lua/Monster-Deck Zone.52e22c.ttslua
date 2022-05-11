@@ -80,7 +80,8 @@ end
 -- Determines if an object is leaving the zone or if it is just consumed by another object within the zone
 local function isObjectReallyLeaving(object, zone)
     local distance = object.getPosition():distance(zone.getPosition())
-    if distance > 1 then
+    -- adjust sensitivity (important for manuel card moving)
+    if distance > 0.62 then
         return true
     end
     return false
@@ -144,7 +145,14 @@ local function getNextInactiveZone()
             return getObjectFromGUID(guid)
         end
     end
-    return getObjectFromGUID(MONSTER_ZONE_GUIDS.SIX)
+    return nil
+end
+
+local function isZoneChooseable(zone)
+    if zone.getVar("active") and (not zone.getTable("active_monster_attrs").INDOMITABLE) then
+        return true
+    end
+    return false
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -287,9 +295,9 @@ function discardActiveMonsterCard(params)
                     -- Place new monster card
                     Wait.frames(function ()
                             if not zone.call("containsDeckOrCard") then
-                                if placeNewMonsterCard({zone = zone, isTargetOfAttack = false}) == nil then
-                                    return
-                                end
+                                repeat
+                                    local placedZone = placeNewMonsterCard({zone = zone, isTargetOfAttack = false})
+                                until ((placedZone == zone) or (placedZone == nil))
                             end
                         end, 60)
                 else
@@ -349,34 +357,23 @@ function placeNewMonsterCard(params)
         printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'placeNewMonsterCard()'.")
     end
     if params.zone.getTable("active_monster_attrs").INDOMITABLE then
+        printToAll("[fdd835][WARNING][-] Can't place a monster on an 'indomitable' monster.")
         return nil
     end
     local monsterDeck = Global.call("getMonsterDeck")
-    --local cardsInMonsterDeck = monsterDeck.getData().ContainedObjects
-    --local newMonsterScript = cardsInMonsterDeck[#cardsInMonsterDeck]
-    --local isIndomitable = (Global.call("findIntInScript"
-    --                        , {scriptString = newMonsterCard["LuaScript"], varName = "indomitable"}) == 1)
-    --[[if newMonsterScript--isIndomitable then
-        local nextInactiveZone
-        -- determine next inactive zone
-        nextIndactiveZone.call("activateZone")
-        if params.zone.getVar("active") == false then
-            return
-        end
-
-    else]]
     local newMonsterCard = Global.call("getCardFromDeck", {deck = monsterDeck})
     local placingZone = params.zone
     if newMonsterCard ~= nil then
         newMonsterCard.addTag(MONSTER_TAGS.NEW)
         newMonsterCard.flip()
         if newMonsterCard.hasTag("Indomitable") then
-            local nextInactiveZone = nil
-            nextInactiveZone = getNextInactiveZone()
-            nextInactiveZone.call("activateZone", {drawCard = false})
-            placingZone = nextInactiveZone
+            local nextInactiveZone = getNextInactiveZone()
+            if nextInactiveZone ~= nil then
+                nextInactiveZone.call("activateZone", {drawCard = false})
+                placingZone = nextInactiveZone
+            end
         end
-        newMonsterCard.setPositionSmooth({placingZone.getPosition():setAt("y", 5)}, false)
+        newMonsterCard.setPositionSmooth(placingZone.getPosition():setAt('y', 5), false)
         Wait.frames(function ()
                 if newMonsterCard.getVar("isEvent") then
                     local eventType = newMonsterCard.getVar("type")
@@ -413,15 +410,13 @@ function changeZoneState(params)
     elseif newState == ATTACK_BUTTON_STATES.ATTACK then
         activateAllMonsterButtons()
         if not zone.getVar("active") then
-            zone.call("activateZone")
+            zone.call("activateZone", {})
         else
-            --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK
                     , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACK})})
         end
     elseif newState == ATTACK_BUTTON_STATES.CHOOSE then
-        if zone.getVar("active") then   --change button state
-            --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE})
+        if isZoneChooseable(zone) then   --change button state
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE
                     , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.CHOOSE})})
         else    --deactivate buttons for inactive zones
@@ -430,7 +425,6 @@ function changeZoneState(params)
     elseif newState == ATTACK_BUTTON_STATES.ATTACKING then
         if zone.getVar("active") then
             zone.call("activateAttackButton")
-            --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.ATTACKING})
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACKING
                     , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACKING})})
             deactivateMonsterButtons(zone, true)
@@ -438,7 +432,6 @@ function changeZoneState(params)
     elseif newState == ATTACK_BUTTON_STATES.DIED then
         if zone.getVar("active") then
             zone.call("activateAttackButton")
-            --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX") , label = ATTACK_BUTTON_STATES.DIED})
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.DIED
                     , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.DIED})})
             deactivateMonsterButtons(zone, true)
@@ -625,21 +618,18 @@ function click_function_ChooseButton(_, color, alt_click)
     if Global.getVar("activePlayerColor") == color or Player[color].admin then
         local chooseButton = getChooseButton()
         if chooseButton.label == CHOOSE_BUTTON_STATES.ATTACK then
-            --self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE})
             self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE
                         , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.CHOOSE})})
             for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
                 changeZoneState({zone = getObjectFromGUID(guid), newState = ATTACK_BUTTON_STATES.CHOOSE})
             end
         elseif chooseButton.label == CHOOSE_BUTTON_STATES.CHOOSE then
-            --self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK})
             self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK
                         , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.ATTACK})})
             activateAllMonsterButtons()
             for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
                 local zone = getObjectFromGUID(guid)
                 if zone.getVar("active") then
-                    --zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK})
                     zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK
                                 , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACK})})
                 end
@@ -658,7 +648,7 @@ function click_function_AttackButton(zone, color, alt_click)
         end
         local attackButtonState = zone.call("getState")
         if attackButtonState == ATTACK_BUTTON_STATES.INACTIVE then
-            zone.call("activateZone")
+            zone.call("activateZone", {})
         elseif attackButtonState == ATTACK_BUTTON_STATES.ATTACK then
             if printAttackPhrase(zone.getTable("active_monster_attrs").NAME) then
                 changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACKING})
