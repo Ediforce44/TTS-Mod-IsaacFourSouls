@@ -178,7 +178,7 @@ function onObjectLeaveZone(zone, leavingObject)
 end
 
 function click_function_SwitchRewardingMode(_, color, alt_click)
-    if Global.call("isPlayerAuthorized", {playerColor = color}) then
+    if Global.call("isPlayerAuthorized", {playerColor = color, ownerColor = owner_color}) then
         -- Locks and unlocks rewarding button
         if alt_click then
             rewardingButtonLocked = not rewardingButtonLocked
@@ -208,7 +208,9 @@ function onSwitchingRewardingMode(params)
     end
     print(Global.getTable("REAL_PLAYER_COLOR")[owner_color] .. owner_color
             .. "s[-] auto rewarding mode has changed.")
-    broadcastToColor(msg, owner_color)
+    if Player[owner_color].seated then
+        broadcastToColor(msg, owner_color)
+    end
 end
 
 function placeObjectInZone(params)
