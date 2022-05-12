@@ -270,8 +270,8 @@ function discardMonsterObject(params)
     if params.object == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'discardMonsterObject()'.")
     end
-    params.object.setPositionSmooth(DISCARD_PILE_POSITION)
     params.object.addTag(MONSTER_TAGS.DEAD)
+    params.object.setPositionSmooth(DISCARD_PILE_POSITION)
 end
 
 function resetAllMonsterZones()
@@ -290,19 +290,14 @@ function discardActiveMonsterCard(params)
     if monsterCard then
         Wait.frames(function ()
                 discardMonsterObject({object = monsterCard})
-                local died = not (monsterCard.call("onDie", {zone = self}) == false)    --default: true, only false on false
-                if died then
-                    -- Place new monster card
-                    Wait.frames(function ()
-                            if not zone.call("containsDeckOrCard") then
-                                repeat
-                                    local placedZone = placeNewMonsterCard({zone = zone, isTargetOfAttack = false})
-                                until ((placedZone == zone) or (placedZone == nil))
-                            end
-                        end, 60)
-                else
-                    monsterCard.removeTag(MONSTER_TAGS.DEAD)
-                end
+                -- Place new monster card
+                Wait.frames(function ()
+                        if not zone.call("containsDeckOrCard") then
+                            repeat
+                                local placedZone = placeNewMonsterCard({zone = zone, isTargetOfAttack = false})
+                            until ((placedZone == zone) or (placedZone == nil))
+                        end
+                    end, 60)
             end)
     end
 end

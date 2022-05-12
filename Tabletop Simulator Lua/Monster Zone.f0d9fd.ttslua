@@ -215,9 +215,13 @@ function activateAttackButton()
     end
 end
 
+function killMonster()
+    getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = 0})
+    monsterDied()
+end
+
 function monsterDied()
     if active then
-        getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = 0})
         local attackButton = getAttackButton()
         if attackButton then
             lastState = attackButton.label
@@ -240,6 +244,11 @@ function monsterReanimated()
     end
 end
 
+-- Pays out the reward of the active monster to the active player if Auto-Rewarding for the active player is activated.
+---   It discards the active monster card if the reward "SOULS" is 0.
+---     Otherwise the card will be placed in the soul zone of the active player.
+---   The `onDie()` function of the card will be executed and if it returns true or nothing,
+---     the card will be taged as DEAD and a new monster card will be placed in this zone if it is empty.
 function finishMonster()
     local activePlayerColor = Global.getVar("activePlayerColor")
     local monsterCard = getActiveMonsterCard()
