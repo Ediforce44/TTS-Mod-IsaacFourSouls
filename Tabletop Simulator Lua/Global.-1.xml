@@ -5,7 +5,7 @@
 
 <VerticalLayout
     id="colorPicker"
-    height="150"
+    height="200"
     width="210"
     allowDragging="true"
     returnToOriginalPositionWhenReleased="false"
@@ -26,6 +26,9 @@
         <Button color="#2BB837"  id="Green"  class="colorButton"></Button>
         <Button color="#D0E431" id="Yellow" class="colorButton"></Button>
     </HorizontalLayout>
+    <Button color="white" id="random" text="Random" textColor="black" fontSize="20" fontStyle="Bold" class="colorButton"
+        >
+    </Button>
     <Button color="white" id="cancel" text="Cancel" textColor="black" fontSize="20" fontStyle="Bold" onClick="cancelPick"
             >
     </Button>

@@ -112,6 +112,17 @@ end
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+function getRandomPlayerColor()
+    local allPlayerColors = {"Red", "Blue", "Green", "Yellow"}
+    local allActivePlayerColors = {}
+    for _ , playerColor in pairs(allPlayerColors) do
+        if Player[playerColor].seated then
+            table.insert(allActivePlayerColors, playerColor)
+        end
+    end
+    return allActivePlayerColors[math.random(#allActivePlayerColors)]
+end
+
 local colorPickerAttachment = {}
 
 function colorPicker_attach(params)
@@ -144,8 +155,14 @@ end
 
 function colorPicked(player, _, idValue)
     local picker = getPlayerString({playerColor = player.color})
-    local picked = getPlayerString({playerColor = idValue})
-    if not Player[idValue].seated then
+    local pickedColor = nil
+    if idValue == "random" then
+        pickedColor = getRandomPlayerColor()
+    else
+        pickedColor = idValue
+    end
+    local picked = getPlayerString({playerColor = pickedColor})
+    if not Player[pickedColor].seated then
         broadcastToColor(picked .. " is not a active Player!", player.color)
         pickColor(true)
         return
@@ -153,7 +170,7 @@ function colorPicked(player, _, idValue)
     broadcastToAll(picker .. " picked " .. picked .. "!")
     local nextEntry = colorPickerAttachment[1]
     local functionParams = nextEntry.functionParams or {}
-    functionParams.pickedColor = idValue
+    functionParams.pickedColor = pickedColor
     nextEntry.functionOwner.call(nextEntry.afterPickFunction, functionParams)
     table.remove(colorPickerAttachment, 1)
     UI.setAttribute("colorPicker", "active", false)
