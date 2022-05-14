@@ -6,7 +6,8 @@ This is the official repository for the Tabletop Simulator[[1]](https://store.st
 - **Working Save-Files:** This folder contains ready-to-play save files. It is recommended to use the save file with the highest number in its name.
   > Copy the `.json` file and the `.png` file and past them into your `Documents/My Games/Tabletop Simulator/Saves` folder.
 - This repository also contains a Python 3 script tool for quickly modifing `TTS-JSON` files.\
-  Is is called `JSON-Sniffer`. We use it to extract monster states from the description of a monster card and transform them into Lua code
+  Is is called `JSON-Sniffer`. We use it to automate repetitive changes to JSON-Save-Files of this mod.\
+  (For Example: To extract monster states from the description of a monster card and transform them into Lua code)
 
 ## How to use this repository with Tabletop Simulator?
 1. First of all follow the [Installation Instructions](https://api.tabletopsimulator.com/atom/) on the [Tabletop Simulator Page](https://api.tabletopsimulator.com/atom/) to install Atom and the Tabletop Simulator Plugin.
@@ -24,8 +25,36 @@ This is the official repository for the Tabletop Simulator[[1]](https://store.st
 > **COMMON PROBLEM:** If you close Atom and open it again, the `.ttslua` files in folder `Tabletop Simulator Lua` have been deleted. If so, just select `Discard All Changes` in the Git-Tab from Atom. It needs a few seconds until all files are recovered. Beware that if you have this problem, you need to stage or commit all your changes before you close Atom. Otherwise all changes will be destroyed.
 
 # What if I want to add a Boosterpack or new Cards?
-There are some important features beside the regular API functions this mod provides. These features are listet in this chapter and are usefull if you want to write scpits for cards.\
+There are some important features beside the regular API functions this mod provides. Thes chapter lists all requirements for cards to work properly with the scrpits of this mod. It also lists all features that are usefull if you want to write scpits for cards.\
 The full documentation of the API of this mod is located in the file `README_API.md`.
+
+## Requirements
+>### <b>Monster Cards</b>
+> - Tags
+>   - Indomitable monsters should have the Tag `Indomitable`
+> - Script Variables
+>   - All monster should contain at least a non-local variable called `hp` which stores the HP of the monster.
+>   - Monster should also contain:
+>       - Variables called `atk` and `dice`. These contain the damage the monster deals and the dice roll to hit value.
+>       - A variable called `soul` if the monster is at least one soul worth. The value of this variable is the soul value of this monster.
+>       - A *Lua-Table* called `rewards` which has the Keys `CENTS`, `LOOT`, `TREASURES` and `SOULS`. The table should contain the amount of each which you get by defeating the monster. 
+> > <b>OPTIONAL</b>
+> > - A non-Event monster card can contain a Script Variable called `isEvent` with the value `false`
+
+>### <b>Event Cards</b>
+> - Script Variables
+>   - All events should contain at least a non-local variable called `isEvent` with the value `true`.
+>   - Events should also contain:
+>     - A variable called `type` which has either the value `"eventGood"`, `"eventBad"` or `"curse"`.
+
+>### <b>Soul Cards</b>
+> Cards that are worth at least one soul are called **Soul Cards**.
+> - Script Variables
+>   - Soul Cards should contain at least a non-local variable called `soul` with the soul value of this card as the value.
+
+>### <b>Character Cards</b>
+> - Tags
+>   - All character cards should have at least the Tag `Character`.
 
 ## General
 - **The Color-Picker** is a feature which allows a player to pick a specific player color or to pick a player color at random. \
@@ -47,8 +76,28 @@ The full documentation of the API of this mod is located in the file `README_API
 ## Monster Cards
 Monster cards are well supported. Many things can be scripted for them. There are Event-like functions which can be added to a Monster Card script. These functions are called **Monster-Events**. \
 Just add a function with the following name to the script of a Monster Card and it will be executed in the specific situation:
-- **onReveal()** will be executed whenever this Monster Card will become a *active* Monster.
-- **onDie()** will be executed whenever this Monster Card leaves a Monster Zone and has the Tag **DEAD**. This is usually the case if a Monster got killed and moved to the discard pile or the soul zone of a player.
+- **onReveal({zone}) : bool** will be executed whenever this Monster Card will become a *active* Monster.
+  - Parameter:
+    - `zone` is a reference to the Monster Zone in which the monster became the active monster.
+  - Return:
+    - If your **onReveal()** function return *false* the Event-Reveal step will be skipped. This means if the Monster Card script contains a variable called **isEvent** with the value *true*, this card will be treated as **isEvent** has the value *false*.
+    > <b>NOTE:</b> \
+    > Normally you want to return *true*.
+
+- **onDie({zone}) : bool** will be executed if the Monster Button is pressed in the state **DIED**.
+    > <b>NOTE:</b> \
+    > This means the **onDie()** Monster Event isn't normally 
+    called if you finish an Event Card in a Monster Zone.
+
+    > <b>NOTE:</b> \
+    > The **onDie()** Monster Event appears directly after setting the position of the killed monster to the position of the discard pile or the Soul Zone of a player. \
+    So you can simply set another position for the Monster Card in the **onDie()** function.
+  - Parameter:
+    - `zone` is a reference to the Monster Zone in which the monster lay while it was killed.
+  - Return:
+    - If the **onDie()** function return *false*, the Monster Card won't be tagged as **DEAD** and no new Monster will be placed in this zone if it is now empty.
+    > <b>NOTE:</b> \
+    > Normally you want to return *true*. The Return-False-Option is provided if you want let the **onReveal()** Monster Event appear again etc.
 
 > **NOTE:** \
 > If you want some examples for the **Monster-Events** look at the script of the Monster Card "The Harbingers".
@@ -56,12 +105,15 @@ Just add a function with the following name to the script of a Monster Card and 
 # Things to do
 ## **TODO-List**
 - Fix Player Turn system (Floors, Order etc.)
-- Handle Indomitable monsters
+- Add Deck-Builder System
 
 ## **Future work**
+- Change the attached object system for Index-Zones like the Soul Zone, Player Zone or Pill Zone to a more usefull system:
+    > - Attached objects refers to the Index in the zone in which they are played
+    > - Add `getPositionFromIndex({index}))`
+    > - Add `getObjectsFromIndex({index})`
 - Automate Bonus-Souls and there counter
 - The Language-Button-Problem
-- Add Deck-Builder System
 - Fix Player Turn system in the Floor Change script
 - Add a Shop-Modifier for each player next to their Attack-Modifier. 
   > The Shop-Modifier reduces the cost of a Shop-Item. The players have to adjust their modifier based on their items. If he purchase a Shop-Item the price can be calculated and automatically subtract from their Coin-Counter.
