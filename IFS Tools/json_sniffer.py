@@ -2,6 +2,10 @@ import sys
 import json
 import re
 
+def matchesBag(object):
+    name = object["Name"]
+    return ((name == "Custom_Model_Bag") or (name == "Bag") or (name == "Infinite_Bag") or (name == "Custom_Model_Infinite_Bag"))
+
 def getRewardPattern(rewardType):
     return re.compile("((((\n|[+])([0-9]{1,2})\s)|([0-9]{1,2}))(" + rewardType + "s?))|((" + rewardType + "s?)\s?([0-9]{1,2}))", re.I)
 
@@ -116,6 +120,62 @@ def matchesMonsterPattern(nickname):
     pattern = re.compile("(.*)monster(.*)", re.I)
     return pattern.match(nickname)
 
+def handleRewards(card):
+    if not rewardsVarExist(card["LuaScript"]):
+        rewardString = translateRewards(card["Description"])
+        if not rewardString == "":
+            card["LuaScript"] = card["LuaScript"] + "\n" + rewardString
+    elif remove:
+        rewardString = translateRewards(card["Description"])
+        if not rewardString == "":
+            card["LuaScript"] = re.sub("\n" + rewardString, "", card["LuaScript"])
+
+def handleEventVar(card):
+    if not eventVarExist(card["LuaScript"]):
+        if hasEventType(card["LuaScript"]):
+            addEventVar(True, card)
+        else:
+            addEventVar(False, card)
+    elif remove:
+        removeEventVar(card)
+
+def handleIndomitableTag(card):
+    if isIndomitable(card["Description"]):
+        if not tagExist("Indomitable", card):
+            addTag("Indomitable", card)
+        elif remove:
+            removeTag("Indomitable", card)
+
+def handleCharacterTag(card):
+    if card["Description"] == "character":
+        if not tagExist("Character", card):
+            addTag("Character", card)
+        elif remove:
+            removeTag("Character", card)
+
+def handleBag(bag):
+    for content in bag["ContainedObjects"]:
+        contentType = content["Name"]
+        if contentType == "Card":
+            if tags:
+                handleIndomitableTag(content)
+                handleCharacterTag(content)
+            if mark_events:
+                handleEventVar(content)
+        elif contentType == "Deck":
+            if rewards:
+                if (content["Nickname"] == "") or matchesMonsterPattern(content["Nickname"]):
+                    for card in content["ContainedObjects"]:
+                        handleRewards(card)
+            for card in content["ContainedObjects"]:
+                if tags:
+                    handleIndomitableTag(card)
+                    handleCharacterTag(card)
+                if mark_events:
+                    handleEventVar(card)
+        elif matchesBag(content):
+            handleBag(content)
+
 def main(argv, argc):
     if argc < 2:
         print("To little parameters:\n\t1: File name of the file you want to sniff.\n\tRest: The mode. (rewards, tags, mark_events, remove)")
@@ -129,16 +189,20 @@ def main(argv, argc):
     except:
         print("The File with the name '" + fileName + "' doesn't exist.\n")
         return
-    
+
+    global rewards
     rewards = False
+    global tags
     tags = False
+    global mark_events
     mark_events = False
 
+    global remove
     remove = False
 
     if argc > 2:
         removeAll = None
-        for i in range(2,argc-1):
+        for i in range(2,argc):
             mode = argv[i]
             if mode == "rewards":
                 rewards = True
@@ -168,74 +232,33 @@ def main(argv, argc):
 
     # Original    
     for val in JSON_data["ObjectStates"]:
-        #print(val["Name"])
         if rewards:
             if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
                 for card in val["ContainedObjects"]:
-                    #print(card["GUID"])
-                    if not rewardsVarExist(card["LuaScript"]):
-                        card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
-                    elif remove:
-                        card["LuaScript"] = re.sub("\n" + translateRewards(card["Description"]), "", card["LuaScript"])
+                    handleRewards(card)
         
         if tags:
             if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
                 for card in val["ContainedObjects"]:
-                    if isIndomitable(card["Description"]):
-                        if not tagExist("Indomitable", card):
-                            addTag("Indomitable", card)
-                        elif remove:
-                            removeTag("Indomitable", card)
+                    handleIndomitableTag(card)
+            if val["Name"] == "Custom_Model_Bag" and val["Description"] == "character-pack":
+                for card in val["ContainedObjects"]:
+                    handleCharacterTag(card)
 
         if mark_events:
             if val["Name"] == "Deck" and val["Nickname"] == "Happening cards":
                 for card in val["ContainedObjects"]:
-                    if not eventVarExist(card["LuaScript"]):
-                        addEventVar(True, card)
-                    elif remove:
-                        removeEventVar(card)
+                    handleEventVar(card)
 
             elif val["Name"] == "Deck" and val["Nickname"] == "Monsters crads":
                 for card in val["ContainedObjects"]:
-                    if not eventVarExist(card["LuaScript"]):
-                        addEventVar(False, card)
-                    elif remove:
-                        removeEventVar(card)
+                    handleEventVar(card)
     
     # Expansions
     for val in JSON_data["ObjectStates"]:
         # Expansion Bag
-        if val["Name"] == "Custom_Model_Infinite_Bag":
-            for expansion in val["ContainedObjects"]:
-                if expansion["Name"] == "Custom_Model_Bag" or expansion["Name"] == "Bag":
-                    for content in expansion["ContainedObjects"]:
-                        # Only Decks with no Nickname or 'monster' in their Nickname
-                        if rewards or mark_events or tags:
-                            if (content["Nickname"] == "" or matchesMonsterPattern(content["Nickname"])):
-                                if content["Name"] == "Deck":
-                                    for card in content["ContainedObjects"]:
-                                        if rewards and (not rewardsVarExist(card["LuaScript"])):
-                                            card["LuaScript"] = card["LuaScript"] + "\n" + translateRewards(card["Description"])
-                                        # This marks more cards as it should, because too many decks have no Nickname
-                                        if mark_events:
-                                            if not eventVarExist(card["LuaScript"]):
-                                                addEventVar(False, card)
-                                            elif remove:
-                                                removeEventVar(card)
-                                        if tags:
-                                            if isIndomitable(card["Description"]) and (not tagExist("Indomitable", card)):
-                                                addTag("Indomitable", card)
-                                            elif remove:
-                                                removeTag("Indomitable", card)
-
-                        if mark_events:
-                            if content["Name"] == "Deck":
-                                for card in content["ContainedObjects"]:
-                                    if hasEventType(card["LuaScript"]):
-                                        if not eventVarExist(card["LuaScript"]):
-                                            addEventVar(True, card)
-                                        elif remove:
-                                            removeEventVar(card)
+        if val["Name"] == "Custom_Model_Infinite_Bag" or val["Name"] == "Infinite_Bag":
+            handleBag(val)
                                     
     newFileName = fileName
     if remove:
