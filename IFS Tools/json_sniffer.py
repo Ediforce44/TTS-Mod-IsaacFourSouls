@@ -78,7 +78,7 @@ def addEventVar(eventValue, JSON_data):
     JSON_data["LuaScript"] = JSON_data["LuaScript"] + "\n" + getEventVar(eventValue)
 
 def removeEventVar(JSON_data):
-    JSON_data["LuaScript"] = re.sub("\n[(" + getEventVar(True) + ")|(" + getEventVar(False) + ")]", "", JSON_data["LuaScript"])
+    JSON_data["LuaScript"] = re.sub("\n(" + getEventVar(True) + ")|(" + getEventVar(False) + ")", "", JSON_data["LuaScript"])
 
 def isIndomitable(description):
     pattern = re.compile("(.)*[-]\s?Indomitable\s?[-]?(.)*", re.I | re.DOTALL)
@@ -120,38 +120,59 @@ def matchesMonsterPattern(nickname):
     pattern = re.compile("(.*)monster(.*)", re.I)
     return pattern.match(nickname)
 
+
+# ---------------------------------------------------------------------------------------------------------------------
+#                                                   Maincode
+# ---------------------------------------------------------------------------------------------------------------------
+
 def handleRewards(card):
-    if not rewardsVarExist(card["LuaScript"]):
-        rewardString = translateRewards(card["Description"])
-        if not rewardString == "":
-            card["LuaScript"] = card["LuaScript"] + "\n" + rewardString
-    elif remove:
+    if remove:
         rewardString = translateRewards(card["Description"])
         if not rewardString == "":
             card["LuaScript"] = re.sub("\n" + rewardString, "", card["LuaScript"])
+    elif not rewardsVarExist(card["LuaScript"]):
+        rewardString = translateRewards(card["Description"])
+        if not rewardString == "":
+            card["LuaScript"] = card["LuaScript"] + "\n" + rewardString
+    if "States" in card:
+            for stateClass in card["States"]:
+                altState = card["States"][stateClass]
+                handleRewards(altState)
 
 def handleEventVar(card):
-    if not eventVarExist(card["LuaScript"]):
+    if remove:
+        removeEventVar(card)
+    elif not eventVarExist(card["LuaScript"]):
         if hasEventType(card["LuaScript"]):
             addEventVar(True, card)
         else:
             addEventVar(False, card)
-    elif remove:
-        removeEventVar(card)
+    if "States" in card:
+        for stateClass in card["States"]:
+            altState = card["States"][stateClass]
+            handleEventVar(altState)
 
 def handleIndomitableTag(card):
     if isIndomitable(card["Description"]):
-        if not tagExist("Indomitable", card):
-            addTag("Indomitable", card)
-        elif remove:
+        if remove:
             removeTag("Indomitable", card)
+        elif not tagExist("Indomitable", card):
+            addTag("Indomitable", card)
+    if "States" in card:
+            for stateClass in card["States"]:
+                altState = card["States"][stateClass]
+                handleIndomitableTag(altState)
 
 def handleCharacterTag(card):
     if card["Description"] == "character":
-        if not tagExist("Character", card):
-            addTag("Character", card)
-        elif remove:
+        if remove:
             removeTag("Character", card)
+        elif not tagExist("Character", card):
+            addTag("Character", card)
+    if "States" in card:
+            for stateClass in card["States"]:
+                altState = card["States"][stateClass]
+                handleCharacterTag(altState)
 
 def handleBag(bag):
     for content in bag["ContainedObjects"]:
