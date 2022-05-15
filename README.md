@@ -100,7 +100,9 @@ The full documentation of the API of this mod is located in the file `README_API
   Therefore it is recommended to write the attached functions into the script of the Boosterpack/Extension **Container**. If you want to use the Color-Picker in regular Isaac cards just write the attached function into the script of the Isaac original **Container**.
 
   The core of the Color-Picker is the function **colorPicker_attach()**:
-  > `colorPicker_attach({afterPickFunction, functionOwner, picker, reason, functionParams})` 
+  > ```
+  > colorPicker_attach({afterPickFunction, functionOwner, picker, reason, functionParams})
+  > ```
   > - `afterPickFunction : string` has to be set and is the name of the attached function.
   > - `functionOwner : object` has to be set and is the *object* which contains the script with the **afterPickFunction**.
   > - `picker : string` is the player color of the player who has to pick the color. \
