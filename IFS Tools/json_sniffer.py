@@ -240,6 +240,8 @@ def main(argv, argc):
             elif mode == "remove":
                 remove = True
                 removeAll = True
+            else:
+                print("WARNING: Can't find the working mode '" + mode + "'.")
         if removeAll == True:
             rewards = True
             tags = True

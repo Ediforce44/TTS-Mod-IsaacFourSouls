@@ -1,6 +1,18 @@
 # Isaac: Four Souls Complete
 This is the official repository for the Tabletop Simulator[[1]](https://store.steampowered.com/app/286160/Tabletop_Simulator/) Mod [Isaac: Four Souls Complete](https://steamcommunity.com/sharedfiles/filedetails/?id=2526757138&searchtext=issac+four+souls+full) from Edgey[[2]](https://steamcommunity.com/id/l-l34l27_4774CK) & co. This repository can be used to add new scripts or cards to the card game.
 
+- [Isaac: Four Souls Complete](#isaac-four-souls-complete)
+  - [What can I find in this Depot?](#what-can-i-find-in-this-depot)
+  - [How to use this repository with Tabletop Simulator?](#how-to-use-this-repository-with-tabletop-simulator)
+  - [How to use JSON-Sniffer?](#how-to-use-json-sniffer)
+- [What if I want to add a Boosterpack or new Cards?](#what-if-i-want-to-add-a-boosterpack-or-new-cards)
+  - [Requirements](#requirements)
+  - [General](#general)
+  - [Monster Cards](#monster-cards)
+- [Things to do](#things-to-do)
+  - [TODO-List](#todo-list)
+  - [Future work](#future-work)
+
 ## What can I find in this Depot?
 - The `ttslua` scripts for the Tabletop Simulator Mod. This are the main part of this repo.
 - **Working Save-Files:** This folder contains ready-to-play save files. It is recommended to use the save file with the highest number in its name.
@@ -23,6 +35,30 @@ This is the official repository for the Tabletop Simulator[[1]](https://store.st
 8. The last step is to load a save file of this mod. Just follow the steps from the point **Working Save-Files** [here](#what-can-i-find-in-this-depot)
 9. Open Tabletop Simulator and load the copied save file.
 > **COMMON PROBLEM:** If you close Atom and open it again, the `.ttslua` files in folder `Tabletop Simulator Lua` have been deleted. If so, just select `Discard All Changes` in the Git-Tab from Atom. It needs a few seconds until all files are recovered. Beware that if you have this problem, you need to stage or commit all your changes before you close Atom. Otherwise all changes will be destroyed.
+
+## How to use JSON-Sniffer?
+You need to install python 3 first. \
+Open the command line in the folder `IFS Tools` and type in 
+```
+python json_sniffer.py
+```
+JSON-Sniffer will tell you that it needs a file name as first parameter and optionally the working modes as the next parameters.\
+Just drag and drop your JSON-file into this folder or the JSON-Sniffer in the folder with the JSON-file and type in the following command into the command line.
+```
+python json_sniffer.py FILE_NAME WORKING_MODE_1 WORKING_MODE_2 ...
+```
+> **WORKING MODES:**
+> - `rewards` extracts a Lua-Table called *rewards* out of the description of a monster card and adds it to the Lua-Script of the card.
+> - `mark_events` adds a Lua-Variable called *isEvent* to the Lua-Script of every event mathing card. The variable has the value *true* if the card has a Lua-Variable called *type* with either the value *eventGood*, *eventBad* or *curse*. Otherwise the value of *isEvent* is *false*.
+> - `tags` adds Tags to cards. 
+>   - **Indomitable** if a card has `-Indomitable-` in its description.
+>   - **Character** if the Nickname of this card is `character`
+> - `remove` removes all changes that the JSON-Sniffer added to a file. If you want to remove just specific modifications you can use the specific **WORKING_MODES** as parameters behind `remove`.
+> > **For Example:** \
+> > This removes only the *isEvent* variable and the added Tags but not the *reward* table.
+> > ```
+> > python json_sniffer.py FILE_NAME remove mark_events tags
+> > ```
 
 # What if I want to add a Boosterpack or new Cards?
 There are some important features beside the regular API functions this mod provides. Thes chapter lists all requirements for cards to work properly with the scrpits of this mod. It also lists all features that are usefull if you want to write scpits for cards.\
@@ -103,11 +139,12 @@ Just add a function with the following name to the script of a Monster Card and 
 > If you want some examples for the **Monster-Events** look at the script of the Monster Card "The Harbingers".
 
 # Things to do
-## **TODO-List**
+## TODO-List
 - Fix Player Turn system (Floors, Order etc.)
 - Add Deck-Builder System
 
-## **Future work**
+## Future work
+- Design a thematic layout for the color picker
 - Change the attached object system for Index-Zones like the Soul Zone, Player Zone or Pill Zone to a more usefull system:
     > - Attached objects refers to the Index in the zone in which they are played
     > - Add `getPositionFromIndex({index}))`

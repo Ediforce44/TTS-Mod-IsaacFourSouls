@@ -1,9 +1,23 @@
+<!-- omit in toc -->
 # Modding API 
+<!-- omit in toc -->
 ## (For everybody who want to add Boosterpacks or Scripts)
 In this chapter are the most important variables and functions for modders listed. Those attributes are grouped by the script in which they are implemented. \
 The keys of Tables are normally written in caps. If a Table refers to something player specific the keys of the Table are the player colors `Red`, `Blue`, `Green` and `Yellow`. \
 All functions with parameters and a return value will return `nil` if the parameters are missing. \
 We will talk about INFO-MSGs. This are Messages which will be printed for one or more player. The message will tell them what happened and what happens.
+
+- [<b>Global</b>](#bglobalb)
+- [<b>Coins</b>](#bcoinsb)
+- [<b>HP (Monster)</b>](#bhp-monsterb)
+- [<b>Monster Zone</b>](#bmonster-zoneb)
+- [<b>Monster-Deck Zone</b>](#bmonster-deck-zoneb)
+- [<b>Shop Zone</b>](#bshop-zoneb)
+- [<b>Shop-Deck Zone</b>](#bshop-deck-zoneb)
+- [<b>Player Zone</b>](#bplayer-zoneb)
+- [<b>Pill Zone</b>](#bpill-zoneb)
+- [<b>Soul Zone</b>](#bsoul-zoneb)
+- [<b>Souls</b>](#bsoulsb)
 
 ## <b>Global</b>
 > ### <u><b>Tables</b></u>
