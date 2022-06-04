@@ -2,10 +2,10 @@
 owner_color = "Green"
 
 ZONE_EDGES = {
-    {x=-1, z=8.5},      -- 1 = |""  ""| = 3
-    {x=-1, z=17},       -- 2 = |__  __| = 4
-    {x=-27.5, z=8.5},
-    {x=-27.5, z=17}
+    {x=0, z=0},       -- 1 = |""  ""| = 3
+    {x=0, z=0},       -- 2 = |__  __| = 4
+    {x=0, z=0},
+    {x=0, z=0}
 }
 
 INDEX_MAX = 14
@@ -15,6 +15,17 @@ INDICES_PER_ROW = INDEX_MAX / ROW_MAX
 playerAlive = true
 attachedObjects = {}
 indexTable = {}
+
+local function calculateZoneEdges()
+    local scale = self.getScale()
+    local xOffset = scale.x / 2
+    local zOffset = scale.z / 2
+    local position = self.getPosition()
+    ZONE_EDGES[1] = {x = position.x + xOffset, z = position.z - zOffset}
+    ZONE_EDGES[2] = {x = position.x + xOffset, z = position.z + zOffset}
+    ZONE_EDGES[3] = {x = position.x - xOffset, z = position.z - zOffset}
+    ZONE_EDGES[4] = {x = position.x - xOffset, z = position.z + zOffset}
+end
 
 local function getTimerParameters(blockedIndex)
     local timerParameters = {
@@ -115,7 +126,19 @@ local function calculateIndexTable()
 end
 
 local function getRealPosition(indexPosition)
-    return {indexPosition.x, 5, indexPosition.z}
+    if indexPosition == nil then
+        return nil
+    end
+    return {x = indexPosition.x, y = 5, z = indexPosition.z}
+end
+
+local function getPositionFromIndex(index)
+    local row = math.ceil(index / (INDICES_PER_ROW + 1))
+    local column = index - (INDICES_PER_ROW * (row - 1))
+    if indexTable[row] == nil then
+        return nil
+    end
+    return getRealPosition(indexTable[row][column].position)
 end
 
 local function getNextFreePosition()
@@ -132,7 +155,13 @@ local function getNextFreePosition()
     return nil
 end
 
+local function placeObject(object, position)
+    object.setRotationSmooth({0, 0, 0}, false)
+    object.setPositionSmooth(position, false)
+end
+
 function onLoad(saved_data)
+    calculateZoneEdges()
     initIndexTable()
     calculateIndexTable()
     if saved_data ~= "" then
@@ -195,10 +224,14 @@ function placeObjectInZone(params)
         printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeObjectInPlayerZone()'.")
         return
     end
-    local freePosition = getNextFreePosition()
-    if freePosition ~= nil then
-        params.object.setRotationSmooth({0, 0, 0}, false)
-        params.object.setPositionSmooth(freePosition, false)
+    local position = nil
+    if params.index ~= nil and params.index <= INDEX_MAX then
+        position = getPositionFromIndex(params.index)
+    else
+        position = getNextFreePosition()
+    end
+    if position ~= nil then
+        placeObject(params.object, position)
     else
         params.object.deal(1, owner_color)
     end
@@ -212,22 +245,21 @@ function placeMultipleObjectsInZone(params)
     end
 
     calculateIndexTable()
-    local maxCardIndex = #params.objects
-    local nextCardIndex = 1
+    local maxObjectIndex = #params.objects
+    local nextObjectIndex = 1
     for row = 1, ROW_MAX do
         for column = 1, INDICES_PER_ROW do
             if indexTable[row][column].free then
-                params.objects[nextCardIndex].setRotationSmooth({0, 0, 0}, false)
-                params.objects[nextCardIndex].setPositionSmooth(getRealPosition(indexTable[row][column].position), false)
-                nextCardIndex = nextCardIndex + 1
-                if nextCardIndex > maxCardIndex then
+                placeObject(params.objects[nextObjectIndex], getRealPosition(indexTable[row][column].position))
+                nextObjectIndex = nextObjectIndex + 1
+                if nextObjectIndex > maxObjectIndex then
                     return
                 end
             end
         end
     end
     -- Not enough free fields for cards
-    for index = nextCardIndex , maxCardIndex do
+    for index = nextObjectIndex , maxObjectIndex do
         params.objects[index].deal(1, owner_color)
     end
 end

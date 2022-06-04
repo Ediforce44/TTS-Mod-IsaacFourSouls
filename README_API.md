@@ -78,9 +78,9 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 
 > ### <u><b>Placing Functions</b></u>
 > - `placeSoulToken({playerColor})` takes a Soul Token from the soul token deck and places it in the Soul Zone of the player with the color **playerColor**. Prints a INFO-MSG. If the soul zone is full the Soul Token will be dealed to the Hand Zone of the player.
-> - `placeObjectInSoulZone({playerColor, object})` places **object** in the Soul Zone of the player with color **playerColor**. If the Soul Zone is full the **object** will be dealed to the Hand Zone of the player.
-> - `placeObjectInPillZone({playerColor, object})` places **object** in the Pill Zone of the player with color **playerColor**. If the Pill Zone is full the **object** will be dealed to the Hand Zone of the player.
-> - `placeObjectsInPlayerZone({playerColor, object})` places **objects** in the Player Zone of the player with color **playerColor**. If the Player Zone is full the **objects** will be dealed to the Hand Zone of the player.
+> - `placeObjectInSoulZone({playerColor, object, index})` places **object** in the Soul Zone of the player with color **playerColor**. If the Soul Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Soul Zone.
+> - `placeObjectInPillZone({playerColor, object, index})` places **object** in the Pill Zone of the player with color **playerColor**. If the Pill Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Pill Zone.
+> - `placeObjectsInPlayerZone({playerColor, objects, index})` places **objects** in the Player Zone of the player with color **playerColor**. If the Player Zone is full the **objects** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set and **objects** contain only one object, this object will be placed on the **index** in the Player Zone.
 
 > ### <u><b>Gameplay Functions</b></u>
 > - `deactivateCharacter({playerColor})` turns all character cards in the Player Zone of the player with the color **playerColor** sideways.
@@ -201,7 +201,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `INDEX_MAX` is the maximum index in this Player Zone. For every Player Zone it is 14. Every index belongs to a fixed position in this zone. Index 1 to 7 belongs to the lower row and 8 to 14 belongs to the upper row.
 
 > ### <u><b>Technical Functions</b></u>
-> - `placeObjectInZone({object})` places **object** in this Player Zone. If this Player Zone is full the **object** will be dealed to the Hand Zone of the player.
+> - `placeObjectInZone({object, index})` places **object** in this Player Zone. If this Player Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Player Zone.
 > - `placeMultipleObjectsInZone({objects})` places the **objects** in this Player Zone. If this Player Zone is full the **objects** will be dealed to the Hand Zone of the player. It is more efficient than calling **placeObjectInZone()** multiple times.
 
 > ### <u><b>Gameplay Functions</b></u>
@@ -215,7 +215,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `INDEX_MAX` is the maximum index in this Pill Zone. For every Pill Zone it is 2. Every index belongs to a fixed position in this zone.
 
 > ### <u><b>Technical Functions</b></u>
-> - `placeObjectInZone({object})` places **object** in this Pill Zone. If this Pill Zone is full the **object** will be dealed to the Hand Zone of the player.
+> - `placeObjectInZone({object, index})` places **object** in this Pill Zone. If this Pill Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Pill Zone.
 
 ## <b>Soul Zone</b>
 > ### <u><b>Tables</b></u>
@@ -225,7 +225,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `INDEX_MAX` is the maximum index in this Soul Zone. For every Soul Zone it is 4. Every index belongs to a fixed position in this zone.
 
 > ### <u><b>Technical Functions</b></u>
-> - `placeObjectInZone({object})` places **object** in this Soul Zone. If this Soul Zone is full the **object** will be dealed to the Hand Zone of the player.
+> - `placeObjectInZone({object, index})` places **object** in this Soul Zone. If this Soul Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Soul Zone.
 
 ## <b>Souls</b>
 > ### <u><b>Variables</b></u>
