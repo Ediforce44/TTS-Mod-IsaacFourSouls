@@ -1,17 +1,9 @@
     CHARACTER_PLACER_GUID = "d2c68a"
     CHARACTER_RANDOMIZER_GUID = "bc6e13"
-    PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
-
-    spawnData = nil
+    PLAYER_COLORS = {Red = 'Red', Blue = 'Blue', Yellow = 'Yellow', Green = 'Green'}
 
     function onLoad()
-      spawnData = loadSpawnData()
       initButtons()
-    end
-
-    function loadSpawnData()
-      local characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
-      return characterPlacer.getTable("SPAWN_DATA")
     end
 
     function initButtons()
@@ -52,7 +44,7 @@
     end
 
     function selectCharacter(_, playerClickerColor)
-      if spawnData[playerClickerColor] == nil then
+      if PLAYER_COLORS[playerClickerColor] == nil then
         printToColor("[fdd835][WARNING][-] Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", playerClickerColor)
         return
       end
@@ -79,9 +71,16 @@
         Wait.frames(function() self.putObject(obj) end, 5)
         local objDescription = objClone.getDescription()
 
-        local cardSpawnData = getCardSpawnData(objDescription, playerClickerColor)
-        objClone.setPositionSmooth(cardSpawnData.position, false)
-        objClone.setRotation(cardSpawnData.rotation)
+        if objDescription == "character" then
+          Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
+        elseif objDescription == "character-item" or objDescription == "character-item-counter" then
+          Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
+        elseif objDescription == "character-soul" then
+          Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
+        else
+          printToColor("[ef5350][ERROR][-] Unknown " .. objDescription .. " card description matadata. Maybe you changed description of card?" , playerClickerColor)
+          return
+        end
 
         if objClone.getStateId() != -1 then
           for _, state in pairs(objClone.getStates()) do
@@ -141,19 +140,6 @@
       end
     end
 
-    function getCardSpawnData(description, playerColor)
-      if description == "character" then
-        return spawnData[playerColor].character
-      elseif description == "character-item" or description == "character-item-counter" then
-        return spawnData[playerColor].characterItem
-      elseif description == "character-soul" then
-        return spawnData[playerColor].characterStartSoul
-      else
-        printToColor("[ef5350][ERROR][-] Unknown " .. description .. " card description matadata. Maybe you changed description of card?" , playerColor)
-        return
-      end
-    end
-
     function getPlayerSpanedObj(playercolor)
       characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
       return characterPlacer.getTable("playersSpawnedCharacterObj")[playercolor]
@@ -182,4 +168,3 @@
     function isCharacterInPullToSelectByCall(params)
       return isCharacterInPullToSelect(params.waitForSelectCharacters)
     end
-  

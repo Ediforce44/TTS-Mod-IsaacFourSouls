@@ -80,9 +80,10 @@ function onStart()
     getObjectFromGUID(shopZoneGUIDs.SIX).call("deactivateZone")
     getObjectFromGUID(TREASURE_DECK_ZONE_GUID).call("activateShopButton")
 
-    soulDeck.takeObject({position={-37.90, 1.57, -3.20}, flip=true})
-    soulDeck.takeObject({position={-37.90, 1.57, 0.00}, flip=true})
-    soulDeck.takeObject({position={-37.90, 1.57, 3.20}, flip=true})
+    local bonusSoulZones = Global.getTable("ZONE_GUID_BONUSSOUL")
+    soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.ONE).getPosition(), flip=true})
+    soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.TWO).getPosition(), flip=true})
+    soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.THREE).getPosition(), flip=true})
 
     lootDeck.deal(3)
 

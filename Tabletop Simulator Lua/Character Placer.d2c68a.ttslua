@@ -4,28 +4,6 @@ Z_MARGIN = 4.91
 MAX_ROW_SIZE = 11
 CHARACTER_RANDOMIZER_GUID = "bc6e13"
 CHARACTER_PLACER_GUID = "d2c68a"
-SPAWN_DATA = {
-  Red = {
-    character = { position = {2.13, 1.56, -15.27}, rotation = {0, 180, 0} },
-    characterItem = { position = {6.18, 1.56, -15.27}, rotation = {0, 180, 0} },
-    characterStartSoul = { position = {33.22, 1.56, -15.92}, rotation = {0, 270, 0} }
-  },
-  Blue = {
-    character = { position = {-33.87, 1.56, -15.31}, rotation = {0, 180, 0} },
-    characterItem = { position = {-29.88, 1.56, -15.29}, rotation = {0, 180, 0} },
-    characterStartSoul = { position = {-2.78, 1.56, -15.91}, rotation = {0, 270, 0} }
-  },
-  Green = {
-    character = { position = {-2.08, 1.56, 15.24}, rotation = {0, 0, 0} },
-    characterItem = { position = {-6.16, 1.56, 15.27}, rotation = {0, 0, 0} },
-    characterStartSoul = { position = {-33.18, 1.56, 15.99}, rotation = {0, 90, 0} }
-  },
-  Yellow = {
-    character = { position = {33.90, 1.56, 15.26}, rotation = {0, 0, 0} },
-    characterItem = { position = {29.90, 1.56, 15.25}, rotation = {0, 0, 0} },
-    characterStartSoul = { position = {2.79, 1.56, 15.92}, rotation = {0, 90, 0} }
-  }
-}
 
 playersSpawnedCharacterObj = {
   Red = {},
@@ -155,18 +133,10 @@ function setCharacterPackScript(obj)
   obj.setLuaScript([[
     CHARACTER_PLACER_GUID = "]] .. CHARACTER_PLACER_GUID .. [["
     CHARACTER_RANDOMIZER_GUID = "]] .. CHARACTER_RANDOMIZER_GUID .. [["
-    PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
-
-    spawnData = nil
+    PLAYER_COLORS = {Red = 'Red', Blue = 'Blue', Yellow = 'Yellow', Green = 'Green'}
 
     function onLoad()
-      spawnData = loadSpawnData()
       initButtons()
-    end
-
-    function loadSpawnData()
-      local characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
-      return characterPlacer.getTable("SPAWN_DATA")
     end
 
     function initButtons()
@@ -207,7 +177,7 @@ function setCharacterPackScript(obj)
     end
 
     function selectCharacter(_, playerClickerColor)
-      if spawnData[playerClickerColor] == nil then
+      if PLAYER_COLORS[playerClickerColor] == nil then
         printToColor("[fdd835][WARNING][-] Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", playerClickerColor)
         return
       end
@@ -234,9 +204,16 @@ function setCharacterPackScript(obj)
         Wait.frames(function() self.putObject(obj) end, 5)
         local objDescription = objClone.getDescription()
 
-        local cardSpawnData = getCardSpawnData(objDescription, playerClickerColor)
-        objClone.setPositionSmooth(cardSpawnData.position, false)
-        objClone.setRotation(cardSpawnData.rotation)
+        if objDescription == "character" then
+          Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
+        elseif objDescription == "character-item" or objDescription == "character-item-counter" then
+          Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
+        elseif objDescription == "character-soul" then
+          Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
+        else
+          printToColor("[ef5350][ERROR][-] Unknown " .. objDescription .. " card description matadata. Maybe you changed description of card?" , playerClickerColor)
+          return
+        end
 
         if objClone.getStateId() != -1 then
           for _, state in pairs(objClone.getStates()) do
@@ -293,19 +270,6 @@ function setCharacterPackScript(obj)
           end
         end
         updatePlayerSpawnedObj(playerColor, {})
-      end
-    end
-
-    function getCardSpawnData(description, playerColor)
-      if description == "character" then
-        return spawnData[playerColor].character
-      elseif description == "character-item" or description == "character-item-counter" then
-        return spawnData[playerColor].characterItem
-      elseif description == "character-soul" then
-        return spawnData[playerColor].characterStartSoul
-      else
-        printToColor("[ef5350][ERROR][-] Unknown " .. description .. " card description matadata. Maybe you changed description of card?" , playerColor)
-        return
       end
     end
 

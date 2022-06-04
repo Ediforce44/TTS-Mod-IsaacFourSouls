@@ -22,35 +22,37 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 ## <b>Global</b>
 > ### <u><b>Tables</b></u>
 > Colors (often used for prints and broadcasts):
-> - `REAL_PLAYER_COLOR` containes HTML color codes with all four player colors. The keys are the ingame player colors **Red**, **Blue**, **Green** and **Yellow**.
-> - `REAL_PLAYER_COLOR_RGB` containes RGB percentage values for the **REAL_PLAYER_COLOR** entries. It has the same keys as **REAL_PLAYER_COLOR**.
+> - `REAL_PLAYER_COLOR` contains HTML color codes with all four player colors. The keys are the ingame player colors **Red**, **Blue**, **Green** and **Yellow**.
+> - `REAL_PLAYER_COLOR_RGB` contains RGB percentage values for the **REAL_PLAYER_COLOR** entries. It has the same keys as **REAL_PLAYER_COLOR**.
 > - `PRINT_COLOR_PLAYER` simular to **REAL_PLAYER_COLOR**, but the keys are in caps.
-> - `PRINT_COLOR_SPECIAL` containes many types of HTML color codes for all types of game components. The keys are also written in caps.
+> - `PRINT_COLOR_SPECIAL` contains many types of HTML color codes for all types of game components. The keys are also written in caps.
 >
 > GUIDs of Zones:
-> - `ZONE_GUID_DECK` containes the GUIDs of all deck zones in the game.
-> - `ZONE_GUID_SHOP` containes the GUIDs of the six Shop Zones. The keys are **ONE** to **SIX**.
-> - `ZONE_GUID_MONSTER` containes the GUIDs of the six Monster Zones. The keys are **ONE** to **SIX**.
-> - `ZONE_GUID_PLAYER` containes the GUIDs of the Player Zones in front of each player. The keys are the ingame player colors **Red**, **Blue**, **Green** and **Yellow**
-> - `ZONE_GUID_SOUL` containes the GUIDs of the Soul Zones in front of each player next to their Player Zone. The keys are the ingame player colors.
+> - `ZONE_GUID_DECK` contains the GUIDs of all deck zones in the game.
+> - `ZONE_GUID_DISCARD` contains the GUIDs of all discard piles in the game.
+> - `ZONE_GUID_SHOP` contains the GUIDs of the six Shop Zones. The keys are **ONE** to **SIX**.
+> - `ZONE_GUID_MONSTER` contains the GUIDs of the six Monster Zones. The keys are **ONE** to **SEVEN**.
+> - `ZONE_GUID_PLAYER` contains the GUIDs of the Player Zones in front of each player. The keys are the ingame player colors **Red**, **Blue**, **Green** and **Yellow**
+> - `ZONE_GUID_SOUL` contains the GUIDs of the Soul Zones in front of each player next to their Player Zone. The keys are the ingame player colors.
+> - `ZONE_GUID_BONUSSOUL` contains the GUIDs of the Bonus Soul Zones next to the Bonus Soul Deck. The keys are **ONE** to **THREE**.
 >
 > GUIDs of game components:
-> - `HEART_TOKENS_GUID` containes Tables of GUIDs corresponding to the Heart Tokens in front of each player. The GUIDs of the Heart Tokens are in the correct order. The keys are the player colors.
+> - `HEART_TOKENS_GUID` contains Tables of GUIDs corresponding to the Heart Tokens in front of each player. The GUIDs of the Heart Tokens are in the correct order. The keys are the player colors.
 > - `FIRST_HEARTS_GUID`. The keys are the player colors.
 > - `COIN_COUNTER_GUID`. The keys are the player colors.
-> - `MONSTER_HP_COUNTER_GUID` containes the GUIDs of the HP Counters for the six Monster Zones. The keys are **ONE** to **SIX**.
-> - `COUNTER_BAGS_GUID` containes the GUIDs of the ingame bags of counters. The keys are in caps.
+> - `MONSTER_HP_COUNTER_GUID` contains the GUIDs of the HP Counters for the six Monster Zones. The keys are **ONE** to **SEVEN**.
+> - `COUNTER_BAGS_GUID` contains the GUIDs of the ingame bags of counters. The keys are in caps.
 >
 > Positions:
-> - `DISCARD_PILE_POSITION` containes the positions of the discard piles for each deck. The keys are in caps.
+> - `DISCARD_PILE_POSITION` contains the positions of the discard piles for each deck. The keys are in caps.
 >
 > Other Tables:
-> - `automaticRewarding` containes the *true* or *false* if the automatic rewarding is activated for a player. The keys are the player colors.
+> - `automaticRewarding` contains the *true* or *false* if the automatic rewarding is activated for a player. The keys are the player colors.
 
 > ### <u><b>Variables</b></u>
-> - `CLICK_DELAY` containes the Value, which is used to determine a Double Click on something.\
+> - `CLICK_DELAY` contains the Value, which is used to determine a Double Click on something.\
 > (Current value: 0.3 sec)
-> - `activePlayerColor` containes the player color *string* of the player who is the active player.
+> - `activePlayerColor` contains the player color *string* of the player who is the active player.
 
 > ### <u><b>Getter Functions</b></u>
 > - `getDeckFromZone(zoneGUID) : object` returns the first deck or card in the zone with the GUID **zoneGUID**. If there is no deck or card, it will return *nil*.
@@ -78,9 +80,9 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 
 > ### <u><b>Placing Functions</b></u>
 > - `placeSoulToken({playerColor})` takes a Soul Token from the soul token deck and places it in the Soul Zone of the player with the color **playerColor**. Prints a INFO-MSG. If the soul zone is full the Soul Token will be dealed to the Hand Zone of the player.
-> - `placeObjectInSoulZone({playerColor, object})` places **object** in the Soul Zone of the player with color **playerColor**. If the Soul Zone is full the **object** will be dealed to the Hand Zone of the player.
-> - `placeObjectInPillZone({playerColor, object})` places **object** in the Pill Zone of the player with color **playerColor**. If the Pill Zone is full the **object** will be dealed to the Hand Zone of the player.
-> - `placeObjectsInPlayerZone({playerColor, object})` places **objects** in the Player Zone of the player with color **playerColor**. If the Player Zone is full the **objects** will be dealed to the Hand Zone of the player.
+> - `placeObjectInSoulZone({playerColor, object, index})` places **object** in the Soul Zone of the player with color **playerColor**. If the Soul Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Soul Zone.
+> - `placeObjectInPillZone({playerColor, object, index})` places **object** in the Pill Zone of the player with color **playerColor**. If the Pill Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Pill Zone.
+> - `placeObjectsInPlayerZone({playerColor, objects, index})` places **objects** in the Player Zone of the player with color **playerColor**. If the Player Zone is full the **objects** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set and **objects** contain only one object, this object will be placed on the **index** in the Player Zone.
 
 > ### <u><b>Gameplay Functions</b></u>
 > - `deactivateCharacter({playerColor})` turns all character cards in the Player Zone of the player with the color **playerColor** sideways.
@@ -105,8 +107,8 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 
 ## <b>Monster Zone</b>
 > ### <u><b>Tables</b></u>
-> - `active_monster_attrs` containes the attributes of the active monster in this zone. The keys are **GUID**, **NAME**, **HP**, **ATK**, **DMG**, **INDOMITABLE**.
-> - `active_monster_reward` containes the amount of rewards of the active monster in this zone. The keys are **CENTS**, **LOOT**, **TREASURES** and **SOULS**.
+> - `active_monster_attrs` contains the attributes of the active monster in this zone. The keys are **GUID**, **NAME**, **HP**, **ATK**, **DMG**, **INDOMITABLE**.
+> - `active_monster_reward` contains the amount of rewards of the active monster in this zone. The keys are **CENTS**, **LOOT**, **TREASURES** and **SOULS**.
  
 > ### <u><b>Variables</b></u>
 > - `active` is *true*, if this zone is an active monster zone.
@@ -120,7 +122,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > If no *card* in this Monster Zone matches the *GUID* of the active monster of this zone, the function will return *nil*.
  
 > ### <u><b>Technical Functions</b></u>
-> - `containsDeckOrCard() : bool` returns *true* if this zone containes a *deck* or *card*.
+> - `containsDeckOrCard() : bool` returns *true* if this zone contains a *deck* or *card*.
 > - `updateAttributes({HP, GUID, NAME, ATK, DMG, INDOMITABLE})` updates the Table **active_monster_attrs** to the given values. All parameters are optional except **HP**. **HP** has to be set otherwise this function does nothing. \
 > The HP-Counter for this zone will also be updated. \
 > If this function is called with some unset parameters, the attributes will be set their standard value. \
@@ -174,7 +176,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `active` is *true*, if this zone is an active shop zone
 
 > ### <u><b>Technical Functions</b></u>
-> - `containsDeckOrCard() : bool` returns *true*, if this zone containes a *deck* or *card*.
+> - `containsDeckOrCard() : bool` returns *true*, if this zone contains a *deck* or *card*.
 > - `deactivateZone()` discards all *decks* or *cards* in this zone. It activates the shop button of this zone and sets it to the state **INACTIVE**.
 > - `activateZone()` places a new treasure card in this zone if there is no *deck* or *card*. It activates the shop button of this zone and sets it to the state **PURCHASE**.
 > - `deactivatePurchaseButton()` removes/deletes the shop button of this zone.
@@ -201,7 +203,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `INDEX_MAX` is the maximum index in this Player Zone. For every Player Zone it is 14. Every index belongs to a fixed position in this zone. Index 1 to 7 belongs to the lower row and 8 to 14 belongs to the upper row.
 
 > ### <u><b>Technical Functions</b></u>
-> - `placeObjectInZone({object})` places **object** in this Player Zone. If this Player Zone is full the **object** will be dealed to the Hand Zone of the player.
+> - `placeObjectInZone({object, index})` places **object** in this Player Zone. If this Player Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Player Zone.
 > - `placeMultipleObjectsInZone({objects})` places the **objects** in this Player Zone. If this Player Zone is full the **objects** will be dealed to the Hand Zone of the player. It is more efficient than calling **placeObjectInZone()** multiple times.
 
 > ### <u><b>Gameplay Functions</b></u>
@@ -215,7 +217,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `INDEX_MAX` is the maximum index in this Pill Zone. For every Pill Zone it is 2. Every index belongs to a fixed position in this zone.
 
 > ### <u><b>Technical Functions</b></u>
-> - `placeObjectInZone({object})` places **object** in this Pill Zone. If this Pill Zone is full the **object** will be dealed to the Hand Zone of the player.
+> - `placeObjectInZone({object, index})` places **object** in this Pill Zone. If this Pill Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Pill Zone.
 
 ## <b>Soul Zone</b>
 > ### <u><b>Tables</b></u>
@@ -225,7 +227,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `INDEX_MAX` is the maximum index in this Soul Zone. For every Soul Zone it is 4. Every index belongs to a fixed position in this zone.
 
 > ### <u><b>Technical Functions</b></u>
-> - `placeObjectInZone({object})` places **object** in this Soul Zone. If this Soul Zone is full the **object** will be dealed to the Hand Zone of the player.
+> - `placeObjectInZone({object, index})` places **object** in this Soul Zone. If this Soul Zone is full the **object** will be dealed to the Hand Zone of the player. The parameter **index** is optional. If **index** is set the **object** is placed on the **index** in the Soul Zone.
 
 ## <b>Souls</b>
 > ### <u><b>Variables</b></u>

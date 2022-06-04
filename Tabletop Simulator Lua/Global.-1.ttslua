@@ -27,9 +27,17 @@ local function getDeckOrCard(zoneGUID)
     printToAll("[fdd835][WARNING][-] Can't find the deck or card in zone: " .. zoneName .. ".")
     return nil
 end
+
+local function setPositionTables()
+    DISCARD_PILE_POSITION.TREASURE = getObjectFromGUID(ZONE_GUID_DISCARD.TREASURE).getPosition():setAt('y', 5)
+    DISCARD_PILE_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DISCARD.LOOT).getPosition():setAt('y', 5)
+    DISCARD_PILE_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DISCARD.MONSTER).getPosition():setAt('y', 5)
+end
 ------------------------------------------------------------------------------------------------------------------------
 
 function onLoad(saved_data)         --EbyE44
+    setPositionTables()
+
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         if loaded_data[1] then
@@ -255,6 +263,12 @@ ZONE_GUID_DECK = {
     SOUL_TOKEN = "560abc"
 }
 
+ZONE_GUID_DISCARD = {
+    TREASURE = "dae5d8",
+    LOOT = "986a58",
+    MONSTER = "61e7b7"
+}
+
 ZONE_GUID_SHOP = {
     ONE = "fd849b",
     TWO = "15e210",
@@ -270,7 +284,8 @@ ZONE_GUID_MONSTER = {
     THREE = "27417f",
     FOUR = "f0d9fd",
     FIVE = "839d81",
-    SIX = "6c1a32"
+    SIX = "6c1a32",
+    SEVEN = "c28110"
 }
 
 ZONE_GUID_PLAYER = {
@@ -294,6 +309,12 @@ ZONE_GUID_SOUL = {
     Red = "8515c8"
 }
 
+ZONE_GUID_BONUSSOUL = {
+    ONE = "2046d8",
+    TWO = "406a24",
+    THREE = "5ffaca"
+}
+
 COIN_COUNTER_GUID = {
     Yellow = "9d76db",
     Green = "c46653",
@@ -314,18 +335,21 @@ MONSTER_HP_COUNTER_GUID = {
     THREE = "fab592",
     FOUR = "fb5299",
     FIVE = "b50db5",
-    SIX = "bcac8d"
+    SIX = "bcac8d",
+    SEVEN = "bc13f5"
 }
 
 COUNTER_BAGS_GUID = {
-    NORMAL = "bb7a32"
+    NORMAL = "bb7a32",
+    GOLD = "a0915e",
+    EGG = "71e1f7",
+    POOP = "9977a0"
 }
 
 DISCARD_PILE_POSITION = {
-    TREASURE = {-33.91, 2.53, 0},
-    FLOOR = {-6.20, 1.89, -1.70},
-    LOOT = {1.64, 2.53, 0},
-    MONSTER = {34.06, 5, 0}
+    TREASURE = {},
+    LOOT = {},
+    MONSTER = {}
 }
 
 function getPlayerString(params)
@@ -487,7 +511,12 @@ function placeObjectInSoulZone(params)
     if (params.playerColor == nil) or (params.object == nil) then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeObjectInSoulZone()'.")
     else
-        getObjectFromGUID(ZONE_GUID_SOUL[params.playerColor]).call("placeObjectInZone", {object = params.object})
+        local index = nil
+        if params.index ~= nil then
+            index = params.index
+        end
+        getObjectFromGUID(ZONE_GUID_SOUL[params.playerColor]).call("placeObjectInZone", {object = params.object
+            , index = index})
     end
 end
 
@@ -495,7 +524,12 @@ function placeObjectInPillZone(params)
     if (params.playerColor == nil) or (params.object == nil) then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeObjectInPillZone()'.")
     else
-        getObjectFromGUID(ZONE_GUID_PILL[params.playerColor]).call("placeObjectInZone", {object = params.object})
+        local index = nil
+        if params.index ~= nil then
+            index = params.index
+        end
+        getObjectFromGUID(ZONE_GUID_PILL[params.playerColor]).call("placeObjectInZone", {object = params.object
+            , index = index})
     end
 end
 
@@ -503,12 +537,17 @@ function placeObjectsInPlayerZone(params)
     if (params.playerColor == nil) or (params.objects == nil) then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeObjectsInPlayerZone()'.")
     else
-        local cards = params.objects
-        if #cards > 1 then
+        local objects = params.objects
+        if #objects > 1 then
             getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeMultipleObjectsInZone"
-                , {cards = params.objects})
-        elseif #cards == 1 then
-            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeObjectInZone", {card = params.objects[1]})
+                , {objects = objects})
+        elseif #objects == 1 then
+            local index = nil
+            if params.index ~= nil then
+                index = params.index
+            end
+            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeObjectInZone", {object = objects[1]
+                , index = index})
         end
     end
 end
