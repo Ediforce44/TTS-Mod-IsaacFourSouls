@@ -196,6 +196,25 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > ### <u><b>Gameplay Functions</b></u>
 > - `placeNewTreasureCard({zone}) : bool` takes the first *card* or the topmost *card* of the first *deck* in the treasure zone. It filps this card and put it into the shop zone **zone**. It returns *false* if no card was found in the treasure zone.
 
+## <b>Room Zone</b>
+> ### <u><b>Variables</b></u>
+> - `active` is *true*, if this zone is an active room zone
+
+> ### <u><b>Technical Functions</b></u>
+> - `containsDeckOrCard() : bool` returns *true*, if this zone contains a *deck* or *card*.
+> - `deactivateZone()` flips all *decks* or *cards* in this zone. It activates the room button of this zone and sets it to the state **INACTIVE**.
+> - `activateZone()` flips all *decks* or *cards* in this zone and places a new room card in this zone. It activates the room button of this zone and sets it to the state **CHANGE**.
+> - `deactivateRoomButton()` removes/deletes the room button of this zone.
+> - `activateRoomButton()` spawns the room button of this zone in the state **CHANGE** if the zone is active and **INACTIVE** otherwise.
+
+## <b>Room Deck Zone</b>
+> ### <u><b>Tables</b></u>
+> - `ROOM_BUTTON_STATES` contains all valid states for the room buttons of the room zones. The keys are **CHANGE** and **INACTIVE**.
+
+> ### <u><b>Gameplay Functions</b></u>
+> - `changeRoom(zone)` changes the room in the **zone**.
+> - `placeNewRoomCard({zone}) : bool` takes the first *card* or the topmost *card* of the first *deck* in the room zone. It filps this card and put it into the room zone **zone**. It returns *false* if no card was found in the room deck zone.
+
 ## <b>Player Zone</b>
 > ### <u><b>Tables</b></u>
 > - `attachedObjects` contains all objects that are currently in this Player Zone. The keys are the *GUIDs* of the objects. The value for a *GUID* is 1 if the corresponding object is in this Player Zone and *nil* otherwise.
