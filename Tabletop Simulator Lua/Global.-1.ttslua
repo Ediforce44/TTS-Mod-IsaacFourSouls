@@ -243,7 +243,7 @@ PRINT_COLOR_SPECIAL = {
     MONSTER = "[352853]",
     COIN = "[AB9023]",
     LOOT = "[B9E9F0]",
-    FLOOR = "[5E4C3F]",
+    ROOM = "[5E4C3F]",
     TREASURE_LIGHT = "[D6BF5C]",
     TREASURE_DARK = "[998126]",
     HP = "[951312]",
@@ -255,7 +255,7 @@ PRINT_COLOR_SPECIAL = {
 
 ZONE_GUID_DECK = {
     TREASURE = "190cda",
-    FLOOR = "096e94",
+    ROOM = "096e94",
     LOOT = "c413a5",
     MONSTER = "52e22c",
     HAPPEN = "61e7b7",
@@ -466,8 +466,8 @@ function getBonusSoulDeck()
     return getDeckOrCard(ZONE_GUID_DECK.BONUS_SOUL)
 end
 
-function getFloorDeck()
-    return getDeckOrCard(ZONE_GUID_DECK.FLOOR)
+function getRoomDeck()
+    return getDeckOrCard(ZONE_GUID_DECK.ROOM)
 end
 
 function getSoulTokenDeck()

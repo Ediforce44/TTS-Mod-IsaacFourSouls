@@ -1,0 +1,82 @@
+ROOM_BUTTON_STATES = {
+    INACTIVE = "Inactive",
+    CHANGE = "New Room"
+}
+ROOM_BUTTON_COLORS = {
+    INACTIVE = {53/255, 41/255, 33/255},
+    ACTIVE = {94/255, 76/255, 63/255}
+}
+
+local function getDoubleAltClickParameters(zone)
+    DOUBLE_CLICK_PARAMETERS = {
+        ["identifier"] = "AltClickTimer" .. zone.guid,
+        ["function_owner"] = zone,
+        ["function_name"] = "resetAltClickCounter",
+        ["delay"] = Global.getVar("CLICK_DELAY")
+    }
+    return DOUBLE_CLICK_PARAMETERS
+end
+
+local function resetRoomButton(zone)
+    local clickCounter = zone.getVar("altClickCounter")
+    if clickCounter > 0 then
+        zone.call("deactivateZone")
+    else
+        zone.setVar("altClickCounter", clickCounter + 1)
+        Timer.create(getDoubleAltClickParameters(zone))
+    end
+end
+
+local function discardRoom(zone)
+    --TODO
+    return true
+end
+
+function placeNewRoomCard(params)
+    if params.zone == nil then
+        return false
+    end
+    local newRoomCard = nil
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.tag == "Deck" then
+            newRoomCard = obj.takeObject({flip = true})
+            break
+        elseif obj.tag == "Card" then
+            newRoomCard = obj
+            newRoomCard.flip()
+            break
+        end
+    end
+    if newRoomCard == nil then
+        return false
+    end
+    newRoomCard.setPositionSmooth({params.zone.getPosition().x, 5, params.zone.getPosition().z}, false)
+    return true
+end
+
+function changeRoom(zone)
+    --if discardRoom(zone) then
+    --    Wait.frames(function ()
+    --            if not zone.call("containsDeckOrCard") then
+                    placeNewRoomCard({zone = zone})
+    --            end
+    --        end, 60)
+    --end
+end
+
+function click_function_RoomButton(zone, color, alt_click)
+    if Global.getVar("activePlayerColor") == color or Player[color].admin then
+        if alt_click then
+            resetRoomButton(zone)
+            return
+        end
+        local roomButton = zone.getButtons()[zone.getVar("ROOM_BUTTON_INDEX") + 1]
+        if roomButton.label == ROOM_BUTTON_STATES.INACTIVE then
+            zone.call("activateZone")
+        elseif roomButton.label == ROOM_BUTTON_STATES.CHANGE then
+            changeRoom(zone)
+        else
+            printToAll("[fdd835][WARNING][-] Unknown shop button state: " .. tostring(attackButton.label) .. ".")
+        end
+    end
+end

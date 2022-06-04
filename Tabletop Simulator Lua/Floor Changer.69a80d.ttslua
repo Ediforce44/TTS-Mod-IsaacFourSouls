@@ -6,33 +6,7 @@ ACTIVE_FLOOR_DECK_POSITION = {-6.20, 5, -1.70}
 startTurnColor = nil
 skipOneTurnTirgger = true
 
-function onPlayerTurn(player)
-
-    startTurnColor = Turns.turn_color
-
-  if skipOneTurnTirgger then
-    skipOneTurnTirgger = false
-    return
-  end
-  skipOneTurnTirgger = true
-
-
-  if player.color == startTurnColor then
-    openNextFloor()
-  end
-end
-
 function onLoad()
-  -- Next floor button
-  self.createButton({
-    click_function = "openNextFloor",
-    function_owner = self,
-    label          = "Next Floor",
-    position       = {0, 1, 0},
-    width          = 1000,
-    height         = 300,
-    font_size      = 200
-  })
   -- Color buttons
   self.createButton({
     click_function = "onClickRedBtn",
@@ -124,59 +98,4 @@ function selectStartTurn(btnIndex, color)
   })
 end
 
-function openNextFloor()
-
-  local zone = getObjectFromGUID(INACTIVE_FLOOR_ZONE_GUID)
-  local objInZone = zone.getObjects()
-
-  -- !First obj is placeholder cards
-  if #objInZone == 1 then
-    printToAll("[fdd835][WARNING][-] In inactive floor zone no deck. Please place floors deck.")
-    return
-  elseif #objInZone > 2 then
-    printToAll("[fdd835][WARNING][-] In inactive floor zone more than one object. Please leave in zone only floors deck.")
-    return
-  end
-
-  local obj = objInZone[2]
---  if obj.name == "Remaining Floors" then
-  if obj.guid == "409647" then
-    obj = objInZone[1]
-    end
-
-  if obj.tag ~= "Deck" and obj.tag ~= "Card" then
-    printToAll("[fdd835][WARNING][-] Inactive floor zone not deck object. Please place floors deck.")
-    return
-  end
-
-  if not obj.is_face_down then
-    printToAll("[fdd835][WARNING][-] Floors deck must be face down. Flip.")
-    obj.flip()
-  end
-
-  local card = nil
-  if obj.tag == "Deck" then
-    card = obj.takeObject()
-  else
-    card = obj
-  end
-
-  card.flip()
-  card.setPositionSmooth(ACTIVE_FLOOR_DECK_POSITION, false)
-
-  broadcastToAll("[66bb6a]New floor open!")
-end
-
 function dummy() end
-
--- For external call
-function getFloorsDeckGuid()
-  local zone = getObjectFromGUID(INACTIVE_FLOOR_ZONE_GUID)
-  local objInZone = zone.getObjects()
-
-  if #objInZone ~= 2 or objInZone[2].tag ~= "Deck" then
-    return nil
-  end
-
-  return objInZone[2].guid
-end
