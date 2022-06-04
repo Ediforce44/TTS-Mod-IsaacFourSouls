@@ -133,8 +133,9 @@ local function getRealPosition(indexPosition)
 end
 
 local function getPositionFromIndex(index)
-    local row = math.ceil(index / (INDICES_PER_ROW + 1))
+    local row = math.ceil(index / INDICES_PER_ROW)
     local column = index - (INDICES_PER_ROW * (row - 1))
+    print(row)
     if indexTable[row] == nil then
         return nil
     end
