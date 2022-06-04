@@ -1,5 +1,5 @@
 --- Edited by Ediforce44
-zone = getObjectFromGUID(Global.getTable("ZONE_GUID_MONSTER").SIX)
+zone = getObjectFromGUID(Global.getTable("ZONE_GUID_MONSTER").SEVEN)
 
 value = 0
 MIN_VALUE = 0
