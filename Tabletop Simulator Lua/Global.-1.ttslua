@@ -278,6 +278,11 @@ ZONE_GUID_SHOP = {
     SIX = "094179"
 }
 
+ZONE_GUID_ROOM = {
+    ONE = "8ccddb",
+    TWO = "9f1558"
+}
+
 ZONE_GUID_MONSTER = {
     ONE = "329a95",
     TWO = "1a25c2",

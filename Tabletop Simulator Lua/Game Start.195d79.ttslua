@@ -10,6 +10,7 @@ HAPPEN_DECK_ZONE_GUID = ZONE_GUIDS_DECK.HAPPEN
 TREASURE_DECK_ZONE_GUID = ZONE_GUIDS_DECK.TREASURE
 LOOT_DECK_ZONE_GUID = ZONE_GUIDS_DECK.LOOT
 SOUL_DECK_ZONE_GUID = ZONE_GUIDS_DECK.BONUS_SOUL
+ROOM_DECK_ZONE_GUID = ZONE_GUIDS_DECK.ROOM
 
 SETTING_UP_NOTE_GUID = "56a44e"
 
@@ -68,6 +69,7 @@ function onStart()
     getObjectFromGUID(monsterZoneGUIDs.FOUR).call("deactivateZone")
     getObjectFromGUID(monsterZoneGUIDs.FIVE).call("deactivateZone")
     getObjectFromGUID(monsterZoneGUIDs.SIX).call("deactivateZone")
+    getObjectFromGUID(monsterZoneGUIDs.SEVEN).call("deactivateZone")
     getObjectFromGUID(MONSTER_DECK_ZONE_GUID).call("activateChooseButton")
 
     -- Init Shop Zones and Shop Buttons
@@ -79,6 +81,11 @@ function onStart()
     getObjectFromGUID(shopZoneGUIDs.FIVE).call("deactivateZone")
     getObjectFromGUID(shopZoneGUIDs.SIX).call("deactivateZone")
     getObjectFromGUID(TREASURE_DECK_ZONE_GUID).call("activateShopButton")
+
+    -- Init Room Zones and Room Buttons
+    local roomZoneGUIDs = Global.getTable("ZONE_GUID_ROOM")
+    getObjectFromGUID(roomZoneGUIDs.ONE).call("activateZone")
+    getObjectFromGUID(roomZoneGUIDs.TWO).call("deactivateZone")
 
     local bonusSoulZones = Global.getTable("ZONE_GUID_BONUSSOUL")
     soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.ONE).getPosition(), flip=true})
@@ -127,6 +134,7 @@ function loadDecksFromZones()
   shopDeck = Global.call("getDeckFromZone", {zoneGUID = TREASURE_DECK_ZONE_GUID})
   lootDeck = Global.call("getDeckFromZone", {zoneGUID = LOOT_DECK_ZONE_GUID})
   soulDeck = Global.call("getDeckFromZone", {zoneGUID = SOUL_DECK_ZONE_GUID})
+  roomDeck = Global.call("getDeckFromZone", {zoneGUID = ROOM_DECK_ZONE_GUID})
 end
 
 function isAllPlayersSelectCharacter()
@@ -155,46 +163,39 @@ function getPlayersCount()
 end
 
 function deckShuffle()
-    local floorsDeckGuid = getFloorsDeckGuid()
-
     local index = 1
     local decksToShuffle = {}
     if monsterDeck ~= nil then
-      decksToShuffle[index] = monsterDeck.guid
+      decksToShuffle[index] = monsterDeck
       index = index + 1
     end
     if happenDeck ~= nil then
-      decksToShuffle[index] = happenDeck.guid
+      decksToShuffle[index] = happenDeck
       index = index + 1
     end
     if soulDeck ~= nil then
-      decksToShuffle[index] = soulDeck.guid
+      decksToShuffle[index] = soulDeck
       index = index + 1
     end
     if shopDeck ~= nil then
-      decksToShuffle[index] = shopDeck.guid
+      decksToShuffle[index] = shopDeck
       index = index + 1
     end
     if lootDeck ~= nil then
-      decksToShuffle[index] = lootDeck.guid
+      decksToShuffle[index] = lootDeck
       index = index + 1
     end
-    if floorsDeckGuid ~= nil then
-      decksToShuffle[index] = floorsDeckGuid
+    if roomDeck ~= nil then
+      decksToShuffle[index] = roomDeck
       index = index + 1
     end
 
     for i = 1, #decksToShuffle, 1 do
-        obj = getObjectFromGUID(decksToShuffle[i])
+        obj = decksToShuffle[i]
         if obj ~= nil then
             obj.shuffle()
         end
     end
-end
-
-function getFloorsDeckGuid()
-  local floorChanger = getObjectFromGUID(FLOOR_CHANGE_GUID)
-  return floorChanger.call("getFloorsDeckGuid")
 end
 
 function dummy()
