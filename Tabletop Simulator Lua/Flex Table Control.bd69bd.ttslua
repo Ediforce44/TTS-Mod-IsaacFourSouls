@@ -7,6 +7,7 @@ function onSave()
 end
 
 function onload(saved_data)
+    print(Tables.getTable())
     --Loads the tracking for if the game has started yet
     if saved_data ~= "" then
          local loaded_data = JSON.decode(saved_data)
@@ -29,6 +30,9 @@ function onload(saved_data)
     obj_side_bot = getObjectFromGUID("f938a2")
     obj_side_lef = getObjectFromGUID("9f95fd")
     obj_side_rig = getObjectFromGUID("5af8f2")
+
+    --Edited by Ediforce44
+    --obj_overlay = getObjectFromGUID("4ee1f3")
 
     controlActive = false
     createOpenCloseButton()
@@ -73,6 +77,7 @@ end
 --Changes table surface
 function click_applySurface(_, color)
     if permissionCheck(color) then
+        --switchOverlay(true)
         updateSurface()
         broadcastToAll("New Table Image Applied", {0.2,0.9,0.2})
     end
@@ -111,6 +116,7 @@ function click_loadMemory(_, color, index)
     if permissionCheck(color) then
         self.editInput({index=0, value=tableImageData[index].name})
         self.editInput({index=1, value=tableImageData[index].url})
+        --switchOverlay(false)
         updateSurface()
         broadcastToAll("Table Image Loaded", {0.2,0.9,0.2})
     end
@@ -134,6 +140,19 @@ function updateSurface()
     customInfo.diffuse = self.getInputs()[2].value
     obj_surface.setCustomObject(customInfo)
     obj_surface = obj_surface.reload()
+end
+
+--Written by Ediforce44
+--- Activates and deactivates overlay (doesn't work because of tts)
+function switchOverlay(turnOn)
+    local customInfo = obj_overlay.getCustomObject()
+    if turnOn == false then
+        customInfo.diffuse = "http://cloud-3.steamusercontent.com/ugc/1881955358032349295/9F8FB29511D82D0682CA92DFF2BAD9C0538D953F/"
+    else
+        customInfo.diffuse = "http://cloud-3.steamusercontent.com/ugc/1881955358032595911/8BC7AA45D9856C0CBE712FEFBD131D9D763D0DE1/"
+    end
+    obj_overlay.setCustomObject(customInfo)
+    obj_overlay = obj_overlay.reload()
 end
 
 
