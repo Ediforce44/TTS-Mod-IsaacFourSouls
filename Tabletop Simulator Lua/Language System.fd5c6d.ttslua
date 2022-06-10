@@ -84,7 +84,7 @@ function initButtons()
     click_function = 'switchToFrance',
     function_owner = self,
     label = 'Française',
-    position = {-4.2, 1.5, 2.5},
+    position = {-13.2, 1.5, 2.5},
     width = 1400,
     height = 400,
     font_size = 300,
@@ -93,7 +93,7 @@ function initButtons()
     click_function = 'switchToRussian',
     function_owner = self,
     label = 'Русский',
-    position = {0, 1.5, 2.5},
+    position = {-9, 1.5, 2.5},
     width = 1400,
     height = 400,
     font_size = 300,
@@ -102,7 +102,7 @@ function initButtons()
     click_function = 'switchToEnglish',
     function_owner = self,
     label = 'English',
-    position = {4.7, 1.5, 2.5},
+    position = {-4.3, 1.5, 2.5},
     width = 1400,
     height = 400,
     font_size = 300,
@@ -160,4 +160,4 @@ function delayedCall(funcName, delayTime, parameters)
         function_name = funcName,
         delay = delayTime,
         parameters = parameters } )
-end 
+end
