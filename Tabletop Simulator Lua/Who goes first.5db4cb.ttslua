@@ -14,7 +14,20 @@ function onObjectRandomize(obj)
     end
 end
 
+function onDrop(obj)
+    if obj == self then
+        startLuaCoroutine(self, 'whoGoesFirst')
+    end
+end
 
+function diceRolled()
+    local rolledPlayerName = self.getRotationValue()
+    for _, player in ipairs(Player.getPlayers()) do
+        if player.steam_name == rolledPlayerName then
+            Global.call("setNewStartPlayer", {playerColor = player.color})
+        end
+    end
+end
 
 function whoGoesFirst()
     coroutine.yield(0)
@@ -55,6 +68,10 @@ function whoGoesFirst()
     else
         startLuaCoroutine(self, 'whoGoesFirstNameSides')
     end
+    Wait.condition(diceRolled,
+        function()
+            return self.resting
+        end,5)
     return 1
 end
 
@@ -118,7 +135,7 @@ function whoGoesFirstNameSides()
                 rotvals[9] = {value=playersides[9],rotation={-38,0,163}}
                 rotvals[10] = {value=playersides[10],rotation={38,180,-90}}
             end
-            self.setName("goes first!")
+            self.setName("Who goes first")
         else
             self.setName("Who goes first?")
         end

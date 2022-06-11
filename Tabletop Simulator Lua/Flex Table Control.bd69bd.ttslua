@@ -7,7 +7,6 @@ function onSave()
 end
 
 function onload(saved_data)
-    print(Tables.getTable())
     --Loads the tracking for if the game has started yet
     if saved_data ~= "" then
          local loaded_data = JSON.decode(saved_data)

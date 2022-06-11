@@ -37,11 +37,14 @@ end
 
 function onLoad(saved_data)         --EbyE44
     setPositionTables()
+    --TODO lade startPlayerColor oder rufe setNewStartPlayer({playerColor = "Red"}) auf
 
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         if loaded_data[1] then
             activePlayerColor = loaded_data[1]
+        else
+            activePlayerColor = "Red"
         end
         if loaded_data[2] then
             automaticRewarding.Yellow = loaded_data[2].Yellow and true
@@ -54,6 +57,7 @@ function onLoad(saved_data)         --EbyE44
 end
 
 function onSave()                   --EbyE44
+    --TODO speicher startPlayerColor
     return JSON.encode({activePlayerColor, automaticRewarding})
 end
 
@@ -196,7 +200,8 @@ function cancelPick(player, _, idValue)
     end
 end
 
-activePlayerColor = "Red"
+activePlayerColor = "None"
+startPlayerColor = "None"
 
 automaticRewarding = {
     Yellow = true,
@@ -356,6 +361,30 @@ DISCARD_PILE_POSITION = {
     LOOT = {},
     MONSTER = {}
 }
+
+function hasGameStarted()
+    local startButtonGUID = "56a44e"
+    if getObjectFromGUID(startButtonGUID) then
+        return false
+    end
+    return true
+end
+
+function setNewStartPlayer(params)
+    if params.playerColor == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'setNewStartPlayer()'.")
+        return false
+    end
+    if hasGameStarted() or (startPlayerColor == params.playerColor) then
+        return false
+    end
+
+    startPlayerColor = params.playerColor
+    getObjectFromGUID("69a80d").call("selectStartTurn", {playerColor = params.playerColor})
+    printToAll("Player " .. getPlayerString(params) .. " has the starting turn now!")
+    --TODO
+    return true
+end
 
 function getPlayerString(params)
     local playerString = "'Player not Found'"

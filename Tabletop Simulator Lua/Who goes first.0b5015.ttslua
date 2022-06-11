@@ -676,8 +676,9 @@ function takeTurn(player)
 end
 
 function setTurn(color)
-    Turns.enable = true
-    Turns.turn_color = color
+    --Turns.enable = true
+    --Turns.turn_color = color
+    Global.call("setNewStartPlayer", {playerColor = color})
 end
 
 function playerWin(player)
