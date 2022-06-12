@@ -51,9 +51,10 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `automaticRewarding` contains the *true* or *false* if the automatic rewarding is activated for a player. The keys are the player colors.
 
 > ### <u><b>Variables</b></u>
-> - `CLICK_DELAY` contains the Value, which is used to determine a Double Click on something.\
+> - `CLICK_DELAY` is the Value, which is used to determine a Double Click on something.\
 > (Current value: 0.3 sec)
-> - `activePlayerColor` contains the player color *string* of the player who is the active player.
+> - `activePlayerColor` is the player color *string* of the player, who is the active player.
+> - `startPlayerColor` is the player color *string* of the player, who will get the first turn.
 
 > ### <u><b>Getter Functions</b></u>
 > - `getDeckFromZone(zoneGUID) : object` returns the first deck or card in the zone with the GUID **zoneGUID**. If there is no deck or card, it will return *nil*.
@@ -72,9 +73,11 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `getCardFromDeck({deck}) : object` takes a card from the **deck** and return a reference on this card. If **deck** is a card it will return **deck**.
  
 > ### <u><b>Technical Functions</b></u>
+> - `hasGameStarted() : bool` returns *true* if the game has already been started (The Setting UP Note was deleted). Otherwise it returns *false*
 > - `findIntInScript({scriptString, varName}) : int` searches in the **scriptString** for a variable with the name **varName** and returns the value of it.
 > - `isPlayerAuthorized({playerColor or player, ownerPlayer}) : bool` returns *true* if the the player **player** or player with the **playerColor** equals **ownerPlayer**. It will return also *true* if **player** or the player with the **playerColor** is an admin.
 > - `switchRewardingMode({playerColor or player})` switches the Rewarding Mode for **player** or the player with the **playerColor**.
+> - `setNewStartPlayer({playerColor}) : bool` sets the *startPlayerColor* variable and select the appropriated turn button in the middle of the Gametable. BUT ONLY if the game hasn't been started yet. If *startPlayerColor* is already equal to **playerColor** or if anything went wrong the function returns *false*.
 > - `colorPicker_attach({afterPickFunction, functionOwner, picker, reason, functionParams}) : bool` attaches **afterPickFunction** to the **Color-Picker System**. The **Color-Picker** is explained in chapter [Color-Picker](#color-picker). \
 > Only **afterPickFunction** and **functionOwner** have to be set. If picker is unset, the active player will be the picker. \
 > Returns *true* if **afterPickFunction** could be attached successfully.

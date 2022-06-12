@@ -37,7 +37,6 @@ end
 
 function onLoad(saved_data)         --EbyE44
     setPositionTables()
-    --TODO lade startPlayerColor oder rufe setNewStartPlayer({playerColor = "Red"}) auf
 
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
@@ -47,18 +46,20 @@ function onLoad(saved_data)         --EbyE44
             activePlayerColor = "Red"
         end
         if loaded_data[2] then
-            automaticRewarding.Yellow = loaded_data[2].Yellow and true
-            automaticRewarding.Green = loaded_data[2].Green and true
-            automaticRewarding.Blue = loaded_data[2].Blue and true
-            automaticRewarding.Red = loaded_data[2].Red and true
+            startPlayerColor = loaded_data[2]
+        end
+        if loaded_data[3] then
+            automaticRewarding.Yellow = loaded_data[3].Yellow and true
+            automaticRewarding.Green = loaded_data[3].Green and true
+            automaticRewarding.Blue = loaded_data[3].Blue and true
+            automaticRewarding.Red = loaded_data[3].Red and true
         end
     end
     broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
 end
 
 function onSave()                   --EbyE44
-    --TODO speicher startPlayerColor
-    return JSON.encode({activePlayerColor, automaticRewarding})
+    return JSON.encode({activePlayerColor, startPlayerColor, automaticRewarding})
 end
 
 HEART_TOKENS_GUID = {
@@ -375,14 +376,17 @@ function setNewStartPlayer(params)
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'setNewStartPlayer()'.")
         return false
     end
-    if hasGameStarted() or (startPlayerColor == params.playerColor) then
+    if hasGameStarted() or (params.playerColor == startPlayerColor) then
+        return false
+    end
+    if not Player[params.playerColor].seated then
+        printToAll("[fdd835][WARNING][-] " .. getPlayerString(params) .. " is not an active Player.")
         return false
     end
 
     startPlayerColor = params.playerColor
     getObjectFromGUID("69a80d").call("selectStartTurn", {playerColor = params.playerColor})
-    printToAll("Player " .. getPlayerString(params) .. " has the starting turn now!")
-    --TODO
+    broadcastToAll(getPlayerString(params) .. " has the starting turn now!")
     return true
 end
 

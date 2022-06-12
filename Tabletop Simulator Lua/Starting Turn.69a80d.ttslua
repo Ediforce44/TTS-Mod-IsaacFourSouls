@@ -7,93 +7,116 @@ TURN_BUTTON_INDICES = {
     Yellow = {4,8}
 }
 
-function onLoad()
-  -- Color buttons
-  self.createButton({
-    click_function = "onClickRedBtn",
-    function_owner = self,
-    label          = "",
-    position       = {-1.2, 1, 5},
-    width          = 300,
-    height         = 300,
-    color          = {0.85, 0.1, 0.09},
-    tooltip        = "Red Turn"
-  })
-  self.createButton({
-    click_function = "onClickBlueBtn",
-    function_owner = self,
-    label          = "",
-    position       = {-0.4, 1, 5},
-    width          = 300,
-    height         = 300,
-    color          = {0.12, 0.53, 1},
-    tooltip        = "Blue Turn"
-  })
-  self.createButton({
-    click_function = "onClickGreenBtn",
-    function_owner = self,
-    label          = "",
-    position       = {0.4, 1, 5},
-    width          = 300,
-    height         = 300,
-    color          = {0.19, 0.7, 0.16},
-    tooltip        = "Green Turn"
-  })
-  self.createButton({
-    click_function = "onClickYellowBtn",
-    function_owner = self,
-    label          = "",
-    position       = {1.2, 1, 5},
-    width          = 300,
-    height         = 300,
-    color          = {0.9, 0.89, 0.17},
-    tooltip        = "Yellow Turn"
-  })
+local function createTurnButtons()
+    self.createButton({
+      click_function = "onClickRedBtn",
+      function_owner = self,
+      label          = "",
+      position       = {-1.2, 1, 5},
+      width          = 300,
+      height         = 300,
+      color          = {0.85, 0.1, 0.09},
+      tooltip        = "Red Turn"
+    })
+    self.createButton({
+      click_function = "onClickBlueBtn",
+      function_owner = self,
+      label          = "",
+      position       = {-0.4, 1, 5},
+      width          = 300,
+      height         = 300,
+      color          = {0.12, 0.53, 1},
+      tooltip        = "Blue Turn"
+    })
+    self.createButton({
+      click_function = "onClickGreenBtn",
+      function_owner = self,
+      label          = "",
+      position       = {0.4, 1, 5},
+      width          = 300,
+      height         = 300,
+      color          = {0.19, 0.7, 0.16},
+      tooltip        = "Green Turn"
+    })
+    self.createButton({
+      click_function = "onClickYellowBtn",
+      function_owner = self,
+      label          = "",
+      position       = {1.2, 1, 5},
+      width          = 300,
+      height         = 300,
+      color          = {0.9, 0.89, 0.17},
+      tooltip        = "Yellow Turn"
+    })
 
-  self.createButton({
-    click_function = "onClickRedBtn",
-    function_owner = self,
-    label          = "",
-    position       = {1.2, 1, -5},
-    rotation       = {0, 180, 0},
-    width          = 300,
-    height         = 300,
-    color          = {0.85, 0.1, 0.09},
-    tooltip        = "Red Turn"
-  })
-  self.createButton({
-    click_function = "onClickBlueBtn",
-    function_owner = self,
-    label          = "",
-    position       = {0.4, 1, -5},
-    rotation       = {0, 180, 0},
-    width          = 300,
-    height         = 300,
-    color          = {0.12, 0.53, 1},
-    tooltip        = "Blue Turn"
-  })
-  self.createButton({
-    click_function = "onClickGreenBtn",
-    function_owner = self,
-    label          = "",
-    position       = {-0.4, 1, -5},
-    rotation       = {0, 180, 0},
-    width          = 300,
-    height         = 300,
-    color          = {0.19, 0.7, 0.16},
-    tooltip        = "Green Turn"
-  })
-  self.createButton({
-    click_function = "onClickYellowBtn",
-    function_owner = self,
-    label          = "",
-    position       = {-1.2, 1, -5},
-    rotation       = {0, 180, 0},
-    width          = 300,
-    height         = 300,
-    color          = {0.9, 0.89, 0.17},
-    tooltip        = "Yellow Turn"
-  })
+    self.createButton({
+      click_function = "onClickRedBtn",
+      function_owner = self,
+      label          = "",
+      position       = {1.2, 1, -5},
+      rotation       = {0, 180, 0},
+      width          = 300,
+      height         = 300,
+      color          = {0.85, 0.1, 0.09},
+      tooltip        = "Red Turn"
+    })
+    self.createButton({
+      click_function = "onClickBlueBtn",
+      function_owner = self,
+      label          = "",
+      position       = {0.4, 1, -5},
+      rotation       = {0, 180, 0},
+      width          = 300,
+      height         = 300,
+      color          = {0.12, 0.53, 1},
+      tooltip        = "Blue Turn"
+    })
+    self.createButton({
+      click_function = "onClickGreenBtn",
+      function_owner = self,
+      label          = "",
+      position       = {-0.4, 1, -5},
+      rotation       = {0, 180, 0},
+      width          = 300,
+      height         = 300,
+      color          = {0.19, 0.7, 0.16},
+      tooltip        = "Green Turn"
+    })
+    self.createButton({
+      click_function = "onClickYellowBtn",
+      function_owner = self,
+      label          = "",
+      position       = {-1.2, 1, -5},
+      rotation       = {0, 180, 0},
+      width          = 300,
+      height         = 300,
+      color          = {0.9, 0.89, 0.17},
+      tooltip        = "Yellow Turn"
+    })
+end
+
+function onLoad(saved_data)
+  createTurnButtons()
+
+  if saved_data ~= "" then
+      local loaded_data = JSON.decode(saved_data)
+      if loaded_data[1] then
+          for _ , index in ipairs(loaded_data[1]) do
+              self.editButton({index=index, label="✓", font_color={0, 0, 0}, font_size=200})
+          end
+      end
+  end
+end
+
+function onSave()
+    local selectedButtonIndices = {}
+    local allButtons = self.getButtons()
+    for index = 1, TURN_BUTTON_COUNT do
+        if allButtons[index].label ~= "" then
+            table.insert(selectedButtonIndices, index-1)
+        end
+    end
+    return JSON.encode({selectedButtonIndices})
 end
 
 function onClickRedBtn()
