@@ -32,6 +32,11 @@ local function setPositionTables()
     DISCARD_PILE_POSITION.TREASURE = getObjectFromGUID(ZONE_GUID_DISCARD.TREASURE).getPosition():setAt('y', 5)
     DISCARD_PILE_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DISCARD.LOOT).getPosition():setAt('y', 5)
     DISCARD_PILE_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DISCARD.MONSTER).getPosition():setAt('y', 5)
+
+    DECK_POSITION.TREASURE = getObjectFromGUID(ZONE_GUID_DECK.TREASURE).getPosition():setAt('y', 5)
+    DECK_POSITION.ROOM = getObjectFromGUID(ZONE_GUID_DECK.ROOM).getPosition():setAt('y', 5)
+    DECK_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DECK.LOOT).getPosition():setAt('y', 5)
+    DECK_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DECK.MONSTER).getPosition():setAt('y', 5)
 end
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -357,8 +362,16 @@ COUNTER_BAGS_GUID = {
     POOP = "9977a0"
 }
 
+--Initialised in onLoad
 DISCARD_PILE_POSITION = {
     TREASURE = {},
+    LOOT = {},
+    MONSTER = {}
+}
+
+DECK_POSITION = {
+    TREASURE = {},
+    ROOM = {},
     LOOT = {},
     MONSTER = {}
 }
