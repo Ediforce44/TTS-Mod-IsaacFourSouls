@@ -18,7 +18,7 @@ SETTING_UP_NOTE_GUID = "56a44e"
 --------------------------------------------------- Deck Builder -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 local DUMMY_CARDS = {
-    TREASURE = {"", ""},
+    TREASURE = {"20478b", "de6fa6"},
     LOOT = {"fc7f84", "d8bf8b"},
     MONSTER = {"6f7d81", "ad45a5"}
 }
@@ -29,11 +29,11 @@ local DECK_BUILDER_MODE = {
 }
 
 local DECK_TREASURE = {
-    ACTIVE  = {40, 40},
-    PASSIVE = {44, 44},
-    PAID    = {10, 10},
-    ONE_USE = {5, 5},
-    SOUL    = {1, 1}
+    T_ACTIVE  = {40, 40},
+    T_PASSIVE = {44, 44},
+    T_PAID    = {10, 10},
+    T_ONE_USE = {5, 5},
+    T_SOUL    = {1, 1}
 }
 
 local DECK_LOOT = {
@@ -55,14 +55,14 @@ local DECK_LOOT = {
 }
 
 local DECK_MONSTER = {
-    EPIC        = {1, 1},
-    BOSS        = {30, 30},
-    BASIC       = {30, 30},
-    CURSED      = {9, 9},
-    HOLY_CHARMED= {9, 9},
-    GOOD        = {8, 8},
-    BAD         = {8, 8},
-    CURSES      = {5, 5}
+    M_EPIC        = {1, 1},
+    M_BOSS        = {30, 30},
+    M_BASIC       = {30, 30},
+    M_CURSED      = {9, 9},
+    M_HOLY_CHARMED= {9, 9},
+    M_GOOD        = {8, 8},
+    M_BAD         = {8, 8},
+    M_CURSES      = {5, 5}
 }
 
 local function setUpLUT(deck)
@@ -92,6 +92,28 @@ local function getDummyDeckGUID(deckZone)
 end
 
 local function buildTreasureDeck(mode)
+    --[[
+    local lookUpTable = setUpLUT(treasureCards)
+    local dummyTreasureDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE))
+    if (dummyTreasureDeckGUID == nil) or (dummyTreasureDeckGUID == "") then
+        treasureCards.setPositionSmooth(Global.getTable("DECK_POSITION").TREASURE, false)
+        treasureCards.setRotationSmooth({180, 0, 0}, false)
+        treasureDeck = treasureCards
+        return
+    end
+    treasureDeck = getObjectFromGUID(dummyTreasureDeckGUID)
+    if treasureDeck.locked then
+        treasureDeck.setLock(false)
+    end
+    for type, amountTable in pairs(DECK_TREASURE) do
+        for i = 1, amountTable[mode] do
+            treasureDeck.putObject(treasureCards.takeObject({guid = lookUpTable[type][i]}))
+        end
+    end
+    for _, dummyGUID in ipairs(DUMMY_CARDS.TREASURE) do
+        destroyObject(treasureDeck.takeObject({guid = dummyGUID}))
+    end
+    --]]
     treasureDeck = treasureCards
 end
 
@@ -236,21 +258,9 @@ function onStart()
 
     Wait.frames(function()
             buildDecks()
-
             deckShuffle()
-
             lootDeck.deal(3)
-
             setupPlayingArea()
-
-            --[[
-            if happenDeck ~= nil then
-                monsterDeck.putObject(happenDeck)
-                happenDeck.setPosition({30.74, 2.04, 0.09})
-            end
-
-            monsterDeck.shuffle()
-            --]]
 
             for _, color in pairs(getSeatedPlayers()) do
                 Global.call("deactivateCharacter", {playerColor = color})
@@ -337,10 +347,6 @@ function cardShuffle()
       decksToShuffle[index] = monsterCards
       index = index + 1
     end
-    --if happenDeck ~= nil then
-    --  decksToShuffle[index] = happenDeck
-    --  index = index + 1
-    --end
     if soulCards ~= nil then
       decksToShuffle[index] = soulCards
       index = index + 1
@@ -373,10 +379,6 @@ function deckShuffle()
       decksToShuffle[index] = monsterDeck
       index = index + 1
     end
-    --if happenDeck ~= nil then
-    --  decksToShuffle[index] = happenDeck
-    --  index = index + 1
-    --end
     if soulDeck ~= nil then
       decksToShuffle[index] = soulDeck
       index = index + 1
