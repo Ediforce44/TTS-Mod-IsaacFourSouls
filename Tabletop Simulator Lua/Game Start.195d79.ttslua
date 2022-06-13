@@ -80,32 +80,34 @@ local function setUpLUT(deck)
     return lookUpTable
 end
 
-local function getDummyDeck(deckZone)
-    local dummyDeck = nil
+local function getDummyDeckGUID(deckZone)
+    local dummyDeckGUID = nil
     for _, obj in ipairs(deckZone.getObjects()) do
         if obj.name == "Deck" then
-            dummyDeck = obj
+            dummyDeckGUID = obj.guid
             break
         end
     end
-    return dummyDeck
+    return dummyDeckGUID
 end
 
-local function buildTreasureDeck()
+local function buildTreasureDeck(mode)
     treasureDeck = treasureCards
-    return
 end
 
 local function buildLootDeck(mode)
     local lookUpTable = setUpLUT(lootCards)
-    local dummyLootDeck = getDummyDeck(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").LOOT))
-    if dummyLootDeck == nil then
+    local dummyLootDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").LOOT))
+    if (dummyLootDeckGUID == nil) or (dummyLootDeckGUID == "") then
         lootCards.setPositionSmooth(Global.getTable("DECK_POSITION").LOOT, false)
         lootCards.setRotationSmooth({180, 0, 0}, false)
         lootDeck = lootCards
         return
     end
-    lootDeck = getObjectFromGUID(dummyLootDeck.guid)
+    lootDeck = getObjectFromGUID(dummyLootDeckGUID)
+    if lootDeck.locked then
+        lootDeck.setLock(false)
+    end
     for type, amountTable in pairs(DECK_LOOT) do
         for i = 1, amountTable[mode] do
             lootDeck.putObject(lootCards.takeObject({guid = lookUpTable[type][i]}))
@@ -116,15 +118,36 @@ local function buildLootDeck(mode)
     end
 end
 
-local function buildMonsterDeck()
+local function buildMonsterDeck(mode)
+    --[[
+    local lookUpTable = setUpLUT(monsterCards)
+    local dummyMonsterDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER))
+    if (dummyMonsterDeckGUID == nil) or (dummyMonsterDeckGUID == "") then
+        monsterCards.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER, false)
+        monsterCards.setRotationSmooth({180, 0, 0}, false)
+        monsterDeck = monsterCards
+        return
+    end
+    monsterDeck = getObjectFromGUID(dummyMonsterDeckGUID)
+    if monsterDeck.locked then
+        monsterDeck.setLock(false)
+    end
+    for type, amountTable in pairs(DECK_MONSTER) do
+        for i = 1, amountTable[mode] do
+            monsterDeck.putObject(monsterCards.takeObject({guid = lookUpTable[type][i]}))
+        end
+    end
+    for _, dummyGUID in ipairs(DUMMY_CARDS.MONSTER) do
+        destroyObject(monsterDeck.takeObject({guid = dummyGUID}))
+    end
+    --]]
     monsterDeck = monsterCards
-    return
 end
 
 local function buildDecks()
-    buildTreasureDeck()
+    buildTreasureDeck(DECK_BUILDER_MODE.NORMAL)
     buildLootDeck(DECK_BUILDER_MODE.NORMAL)
-    buildMonsterDeck()
+    buildMonsterDeck(DECK_BUILDER_MODE.NORMAL)
 end
 
 ------------------------------------------------------------------------------------------------------------------------
