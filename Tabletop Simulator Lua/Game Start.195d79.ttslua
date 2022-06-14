@@ -12,168 +12,8 @@ LOOT_DECK_ZONE_GUID = ZONE_GUIDS_DECK.LOOT
 SOUL_DECK_ZONE_GUID = ZONE_GUIDS_DECK.BONUS_SOUL
 ROOM_DECK_ZONE_GUID = ZONE_GUIDS_DECK.ROOM
 
-SETTING_UP_NOTE_GUID = "56a44e"
-
-------------------------------------------------------------------------------------------------------------------------
---------------------------------------------------- Deck Builder -------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-local DUMMY_CARDS = {
-    TREASURE = {"20478b", "de6fa6"},
-    LOOT = {"fc7f84", "d8bf8b"},
-    MONSTER = {"6f7d81", "ad45a5"}
-}
-
-local DECK_BUILDER_MODE = {
-    NORMAL  = 1,
-    DRAFT   = 2
-}
-
-local DECK_TREASURE = {
-    T_ACTIVE  = {40, 40},
-    T_PASSIVE = {44, 44},
-    T_PAID    = {10, 10},
-    T_ONE_USE = {5, 5},
-    T_SOUL    = {1, 1}
-}
-
-local DECK_LOOT = {
-    L_TAROT_MISC    = {23, 22},
-    L_TRINKET       = {11, 10},
-    L_PILL          = {3, 2},
-    L_RUNE          = {3, 3},
-    L_BUTTER_BEAN   = {5, 5},
-    L_BOMB          = {6, 5},
-    L_BATTERY       = {6, 5},
-    L_DICE_SHARD    = {3, 3},
-    L_SOUL_HEART    = {2, 2},
-    L_LOST_SOUL     = {1, 1},
-    L_NICKEL        = {6, 5},
-    L_FOUR_CENT     = {12, 10},
-    L_THREE_CENT    = {11, 10},
-    L_TWO_CENT      = {6, 5},
-    L_ONE_CENT      = {2, 2}
-}
-
-local DECK_MONSTER = {
-    M_EPIC        = {1, 1},
-    M_BOSS        = {30, 30},
-    M_BASIC       = {30, 30},
-    M_CURSED      = {9, 9},
-    M_HOLY_CHARMED= {9, 9},
-    M_GOOD        = {8, 8},
-    M_BAD         = {8, 8},
-    M_CURSES      = {5, 5}
-}
-
-local function setUpLUT(deck)
-    local lookUpTable = {}
-    for _, card in pairs(deck.getObjects()) do
-        local insertTag = "EMPTY"
-        if not (card.tags == {}) then
-            insertTag = card.tags[1]
-        end
-        if lookUpTable[insertTag] == nil then
-            lookUpTable[insertTag] = {}
-        end
-        table.insert(lookUpTable[insertTag], card.guid)
-    end
-    return lookUpTable
-end
-
-local function getDummyDeckGUID(deckZone)
-    local dummyDeckGUID = nil
-    for _, obj in ipairs(deckZone.getObjects()) do
-        if obj.name == "Deck" then
-            dummyDeckGUID = obj.guid
-            break
-        end
-    end
-    return dummyDeckGUID
-end
-
-local function buildTreasureDeck(mode)
-    --[[
-    local lookUpTable = setUpLUT(treasureCards)
-    local dummyTreasureDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE))
-    if (dummyTreasureDeckGUID == nil) or (dummyTreasureDeckGUID == "") then
-        treasureCards.setPositionSmooth(Global.getTable("DECK_POSITION").TREASURE, false)
-        treasureCards.setRotationSmooth({180, 0, 0}, false)
-        treasureDeck = treasureCards
-        return
-    end
-    treasureDeck = getObjectFromGUID(dummyTreasureDeckGUID)
-    if treasureDeck.locked then
-        treasureDeck.setLock(false)
-    end
-    for type, amountTable in pairs(DECK_TREASURE) do
-        for i = 1, amountTable[mode] do
-            treasureDeck.putObject(treasureCards.takeObject({guid = lookUpTable[type][i]}))
-        end
-    end
-    for _, dummyGUID in ipairs(DUMMY_CARDS.TREASURE) do
-        destroyObject(treasureDeck.takeObject({guid = dummyGUID}))
-    end
-    --]]
-    treasureDeck = treasureCards
-end
-
-local function buildLootDeck(mode)
-    local lookUpTable = setUpLUT(lootCards)
-    local dummyLootDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").LOOT))
-    if (dummyLootDeckGUID == nil) or (dummyLootDeckGUID == "") then
-        lootCards.setPositionSmooth(Global.getTable("DECK_POSITION").LOOT, false)
-        lootCards.setRotationSmooth({180, 0, 0}, false)
-        lootDeck = lootCards
-        return
-    end
-    lootDeck = getObjectFromGUID(dummyLootDeckGUID)
-    if lootDeck.locked then
-        lootDeck.setLock(false)
-    end
-    for type, amountTable in pairs(DECK_LOOT) do
-        for i = 1, amountTable[mode] do
-            lootDeck.putObject(lootCards.takeObject({guid = lookUpTable[type][i]}))
-        end
-    end
-    for _, dummyGUID in ipairs(DUMMY_CARDS.LOOT) do
-        destroyObject(lootDeck.takeObject({guid = dummyGUID}))
-    end
-end
-
-local function buildMonsterDeck(mode)
-    --[[
-    local lookUpTable = setUpLUT(monsterCards)
-    local dummyMonsterDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER))
-    if (dummyMonsterDeckGUID == nil) or (dummyMonsterDeckGUID == "") then
-        monsterCards.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER, false)
-        monsterCards.setRotationSmooth({180, 0, 0}, false)
-        monsterDeck = monsterCards
-        return
-    end
-    monsterDeck = getObjectFromGUID(dummyMonsterDeckGUID)
-    if monsterDeck.locked then
-        monsterDeck.setLock(false)
-    end
-    for type, amountTable in pairs(DECK_MONSTER) do
-        for i = 1, amountTable[mode] do
-            monsterDeck.putObject(monsterCards.takeObject({guid = lookUpTable[type][i]}))
-        end
-    end
-    for _, dummyGUID in ipairs(DUMMY_CARDS.MONSTER) do
-        destroyObject(monsterDeck.takeObject({guid = dummyGUID}))
-    end
-    --]]
-    monsterDeck = monsterCards
-end
-
-local function buildDecks()
-    buildTreasureDeck(DECK_BUILDER_MODE.NORMAL)
-    buildLootDeck(DECK_BUILDER_MODE.NORMAL)
-    buildMonsterDeck(DECK_BUILDER_MODE.NORMAL)
-end
-
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
+DECK_BUILDER_GUID       = "69a80e"
+SETTING_UP_NOTE_GUID    = "56a44e"
 
 local function setupPlayingArea()
     -- Edited by Ediforce44
@@ -204,9 +44,11 @@ local function setupPlayingArea()
     getObjectFromGUID(roomZoneGUIDs.TWO).call("deactivateZone")
 
     local bonusSoulZones = Global.getTable("ZONE_GUID_BONUSSOUL")
-    soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.ONE).getPosition(), flip=true})
-    soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.TWO).getPosition(), flip=true})
-    soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.THREE).getPosition(), flip=true})
+    if soulDeck ~= nil then
+        soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.ONE).getPosition(), flip=true})
+        soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.TWO).getPosition(), flip=true})
+        soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.THREE).getPosition(), flip=true})
+    end
 end
 
 function onLoad()
@@ -257,9 +99,15 @@ function onStart()
     cardShuffle() --use shuffle as randomizer for the deck builder ;)
 
     Wait.frames(function()
-            buildDecks()
-            deckShuffle()
-            lootDeck.deal(3)
+            local createdDecks = getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {buildingMode = 1})
+            treasureDeck = createdDecks.TREASURE
+            lootDeck = createdDecks.LOOT
+            monsterDeck = createdDecks.MONSTER
+
+            checkAndShuffleDecks()
+            if lootDeck ~= nil then
+                lootDeck.deal(3)
+            end
             setupPlayingArea()
 
             for _, color in pairs(getSeatedPlayers()) do
@@ -341,63 +189,61 @@ function getPlayersCount()
 end
 
 function cardShuffle()
-    local index = 1
     local decksToShuffle = {}
     if monsterCards ~= nil then
-      decksToShuffle[index] = monsterCards
-      index = index + 1
+      table.insert(decksToShuffle, monsterCards)
     end
     if soulCards ~= nil then
-      decksToShuffle[index] = soulCards
-      index = index + 1
+      table.insert(decksToShuffle, soulCards)
     end
     if treasureCards ~= nil then
-      decksToShuffle[index] = treasureCards
-      index = index + 1
+      table.insert(decksToShuffle, treasureCards)
     end
     if lootCards ~= nil then
-      decksToShuffle[index] = lootCards
-      index = index + 1
+      table.insert(decksToShuffle, lootCards)
     end
     if roomCards ~= nil then
-      decksToShuffle[index] = roomCards
-      index = index + 1
+      table.insert(decksToShuffle, roomCards)
     end
 
     for i = 1, #decksToShuffle, 1 do
-        obj = decksToShuffle[i]
+        local obj = decksToShuffle[i]
         if obj ~= nil then
             obj.shuffle()
         end
     end
 end
 
-function deckShuffle()
-    local index = 1
+function checkAndShuffleDecks()
     local decksToShuffle = {}
     if monsterDeck ~= nil then
-      decksToShuffle[index] = monsterDeck
-      index = index + 1
+      table.insert(decksToShuffle, monsterDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Monster Deck!!!")
     end
     if soulDeck ~= nil then
-      decksToShuffle[index] = soulDeck
-      index = index + 1
+      table.insert(decksToShuffle, soulDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Bonus Soul Deck!!!")
     end
     if treasureDeck ~= nil then
-      decksToShuffle[index] = treasureDeck
-      index = index + 1
+      table.insert(decksToShuffle, treasureDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Treasure Deck!!!")
     end
     if lootDeck ~= nil then
-      decksToShuffle[index] = lootDeck
-      index = index + 1
+      table.insert(decksToShuffle, lootDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Loot Deck!!!")
     end
     if roomDeck ~= nil then
-      decksToShuffle[index] = roomDeck
-      index = index + 1
+      table.insert(decksToShuffle, roomDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Room Deck!!!")
     end
 
     for i = 1, #decksToShuffle, 1 do
-        obj = decksToShuffle[i]
+        local obj = decksToShuffle[i]
         if obj ~= nil then
             obj.shuffle()
         end
