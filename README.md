@@ -53,6 +53,8 @@ python json_sniffer.py FILE_NAME WORKING_MODE_1 WORKING_MODE_2 ...
 > - `tags` adds Tags to cards. 
 >   - **Indomitable** if a card has `-Indomitable-` in its description.
 >   - **Character** if the Nickname of this card is `character`
+>   - The **--Deck Builder--** Tags are added to all monster and event cards
+> - `inherit` copies all Tags from a card to the Tags of its various states. The **remove** parameter don't work with **inherit**.
 > - `remove` removes all changes that the JSON-Sniffer added to a file. If you want to remove just specific modifications you can use the specific **WORKING_MODES** as parameters behind `remove`.
 > > **For Example:** \
 > > This removes only the *isEvent* variable and the added Tags but not the *reward* table.
