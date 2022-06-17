@@ -15,6 +15,8 @@ ROOM_DECK_ZONE_GUID = ZONE_GUIDS_DECK.ROOM
 DECK_BUILDER_GUID       = "69a80e"
 SETTING_UP_NOTE_GUID    = "56a44e"
 
+ready_for_setup = false
+
 local function setupPlayingArea()
     -- Edited by Ediforce44
     -- Init Monster Zones and Monster Buttons
@@ -87,6 +89,13 @@ function shuffleOptions(array)
     return output
 end
 
+function decksBuilt(createdDecks)
+    treasureDeck = createdDecks.TREASURE
+    lootDeck = createdDecks.LOOT
+    monsterDeck = createdDecks.MONSTER
+    ready_for_setup = true
+end
+
 function onStart()
     local isAllReady = isAllPlayersSelectCharacter()
     if isAllReady == false or isAllReady == nil then
@@ -98,48 +107,52 @@ function onStart()
 
     cardShuffle() --use shuffle as randomizer for the deck builder ;)
 
-    Wait.frames(function()
-            local createdDecks = getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {buildingMode = 1})
-            treasureDeck = createdDecks.TREASURE
-            lootDeck = createdDecks.LOOT
-            monsterDeck = createdDecks.MONSTER
+    Wait.frames(
+        function()
+            getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {buildingMode = 1})
 
-            checkAndShuffleDecks()
-            if lootDeck ~= nil then
-                lootDeck.deal(3)
-            end
-            setupPlayingArea()
+            Wait.condition(
+                function()
+                    checkAndShuffleDecks()
+                    if lootDeck ~= nil then
+                        lootDeck.deal(3)
+                    end
+                    setupPlayingArea()
 
-            for _, color in pairs(getSeatedPlayers()) do
-                Global.call("deactivateCharacter", {playerColor = color})
-            end
+                    for _, color in pairs(getSeatedPlayers()) do
+                        Global.call("deactivateCharacter", {playerColor = color})
+                    end
 
-            -- INSERT other setup steps
+                    -- INSERT other setup steps
 
-            self.editButton({
-                index = 0,
-                click_function = "dummy",
-                label = "",
-                tooltip = "",
-                width = 0,
-                height = 0,
-                font_size = 0
-            })
+                    self.editButton({
+                        index = 0,
+                        click_function = "dummy",
+                        label = "",
+                        tooltip = "",
+                        width = 0,
+                        height = 0,
+                        font_size = 0
+                    })
 
-            if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
-                settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
-                destroyObject(settingUpNote)
-            end
+                    if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
+                        settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
+                        destroyObject(settingUpNote)
+                    end
 
-            Turns.enable = true
-            Turns.type = 1
-            local startPlayerColor = Global.getVar("startPlayerColor")
-            if startPlayerColor ~= "None" then
-                Turns.turn_color = startPlayerColor
-            end
+                    Turns.enable = true
+                    Turns.type = 1
+                    local startPlayerColor = Global.getVar("startPlayerColor")
+                    if startPlayerColor ~= "None" then
+                        Turns.turn_color = startPlayerColor
+                    end
 
-            self.destroy()
-        end, 1)
+                    self.destroy()
+                end,
+                function()
+                    return getObjectFromGUID("195d79").getVar("ready_for_setup")
+                end)
+        end)
 end
 
 function loadDecks()
