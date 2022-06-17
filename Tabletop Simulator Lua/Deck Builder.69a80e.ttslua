@@ -169,7 +169,7 @@ local function setUpLUT(deck)
     local lookUpTable = {}
     for _, card in pairs(deck.getObjects()) do
         local insertTag = "EMPTY"
-        if not (card.tags == {}) then
+        if not (#card.tags == 0) then
             insertTag = card.tags[1]
         end
         if lookUpTable[insertTag] == nil then
@@ -192,11 +192,35 @@ local function getDummyDeckGUID(deckZone)
 end
 
 local function buildDeck(baseDeck, cardSource, lookUpTable, tagTable)
-    for type, amount in pairs(tagTable) do
-        for i = 1, amount do
-            baseDeck.putObject(cardSource.takeObject({guid = lookUpTable[type][i]}))
+    local waitFrames = 0
+    tagTable["EMPTY"] = 200
+    if animation_on then
+        for type, amount in pairs(tagTable) do
+            if lookUpTable[type] ~= nil then
+                for i = 1, amount do
+                    if lookUpTable[type][i] == nil then
+                        break
+                    end
+                    Wait.frames(function()
+                            baseDeck.putObject(cardSource.takeObject({guid = lookUpTable[type][i]}))
+                        end, waitFrames)
+                        waitFrames = waitFrames + 3
+                end
+            end
+        end
+    else
+        for type, amount in pairs(tagTable) do
+            if lookUpTable[type] ~= nil then
+                for i = 1, amount do
+                    if lookUpTable[type][i] == nil then
+                        break
+                    end
+                    baseDeck.putObject(cardSource.takeObject({guid = lookUpTable[type][i]}))
+                end
+            end
         end
     end
+    return waitFrames
 end
 
 local function deckBuildBarrier(deckType, deck)
@@ -211,6 +235,21 @@ local function deckBuildBarrier(deckType, deck)
     end
 end
 
+local function finishTreasureDeck(treasureDeck)
+    treasureDeck.setName("Treasure Deck")
+    deckBuildBarrier("TREASURE", treasureDeck)
+end
+
+local function finishLootDeck(lootDeck)
+    lootDeck.setName("Loot Deck")
+    deckBuildBarrier("LOOT", lootDeck)
+end
+
+local function finishMonsterDeck(monsterDeck)
+    monsterDeck.setName("Monster Deck")
+    deckBuildBarrier("MONSTER", monsterDeck)
+end
+
 local function buildTreasureDeck(mode)
     local treasureDeck = nil
     local treasureZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE)
@@ -223,24 +262,27 @@ local function buildTreasureDeck(mode)
     if dummyTreasureDeckGUID == nil then
         treasureCards.setPositionSmooth(Global.getTable("DECK_POSITION").TREASURE, false)
         treasureCards.setRotationSmooth({180, 0, 0}, false)
-        treasureDeck = treasureCards
+        Wait.time(function() finishTreasureDeck(treasureCards) end, 2)
     else
         local dummyDeck = getObjectFromGUID(dummyTreasureDeckGUID)
         if dummyDeck.locked then
             dummyDeck.setLock(false)
         end
         treasureDeck = dummyDeck
+        local waitFrames = 0
         if isDeckBuilderON() then
-            buildDeck(treasureDeck, treasureCards, lookUpTable, DECK_TREASURE[mode])
+            waitFrames = buildDeck(treasureDeck, treasureCards, lookUpTable, DECK_TREASURE[mode])
         else
             treasureDeck.putObject(treasureCards)
         end
-        for _, dummyGUID in ipairs(DUMMY_CARDS.TREASURE) do
-            treasureDeck.takeObject({guid = dummyGUID, position = {46.8, 2, 12}})
-        end
+        waitFrames = waitFrames + 40
+        Wait.frames(function()
+                for _, dummyGUID in ipairs(DUMMY_CARDS.TREASURE) do
+                    treasureDeck.takeObject({guid = dummyGUID, position = {46.8, 2, 12}})
+                end
+                finishTreasureDeck(treasureDeck)
+            end, waitFrames)
     end
-    treasureDeck.setName("Treasure Deck")
-    deckBuildBarrier("TREASURE", treasureDeck)
 end
 
 local function buildLootDeck(mode)
@@ -255,24 +297,27 @@ local function buildLootDeck(mode)
     if dummyLootDeckGUID == nil then
         lootCards.setPositionSmooth(Global.getTable("DECK_POSITION").LOOT, false)
         lootCards.setRotationSmooth({180, 0, 0}, false)
-        lootDeck = lootCards
+        Wait.time(function() finishLootDeck(lootCards) end, 2)
     else
         local dummyDeck = getObjectFromGUID(dummyLootDeckGUID)
         if dummyDeck.locked then
             dummyDeck.setLock(false)
         end
         lootDeck = dummyDeck
+        local waitFrames = 0
         if isDeckBuilderON() then
-            buildDeck(lootDeck, lootCards, lookUpTable, DECK_LOOT[mode])
+            waitFrames = buildDeck(lootDeck, lootCards, lookUpTable, DECK_LOOT[mode])
         else
             lootDeck.putObject(lootCards)
         end
-        for _, dummyGUID in ipairs(DUMMY_CARDS.LOOT) do
-            lootDeck.takeObject({guid = dummyGUID, position = {46.8, 2, 7}})
-        end
+        waitFrames = waitFrames + 40
+        Wait.frames(function()
+                for _, dummyGUID in ipairs(DUMMY_CARDS.LOOT) do
+                    lootDeck.takeObject({guid = dummyGUID, position = {46.8, 2, 7}})
+                end
+                finishLootDeck(lootDeck)
+            end, waitFrames)
     end
-    lootDeck.setName("Loot Deck")
-    deckBuildBarrier("LOOT", lootDeck)
 end
 
 local function buildMonsterDeck(mode)
@@ -287,24 +332,27 @@ local function buildMonsterDeck(mode)
     if dummyMonsterDeckGUID == nil then
         monsterCards.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER, false)
         monsterCards.setRotationSmooth({180, 0, 0}, false)
-        monsterDeck = monsterCards
+        Wait.time(function() finishMonsterDeck(monsterCards) end, 2)
     else
         local dummyDeck = getObjectFromGUID(dummyMonsterDeckGUID)
         if dummyDeck.locked then
             dummyDeck.setLock(false)
         end
         monsterDeck = dummyDeck
+        local waitFrames = 0
         if isDeckBuilderON() then
-            buildDeck(monsterDeck, monsterCards, lookUpTable, DECK_MONSTER[mode])
+            waitFrames = buildDeck(monsterDeck, monsterCards, lookUpTable, DECK_MONSTER[mode])
         else
             monsterDeck.putObject(monsterCards)
         end
-        for _, dummyGUID in ipairs(DUMMY_CARDS.MONSTER) do
-            monsterDeck.takeObject({guid = dummyGUID, position = {46.8, 2, -7}})
-        end
+        waitFrames = waitFrames + 40
+        Wait.frames(function()
+                for _, dummyGUID in ipairs(DUMMY_CARDS.MONSTER) do
+                    monsterDeck.takeObject({guid = dummyGUID, position = {46.8, 2, -7}})
+                end
+                finishMonsterDeck(monsterDeck)
+            end, waitFrames)
     end
-    monsterDeck.setName("Monster Deck")
-    deckBuildBarrier("MONSTER", monsterDeck)
 end
 
 function buildDecks(params)

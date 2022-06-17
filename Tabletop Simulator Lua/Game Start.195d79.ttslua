@@ -17,9 +17,23 @@ SETTING_UP_NOTE_GUID    = "56a44e"
 
 ready_for_setup = false
 
+local function topTwoCardsAreMonster(deck)
+    local allCards = deck.getObjects()
+    if (not Global.call("findBoolInScript", {scriptString = allCards[1].lua_script, varName = "isEvent"})) and
+        (not Global.call("findBoolInScript", {scriptString = allCards[2].lua_script, varName = "isEvent"})) then
+            return true
+        end
+    return false
+end
+
 local function setupPlayingArea()
     -- Edited by Ediforce44
     -- Init Monster Zones and Monster Buttons
+    local allMonsterCards = monsterDeck.getObjects()
+    while not topTwoCardsAreMonster(monsterDeck) do
+        monsterDeck.shuffle()
+    end
+
     local monsterZoneGUIDs = Global.getTable("ZONE_GUID_MONSTER")
     getObjectFromGUID(monsterZoneGUIDs.ONE).call("activateZone")
     getObjectFromGUID(monsterZoneGUIDs.TWO).call("activateZone")
