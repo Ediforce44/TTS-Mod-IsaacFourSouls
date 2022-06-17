@@ -53,7 +53,7 @@ def translateRewards(rewardsString):
 
 def hasEventType(JSON_string):
     pattern = re.compile("(?=(event)?[_]?type\s?=\s?)(.*\n?)", re.I)
-    eventTypePattern = re.compile("[(curse)|(goodEvent)|(badEvent)|(eventGood)|(eventBad)]", re.I)
+    eventTypePattern = re.compile("\\\"(curse|goodEvent|badEvent|eventGood|eventBad)\\\"", re.I)
     m = pattern.search(JSON_string)
     if m != None:
         eventTypeString = m.group(0)
@@ -144,9 +144,10 @@ def removeTag(tagToRemove, JSON_data):
     except:
         return
     else:
-        tags.remove(tagToRemove)
-        if not tags:
-            del JSON_data["Tags"]
+        if tagToRemove in tags:
+            tags.remove(tagToRemove)
+            if not tags:
+                del JSON_data["Tags"]
 
 def matchesMonsterPattern(nickname):
     pattern = re.compile("(.*)monster(.*)", re.I)
