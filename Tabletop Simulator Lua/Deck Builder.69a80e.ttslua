@@ -1,0 +1,366 @@
+
+local ACTIVE_BUTTON_INDEX = 1
+local ANIMATION_BUTTON_INDEX = 2
+
+local animation_on = false
+
+function onLoad(saved_data)
+    self.createButton({
+      click_function = "switchBuilderMode",
+      function_owner = self,
+      label          = "",
+      position       = {1.5, 1, -0.12},
+      width          = 300,
+      height         = 300,
+      color          = {1, 1, 1},
+    })
+    self.createButton({
+      click_function = "switchAnimationMode",
+      function_owner = self,
+      label          = "",
+      position       = {1.5, 1, 0.6},
+      width          = 300,
+      height         = 300,
+      color          = {1, 1, 1},
+    })
+
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        if loaded_data[1] == true then
+            switchBuilderMode()
+        end
+        if loaded_data[2] == true then
+            switchAnimationMode()
+        end
+    end
+end
+
+function onSave()
+    return JSON.encode({isDeckBuilderON(), animation_on})
+end
+
+function isDeckBuilderON()
+    local activeButton = self.getButtons()[ACTIVE_BUTTON_INDEX]
+    return (activeButton.label ~= "")
+end
+
+function switchBuilderMode()
+    local newLabel = ""
+    if not isDeckBuilderON() then
+        newLabel = "✓"
+    end
+    self.editButton({index=ACTIVE_BUTTON_INDEX-1, label=newLabel, font_color={0, 0, 0}, font_size=200})
+end
+
+function switchAnimationMode()
+    local newLabel = ""
+    if not animation_on then
+        newLabel = "✓"
+    end
+    self.editButton({index=ANIMATION_BUTTON_INDEX-1, label=newLabel, font_color={0, 0, 0}, font_size=200})
+    animation_on = not animation_on
+end
+
+------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------      Deck Builder        --------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+DECK_BUILDER_MODE = {
+    NORMAL  = 1,
+    DRAFT   = 2
+}
+
+local DUMMY_CARDS = {
+    TREASURE = {"20478b", "de6fa6"},
+    LOOT = {"fc7f84", "d8bf8b"},
+    MONSTER = {"6f7d81", "ad45a5"}
+}
+
+local DECK_TREASURE = {
+    {
+        T_ACTIVE  = 40,
+        T_PASSIVE = 44,
+        T_PAID    = 10,
+        T_ONE_USE = 5,
+        T_SOUL    = 1
+    },
+    {
+        T_ACTIVE  = 40,
+        T_PASSIVE = 44,
+        T_PAID    = 10,
+        T_ONE_USE = 5,
+        T_SOUL    = 1
+    }
+}
+
+local DECK_LOOT = {
+    {
+        L_TAROT_MISC    = 23,
+        L_TRINKET       = 11,
+        L_PILL          = 3,
+        L_RUNE          = 3,
+        L_BUTTER_BEAN   = 5,
+        L_BOMB          = 6,
+        L_BATTERY       = 6,
+        L_DICE_SHARD    = 3,
+        L_SOUL_HEART    = 2,
+        L_LOST_SOUL     = 1,
+        L_NICKEL        = 6,
+        L_FOUR_CENT     = 12,
+        L_THREE_CENT    = 11,
+        L_TWO_CENT      = 6,
+        L_ONE_CENT      = 2
+    },
+    {
+        L_TAROT_MISC    = 22,
+        L_TRINKET       = 10,
+        L_PILL          = 2,
+        L_RUNE          = 3,
+        L_BUTTER_BEAN   = 5,
+        L_BOMB          = 5,
+        L_BATTERY       = 5,
+        L_DICE_SHARD    = 3,
+        L_SOUL_HEART    = 2,
+        L_LOST_SOUL     = 1,
+        L_NICKEL        = 5,
+        L_FOUR_CENT     = 10,
+        L_THREE_CENT    = 10,
+        L_TWO_CENT      = 5,
+        L_ONE_CENT      = 2
+    }
+}
+
+local DECK_MONSTER = {
+    {
+        M_EPIC        = 1,
+        M_BOSS        = 30,
+        M_BASIC       = 30,
+        M_CURSED      = 9,
+        M_HOLY_CHARMED= 9,
+        M_GOOD        = 8,
+        M_BAD         = 8,
+        M_CURSE       = 5
+    },
+    {
+        M_EPIC        = 1,
+        M_BOSS        = 30,
+        M_BASIC       = 30,
+        M_CURSED      = 9,
+        M_HOLY_CHARMED= 9,
+        M_GOOD        = 8,
+        M_BAD         = 8,
+        M_CURSE       = 5
+    }
+}
+
+local B_TOTAL_DECK_COUNT = 3
+local B_waitingDecks = {}
+
+local function getDeckFromTable(name)
+    for _, obj in ipairs(getObjectsWithTag("Deck")) do
+        if obj.getName() == name then
+            return obj
+        end
+    end
+    return nil
+end
+
+local function setUpLUT(deck)
+    local lookUpTable = {}
+    for _, card in pairs(deck.getObjects()) do
+        local insertTag = "EMPTY"
+        if not (#card.tags == 0) then
+            insertTag = card.tags[1]
+        end
+        if lookUpTable[insertTag] == nil then
+            lookUpTable[insertTag] = {}
+        end
+        table.insert(lookUpTable[insertTag], card.guid)
+    end
+    return lookUpTable
+end
+
+local function getDummyDeckGUID(deckZone)
+    local dummyDeckGUID = nil
+    for _, obj in ipairs(deckZone.getObjects()) do
+        if obj.name == "Deck" then
+            dummyDeckGUID = obj.guid
+            break
+        end
+    end
+    return dummyDeckGUID
+end
+
+local function buildDeck(baseDeck, cardSource, lookUpTable, tagTable)
+    local waitFrames = 0
+    tagTable["EMPTY"] = 200
+    if animation_on then
+        for type, amount in pairs(tagTable) do
+            if lookUpTable[type] ~= nil then
+                for i = 1, amount do
+                    if lookUpTable[type][i] == nil then
+                        break
+                    end
+                    Wait.frames(function()
+                            baseDeck.putObject(cardSource.takeObject({guid = lookUpTable[type][i]}))
+                        end, waitFrames)
+                        waitFrames = waitFrames + 3
+                end
+            end
+        end
+    else
+        for type, amount in pairs(tagTable) do
+            if lookUpTable[type] ~= nil then
+                for i = 1, amount do
+                    if lookUpTable[type][i] == nil then
+                        break
+                    end
+                    baseDeck.putObject(cardSource.takeObject({guid = lookUpTable[type][i]}))
+                end
+            end
+        end
+    end
+    return waitFrames
+end
+
+local function deckBuildBarrier(deckType, deck)
+    B_waitingDecks[deckType] = deck
+    local waitCount = 0
+    for _, _ in pairs(B_waitingDecks) do
+        waitCount = waitCount + 1
+    end
+    if waitCount >= B_TOTAL_DECK_COUNT then
+        getObjectFromGUID("195d79").call("decksBuilt", B_waitingDecks)
+        B_waitingDecks = {}
+    end
+end
+
+local function finishTreasureDeck(treasureDeck)
+    treasureDeck.setName("Treasure Deck")
+    deckBuildBarrier("TREASURE", treasureDeck)
+end
+
+local function finishLootDeck(lootDeck)
+    lootDeck.setName("Loot Deck")
+    deckBuildBarrier("LOOT", lootDeck)
+end
+
+local function finishMonsterDeck(monsterDeck)
+    monsterDeck.setName("Monster Deck")
+    deckBuildBarrier("MONSTER", monsterDeck)
+end
+
+local function buildTreasureDeck(mode)
+    local treasureDeck = nil
+    local treasureZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE)
+    local treasureCards = getDeckFromTable("TREASURE_CARDS")
+    if treasureCards == nil then
+        return nil
+    end
+    local lookUpTable = setUpLUT(treasureCards)
+    local dummyTreasureDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE))
+    if dummyTreasureDeckGUID == nil then
+        treasureCards.setPositionSmooth(Global.getTable("DECK_POSITION").TREASURE, false)
+        treasureCards.setRotationSmooth({180, 0, 0}, false)
+        Wait.time(function() finishTreasureDeck(treasureCards) end, 2)
+    else
+        local dummyDeck = getObjectFromGUID(dummyTreasureDeckGUID)
+        if dummyDeck.locked then
+            dummyDeck.setLock(false)
+        end
+        treasureDeck = dummyDeck
+        local waitFrames = 0
+        if isDeckBuilderON() then
+            waitFrames = buildDeck(treasureDeck, treasureCards, lookUpTable, DECK_TREASURE[mode])
+        else
+            treasureDeck.putObject(treasureCards)
+        end
+        waitFrames = waitFrames + 40
+        Wait.frames(function()
+                for _, dummyGUID in ipairs(DUMMY_CARDS.TREASURE) do
+                    treasureDeck.takeObject({guid = dummyGUID, position = {46.8, 2, 12}})
+                end
+                finishTreasureDeck(treasureDeck)
+            end, waitFrames)
+    end
+end
+
+local function buildLootDeck(mode)
+    local lootDeck = nil
+    local lootZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").LOOT)
+    local lootCards = getDeckFromTable("LOOT_CARDS")
+    if lootCards == nil then
+        return nil
+    end
+    local lookUpTable = setUpLUT(lootCards)
+    local dummyLootDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").LOOT))
+    if dummyLootDeckGUID == nil then
+        lootCards.setPositionSmooth(Global.getTable("DECK_POSITION").LOOT, false)
+        lootCards.setRotationSmooth({180, 0, 0}, false)
+        Wait.time(function() finishLootDeck(lootCards) end, 2)
+    else
+        local dummyDeck = getObjectFromGUID(dummyLootDeckGUID)
+        if dummyDeck.locked then
+            dummyDeck.setLock(false)
+        end
+        lootDeck = dummyDeck
+        local waitFrames = 0
+        if isDeckBuilderON() then
+            waitFrames = buildDeck(lootDeck, lootCards, lookUpTable, DECK_LOOT[mode])
+        else
+            lootDeck.putObject(lootCards)
+        end
+        waitFrames = waitFrames + 40
+        Wait.frames(function()
+                for _, dummyGUID in ipairs(DUMMY_CARDS.LOOT) do
+                    lootDeck.takeObject({guid = dummyGUID, position = {46.8, 2, 7}})
+                end
+                finishLootDeck(lootDeck)
+            end, waitFrames)
+    end
+end
+
+local function buildMonsterDeck(mode)
+    local monsterDeck = nil
+    local monsterZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
+    local monsterCards = getDeckFromTable("MONSTER_CARDS")
+    if monsterCards == nil then
+        return nil
+    end
+    local lookUpTable = setUpLUT(monsterCards)
+    local dummyMonsterDeckGUID = getDummyDeckGUID(monsterZone)
+    if dummyMonsterDeckGUID == nil then
+        monsterCards.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER, false)
+        monsterCards.setRotationSmooth({180, 0, 0}, false)
+        Wait.time(function() finishMonsterDeck(monsterCards) end, 2)
+    else
+        local dummyDeck = getObjectFromGUID(dummyMonsterDeckGUID)
+        if dummyDeck.locked then
+            dummyDeck.setLock(false)
+        end
+        monsterDeck = dummyDeck
+        local waitFrames = 0
+        if isDeckBuilderON() then
+            waitFrames = buildDeck(monsterDeck, monsterCards, lookUpTable, DECK_MONSTER[mode])
+        else
+            monsterDeck.putObject(monsterCards)
+        end
+        waitFrames = waitFrames + 40
+        Wait.frames(function()
+                for _, dummyGUID in ipairs(DUMMY_CARDS.MONSTER) do
+                    monsterDeck.takeObject({guid = dummyGUID, position = {46.8, 2, -7}})
+                end
+                finishMonsterDeck(monsterDeck)
+            end, waitFrames)
+    end
+end
+
+function buildDecks(params)
+    local buildingMode = 1
+    if params.buildingMode ~= nil then
+        buildingMode = params.buildingMode
+    end
+    buildTreasureDeck(buildingMode)
+    buildLootDeck(buildingMode)
+    buildMonsterDeck(buildingMode)
+end

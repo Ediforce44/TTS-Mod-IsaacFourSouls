@@ -32,6 +32,11 @@ local function setPositionTables()
     DISCARD_PILE_POSITION.TREASURE = getObjectFromGUID(ZONE_GUID_DISCARD.TREASURE).getPosition():setAt('y', 5)
     DISCARD_PILE_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DISCARD.LOOT).getPosition():setAt('y', 5)
     DISCARD_PILE_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DISCARD.MONSTER).getPosition():setAt('y', 5)
+
+    DECK_POSITION.TREASURE = getObjectFromGUID(ZONE_GUID_DECK.TREASURE).getPosition():setAt('y', 5)
+    DECK_POSITION.ROOM = getObjectFromGUID(ZONE_GUID_DECK.ROOM).getPosition():setAt('y', 5)
+    DECK_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DECK.LOOT).getPosition():setAt('y', 5)
+    DECK_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DECK.MONSTER).getPosition():setAt('y', 5)
 end
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -46,7 +51,7 @@ function onLoad(saved_data)         --EbyE44
             activePlayerColor = "Red"
         end
         if loaded_data[2] then
-            startPlayerColor = loaded_data[2]
+            startPlayerColor = setNewStartPlayer({playerColor = loaded_data[2]})
         end
         if loaded_data[3] then
             automaticRewarding.Yellow = loaded_data[3].Yellow and true
@@ -357,8 +362,16 @@ COUNTER_BAGS_GUID = {
     POOP = "9977a0"
 }
 
+--Initialised in onLoad
 DISCARD_PILE_POSITION = {
     TREASURE = {},
+    LOOT = {},
+    MONSTER = {}
+}
+
+DECK_POSITION = {
+    TREASURE = {},
+    ROOM = {},
     LOOT = {},
     MONSTER = {}
 }
@@ -463,14 +476,32 @@ end
 
 --Thank you Bone White in discord for this <3       --Edited by Ediforce44
 function findIntInScript(params)
-    if params.scriptString == nil or params.varName then
+    if params.scriptString == nil or params.varName == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'findIntInScript()'.")
         return nil
     end
-    for line in string.gmatch(scriptString,"[^\r\n]+") do -- for each line in the script
-        if string.sub(line,1,#varName) == varName then -- if the beginning of the line matches var
-            local value = string.match(line,"%d+",#varName) -- get the first number listed in that line after the var name
+    for line in string.gmatch(params.scriptString,"[^\r\n]+") do -- for each line in the script
+        if string.sub(line,1,#params.varName) == params.varName then -- if the beginning of the line matches var
+            local value = string.match(line,"%d+",#params.varName) -- get the first number listed in that line after the var name
             return tonumber(value)
+        end
+    end
+    return nil
+end
+
+function findBoolInScript(params)
+    if params.scriptString == nil or params.varName == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'findBoolInScript()'.")
+        return nil
+    end
+    for line in string.gmatch(params.scriptString,"[^\r\n]+") do -- for each line in the script
+        if string.sub(line,1,#params.varName) == params.varName then -- if the beginning of the line matches var
+            local value = string.match(line,"true",#params.varName)
+            if value == "true" then
+                return true
+            else
+                return false
+            end
         end
     end
     return nil

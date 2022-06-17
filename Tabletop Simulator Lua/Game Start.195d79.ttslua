@@ -12,7 +12,60 @@ LOOT_DECK_ZONE_GUID = ZONE_GUIDS_DECK.LOOT
 SOUL_DECK_ZONE_GUID = ZONE_GUIDS_DECK.BONUS_SOUL
 ROOM_DECK_ZONE_GUID = ZONE_GUIDS_DECK.ROOM
 
-SETTING_UP_NOTE_GUID = "56a44e"
+DECK_BUILDER_GUID       = "69a80e"
+SETTING_UP_NOTE_GUID    = "56a44e"
+
+ready_for_setup = false
+
+local function topTwoCardsAreMonster(deck)
+    local allCards = deck.getObjects()
+    if (not Global.call("findBoolInScript", {scriptString = allCards[1].lua_script, varName = "isEvent"})) and
+        (not Global.call("findBoolInScript", {scriptString = allCards[2].lua_script, varName = "isEvent"})) then
+            return true
+        end
+    return false
+end
+
+local function setupPlayingArea()
+    -- Edited by Ediforce44
+    -- Init Monster Zones and Monster Buttons
+    local allMonsterCards = monsterDeck.getObjects()
+    while not topTwoCardsAreMonster(monsterDeck) do
+        monsterDeck.shuffle()
+    end
+
+    local monsterZoneGUIDs = Global.getTable("ZONE_GUID_MONSTER")
+    getObjectFromGUID(monsterZoneGUIDs.ONE).call("activateZone")
+    getObjectFromGUID(monsterZoneGUIDs.TWO).call("activateZone")
+    getObjectFromGUID(monsterZoneGUIDs.THREE).call("deactivateZone")
+    getObjectFromGUID(monsterZoneGUIDs.FOUR).call("deactivateZone")
+    getObjectFromGUID(monsterZoneGUIDs.FIVE).call("deactivateZone")
+    getObjectFromGUID(monsterZoneGUIDs.SIX).call("deactivateZone")
+    getObjectFromGUID(monsterZoneGUIDs.SEVEN).call("deactivateZone")
+    getObjectFromGUID(MONSTER_DECK_ZONE_GUID).call("activateChooseButton")
+
+    -- Init Shop Zones and Shop Buttons
+    local shopZoneGUIDs = Global.getTable("ZONE_GUID_SHOP")
+    getObjectFromGUID(shopZoneGUIDs.ONE).call("activateZone")
+    getObjectFromGUID(shopZoneGUIDs.TWO).call("activateZone")
+    getObjectFromGUID(shopZoneGUIDs.THREE).call("deactivateZone")
+    getObjectFromGUID(shopZoneGUIDs.FOUR).call("deactivateZone")
+    getObjectFromGUID(shopZoneGUIDs.FIVE).call("deactivateZone")
+    getObjectFromGUID(shopZoneGUIDs.SIX).call("deactivateZone")
+    getObjectFromGUID(TREASURE_DECK_ZONE_GUID).call("activateShopButton")
+
+    -- Init Room Zones and Room Buttons
+    local roomZoneGUIDs = Global.getTable("ZONE_GUID_ROOM")
+    getObjectFromGUID(roomZoneGUIDs.ONE).call("activateZone")
+    getObjectFromGUID(roomZoneGUIDs.TWO).call("deactivateZone")
+
+    local bonusSoulZones = Global.getTable("ZONE_GUID_BONUSSOUL")
+    if soulDeck ~= nil then
+        soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.ONE).getPosition(), flip=true})
+        soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.TWO).getPosition(), flip=true})
+        soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.THREE).getPosition(), flip=true})
+    end
+end
 
 function onLoad()
     self.createButton({
@@ -50,6 +103,13 @@ function shuffleOptions(array)
     return output
 end
 
+function decksBuilt(createdDecks)
+    treasureDeck = createdDecks.TREASURE
+    lootDeck = createdDecks.LOOT
+    monsterDeck = createdDecks.MONSTER
+    ready_for_setup = true
+end
+
 function onStart()
     local isAllReady = isAllPlayersSelectCharacter()
     if isAllReady == false or isAllReady == nil then
@@ -57,88 +117,77 @@ function onStart()
         return
     end
 
-    loadDecksFromZones()
-    deckShuffle()
+    loadDecks()
 
-    -- Edited by Ediforce44
-    -- Init Monster Zones and Monster Buttons
-    local monsterZoneGUIDs = Global.getTable("ZONE_GUID_MONSTER")
-    getObjectFromGUID(monsterZoneGUIDs.ONE).call("activateZone")
-    getObjectFromGUID(monsterZoneGUIDs.TWO).call("activateZone")
-    getObjectFromGUID(monsterZoneGUIDs.THREE).call("deactivateZone")
-    getObjectFromGUID(monsterZoneGUIDs.FOUR).call("deactivateZone")
-    getObjectFromGUID(monsterZoneGUIDs.FIVE).call("deactivateZone")
-    getObjectFromGUID(monsterZoneGUIDs.SIX).call("deactivateZone")
-    getObjectFromGUID(monsterZoneGUIDs.SEVEN).call("deactivateZone")
-    getObjectFromGUID(MONSTER_DECK_ZONE_GUID).call("activateChooseButton")
+    cardShuffle() --use shuffle as randomizer for the deck builder ;)
 
-    -- Init Shop Zones and Shop Buttons
-    local shopZoneGUIDs = Global.getTable("ZONE_GUID_SHOP")
-    getObjectFromGUID(shopZoneGUIDs.ONE).call("activateZone")
-    getObjectFromGUID(shopZoneGUIDs.TWO).call("activateZone")
-    getObjectFromGUID(shopZoneGUIDs.THREE).call("deactivateZone")
-    getObjectFromGUID(shopZoneGUIDs.FOUR).call("deactivateZone")
-    getObjectFromGUID(shopZoneGUIDs.FIVE).call("deactivateZone")
-    getObjectFromGUID(shopZoneGUIDs.SIX).call("deactivateZone")
-    getObjectFromGUID(TREASURE_DECK_ZONE_GUID).call("activateShopButton")
+    Wait.frames(
+        function()
+            getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {buildingMode = 1})
 
-    -- Init Room Zones and Room Buttons
-    local roomZoneGUIDs = Global.getTable("ZONE_GUID_ROOM")
-    getObjectFromGUID(roomZoneGUIDs.ONE).call("activateZone")
-    getObjectFromGUID(roomZoneGUIDs.TWO).call("deactivateZone")
+            Wait.condition(
+                function()
+                    checkAndShuffleDecks()
+                    if lootDeck ~= nil then
+                        lootDeck.deal(3)
+                    end
+                    setupPlayingArea()
 
-    local bonusSoulZones = Global.getTable("ZONE_GUID_BONUSSOUL")
-    soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.ONE).getPosition(), flip=true})
-    soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.TWO).getPosition(), flip=true})
-    soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.THREE).getPosition(), flip=true})
+                    for _, color in pairs(getSeatedPlayers()) do
+                        Global.call("deactivateCharacter", {playerColor = color})
+                    end
 
-    lootDeck.deal(3)
+                    -- INSERT other setup steps
 
-    if happenDeck ~= nil then
-        monsterDeck.putObject(happenDeck)
-        happenDeck.setPosition({30.74, 2.04, 0.09})
-    end
+                    self.editButton({
+                        index = 0,
+                        click_function = "dummy",
+                        label = "",
+                        tooltip = "",
+                        width = 0,
+                        height = 0,
+                        font_size = 0
+                    })
 
-    monsterDeck.shuffle()
+                    if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
+                        settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
+                        destroyObject(settingUpNote)
+                    end
 
-    for _, color in pairs(getSeatedPlayers()) do
-        Global.call("deactivateCharacter", {playerColor = color})
-    end
+                    Turns.enable = true
+                    Turns.type = 1
+                    local startPlayerColor = Global.getVar("startPlayerColor")
+                    if startPlayerColor ~= "None" then
+                        Turns.turn_color = startPlayerColor
+                    end
 
-    -- INSERT other setup steps
-
-    self.editButton({
-        index = 0,
-        click_function = "dummy",
-        label = "",
-        tooltip = "",
-        width = 0,
-        height = 0,
-        font_size = 0
-    })
-
-    if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
-        settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
-        destroyObject(settingUpNote)
-    end
-
-    Turns.enable = true
-    Turns.type = 1
-    local startPlayerColor = Global.getVar("startPlayerColor")
-    if startPlayerColor ~= "None" then
-        Turns.turn_color = startPlayerColor
-    end
-
-    self.destroy()
+                    self.destroy()
+                end,
+                function()
+                    return getObjectFromGUID("195d79").getVar("ready_for_setup")
+                end)
+        end)
 end
 
-function loadDecksFromZones()
-  monsterDeck = Global.call("getDeckFromZone", {zoneGUID = MONSTER_DECK_ZONE_GUID})
-  happenDeck = Global.call("getDeckFromZone", {zoneGUID = HAPPEN_DECK_ZONE_GUID})
-  shopDeck = Global.call("getDeckFromZone", {zoneGUID = TREASURE_DECK_ZONE_GUID})
-  lootDeck = Global.call("getDeckFromZone", {zoneGUID = LOOT_DECK_ZONE_GUID})
-  soulDeck = Global.call("getDeckFromZone", {zoneGUID = SOUL_DECK_ZONE_GUID})
-  roomDeck = Global.call("getDeckFromZone", {zoneGUID = ROOM_DECK_ZONE_GUID})
+function loadDecks()
+    for _, obj in ipairs(getObjectsWithTag("Deck")) do
+        if obj.getName() == "LOOT_CARDS" then
+            lootCards = obj
+            lootDeck = nil
+        elseif obj.getName() == "TREASURE_CARDS" then
+            treasureCards = obj
+            treasureDeck = nil
+        elseif obj.getName() == "MONSTER_CARDS" then
+            monsterCards = obj
+            monsterDeck = nil
+        elseif obj.getName() == "ROOM_CARDS" then
+            roomCards = obj
+            roomDeck = obj
+        elseif obj.getName() == "BONUS_SOUL_CARDS" then
+            soulCards = obj
+            soulDeck = obj
+        end
+    end
 end
 
 function isAllPlayersSelectCharacter()
@@ -166,36 +215,62 @@ function getPlayersCount()
   return counter
 end
 
-function deckShuffle()
-    local index = 1
+function cardShuffle()
     local decksToShuffle = {}
-    if monsterDeck ~= nil then
-      decksToShuffle[index] = monsterDeck
-      index = index + 1
+    if monsterCards ~= nil then
+      table.insert(decksToShuffle, monsterCards)
     end
-    if happenDeck ~= nil then
-      decksToShuffle[index] = happenDeck
-      index = index + 1
+    if soulCards ~= nil then
+      table.insert(decksToShuffle, soulCards)
     end
-    if soulDeck ~= nil then
-      decksToShuffle[index] = soulDeck
-      index = index + 1
+    if treasureCards ~= nil then
+      table.insert(decksToShuffle, treasureCards)
     end
-    if shopDeck ~= nil then
-      decksToShuffle[index] = shopDeck
-      index = index + 1
+    if lootCards ~= nil then
+      table.insert(decksToShuffle, lootCards)
     end
-    if lootDeck ~= nil then
-      decksToShuffle[index] = lootDeck
-      index = index + 1
-    end
-    if roomDeck ~= nil then
-      decksToShuffle[index] = roomDeck
-      index = index + 1
+    if roomCards ~= nil then
+      table.insert(decksToShuffle, roomCards)
     end
 
     for i = 1, #decksToShuffle, 1 do
-        obj = decksToShuffle[i]
+        local obj = decksToShuffle[i]
+        if obj ~= nil then
+            obj.shuffle()
+        end
+    end
+end
+
+function checkAndShuffleDecks()
+    local decksToShuffle = {}
+    if monsterDeck ~= nil then
+      table.insert(decksToShuffle, monsterDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Monster Deck!!!")
+    end
+    if soulDeck ~= nil then
+      table.insert(decksToShuffle, soulDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Bonus Soul Deck!!!")
+    end
+    if treasureDeck ~= nil then
+      table.insert(decksToShuffle, treasureDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Treasure Deck!!!")
+    end
+    if lootDeck ~= nil then
+      table.insert(decksToShuffle, lootDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Loot Deck!!!")
+    end
+    if roomDeck ~= nil then
+      table.insert(decksToShuffle, roomDeck)
+    else
+      printToAll("[fdd835][WARNING][-] Can't find the Room Deck!!!")
+    end
+
+    for i = 1, #decksToShuffle, 1 do
+        local obj = decksToShuffle[i]
         if obj ~= nil then
             obj.shuffle()
         end

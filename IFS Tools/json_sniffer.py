@@ -53,7 +53,7 @@ def translateRewards(rewardsString):
 
 def hasEventType(JSON_string):
     pattern = re.compile("(?=(event)?[_]?type\s?=\s?)(.*\n?)", re.I)
-    eventTypePattern = re.compile("[(curse)|(goodEvent)|(badEvent)|(eventGood)|(eventBad)]", re.I)
+    eventTypePattern = re.compile("\\\"(curse|goodEvent|badEvent|eventGood|eventBad)\\\"", re.I)
     m = pattern.search(JSON_string)
     if m != None:
         eventTypeString = m.group(0)
@@ -84,6 +84,38 @@ def isIndomitable(description):
     pattern = re.compile("(.)*[-]\s?Indomitable\s?[-]?(.)*", re.I | re.DOTALL)
     return pattern.match(description)
 
+def isEpicBossMonster(luaScript):
+    pattern = re.compile("(.)*souls\s?=\s?2(.)*", re.I | re.DOTALL)
+    return pattern.match(luaScript)
+
+def isBossMonster(luaScript):
+    pattern = re.compile("(.)*souls\s?=\s?1(.)*", re.I | re.DOTALL)
+    return pattern.match(luaScript)
+
+def isHolyMonster(name):
+    pattern = re.compile("(.)*holy(.)*", re.I | re.DOTALL)
+    return pattern.match(name)
+
+def isCharmedMonster(name):
+    pattern = re.compile("(.)*charmed(.)*", re.I | re.DOTALL)
+    return pattern.match(name)
+
+def isCursedMonster(name):
+    pattern = re.compile("(.)*cursed(.)*", re.I | re.DOTALL)
+    return pattern.match(name)
+
+def isGoodEvent(luaScript):
+    pattern = re.compile("(.)*type\s?=\s?\"eventGood(.)*", re.I | re.DOTALL)
+    return pattern.match(luaScript)
+
+def isBadEvent(luaScript):
+    pattern = re.compile("(.)*type\s?=\s?\"eventBad(.)*", re.I | re.DOTALL)
+    return pattern.match(luaScript)
+
+def isCurse(luaScript):
+    pattern = re.compile("(.)*type\s?=\s?\"curse(.)*", re.I | re.DOTALL)
+    return pattern.match(luaScript)
+
 # WARNING: No Prefix resistance. 
 #   - Returns also True if JSON_data has a Tag which containes tag as a prefix
 def tagExist(refTag, JSON_data):
@@ -112,9 +144,10 @@ def removeTag(tagToRemove, JSON_data):
     except:
         return
     else:
-        tags.remove(tagToRemove)
-        if not tags:
-            del JSON_data["Tags"]
+        if tagToRemove in tags:
+            tags.remove(tagToRemove)
+            if not tags:
+                del JSON_data["Tags"]
 
 def matchesMonsterPattern(nickname):
     pattern = re.compile("(.*)monster(.*)", re.I)
@@ -159,9 +192,48 @@ def handleIndomitableTag(card):
         elif not tagExist("Indomitable", card):
             addTag("Indomitable", card)
     if "States" in card:
+        for stateClass in card["States"]:
+            altState = card["States"][stateClass]
+            handleIndomitableTag(altState)
+
+def handleDeckBuilderMonsterTags(card):
+    tag = None
+    if isEpicBossMonster(card["LuaScript"]):
+        tag = "M_EPIC"
+    elif isBossMonster(card["LuaScript"]):
+        tag = "M_BOSS"
+    elif isHolyMonster(card["Nickname"]) or isCharmedMonster(card["Nickname"]):
+        tag = "M_HOLY_CHARMED"
+    elif isCursedMonster(card["Nickname"]):
+        tag = "M_CURSED"
+    elif isGoodEvent(card["LuaScript"]):
+        tag = "M_GOOD"
+    elif isBadEvent(card["LuaScript"]):
+        tag = "M_BAD"
+    elif isCurse(card["LuaScript"]):
+        tag = "M_CURSE"
+    else:
+        tag = "M_BASIC"
+
+    if tag != None:
+        if remove:
+            removeTag(tag, card)
+        elif not tagExist(tag, card):
+            addTag(tag, card)
+    if "States" in card:
+        for stateClass in card["States"]:
+            altState = card["States"][stateClass]
+            handleDeckBuilderMonsterTags(altState)
+
+def inheritTags(card):
+    try:
+        tags = card["Tags"]
+    except:
+        return
+    else:
+        if "States" in card:
             for stateClass in card["States"]:
-                altState = card["States"][stateClass]
-                handleIndomitableTag(altState)
+                card["States"][stateClass]["Tags"] = tags
 
 def handleCharacterTag(card):
     if card["Description"] == "character":
@@ -170,9 +242,9 @@ def handleCharacterTag(card):
         elif not tagExist("Character", card):
             addTag("Character", card)
     if "States" in card:
-            for stateClass in card["States"]:
-                altState = card["States"][stateClass]
-                handleCharacterTag(altState)
+        for stateClass in card["States"]:
+            altState = card["States"][stateClass]
+            handleCharacterTag(altState)
 
 def handleBag(bag):
     for content in bag["ContainedObjects"]:
@@ -183,6 +255,8 @@ def handleBag(bag):
                 handleCharacterTag(content)
             if mark_events:
                 handleEventVar(content)
+            if inherit:
+                inheritTags(content)
         elif contentType == "Deck":
             if rewards:
                 if (content["Nickname"] == "") or matchesMonsterPattern(content["Nickname"]):
@@ -194,6 +268,8 @@ def handleBag(bag):
                     handleCharacterTag(card)
                 if mark_events:
                     handleEventVar(card)
+                if inherit:
+                    inheritTags(card)
         elif matchesBag(content):
             handleBag(content)
 
@@ -217,6 +293,8 @@ def main(argv, argc):
     tags = False
     global mark_events
     mark_events = False
+    global inherit
+    inherit = False
 
     global remove
     remove = False
@@ -237,6 +315,10 @@ def main(argv, argc):
                 mark_events = True
                 if removeAll:
                     removeAll = False
+            elif mode == "inherit":
+                inherit = True
+                if removeAll:
+                    removeAll = False
             elif mode == "remove":
                 remove = True
                 removeAll = True
@@ -246,34 +328,44 @@ def main(argv, argc):
             rewards = True
             tags = True
             mark_events = True
+            inherit = True
     else:
         rewards = True
         tags = True
         mark_events = True
+        inherit = True
 
     JSON_data = json.load(JSON_file)
 
     # Original    
     for val in JSON_data["ObjectStates"]:
         if rewards:
-            if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
+            if val["Name"] == "Deck" and val["Nickname"] == "MONSTER_CARDS":
                 for card in val["ContainedObjects"]:
                     handleRewards(card)
         
         if tags:
-            if val["Name"] == "Deck" and val["Nickname"] == "Monsters cards":
+            if val["Name"] == "Deck" and val["Nickname"] == "MONSTER_CARDS":
                 for card in val["ContainedObjects"]:
                     handleIndomitableTag(card)
+                    handleDeckBuilderMonsterTags(card)
             if val["Name"] == "Custom_Model_Bag" and val["Description"] == "character-pack":
                 for card in val["ContainedObjects"]:
                     handleCharacterTag(card)
+
+        if inherit:
+            if val["Name"] == "Deck":
+                for card in val["ContainedObjects"]:
+                    inheritTags(card)
+            if val["Name"] == "Card":
+                inheritTags(val)
 
         if mark_events:
             if val["Name"] == "Deck" and val["Nickname"] == "Happening cards":
                 for card in val["ContainedObjects"]:
                     handleEventVar(card)
 
-            elif val["Name"] == "Deck" and val["Nickname"] == "Monsters crads":
+            elif val["Name"] == "Deck" and val["Nickname"] == "MONSTER_CARDS":
                 for card in val["ContainedObjects"]:
                     handleEventVar(card)
     
