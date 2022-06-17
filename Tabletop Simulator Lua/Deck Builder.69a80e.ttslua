@@ -41,7 +41,7 @@ end
 
 function isDeckBuilderON()
     local activeButton = self.getButtons()[ACTIVE_BUTTON_INDEX]
-    return activeButton.label ~= ""
+    return (activeButton.label ~= "")
 end
 
 function switchBuilderMode()
@@ -71,46 +71,86 @@ local DUMMY_CARDS = {
     MONSTER = {"6f7d81", "ad45a5"}
 }
 
-local DECK_TREASURE = {
-    T_ACTIVE  = {40, 40},
-    T_PASSIVE = {44, 44},
-    T_PAID    = {10, 10},
-    T_ONE_USE = {5, 5},
-    T_SOUL    = {1, 1}
-}
-
-local DECK_LOOT = {
-    L_TAROT_MISC    = {23, 22},
-    L_TRINKET       = {11, 10},
-    L_PILL          = {3, 2},
-    L_RUNE          = {3, 3},
-    L_BUTTER_BEAN   = {5, 5},
-    L_BOMB          = {6, 5},
-    L_BATTERY       = {6, 5},
-    L_DICE_SHARD    = {3, 3},
-    L_SOUL_HEART    = {2, 2},
-    L_LOST_SOUL     = {1, 1},
-    L_NICKEL        = {6, 5},
-    L_FOUR_CENT     = {12, 10},
-    L_THREE_CENT    = {11, 10},
-    L_TWO_CENT      = {6, 5},
-    L_ONE_CENT      = {2, 2}
-}
-
-local DECK_MONSTER = {
-    M_EPIC        = {1, 1},
-    M_BOSS        = {30, 30},
-    M_BASIC       = {30, 30},
-    M_CURSED      = {9, 9},
-    M_HOLY_CHARMED= {9, 9},
-    M_GOOD        = {8, 8},
-    M_BAD         = {8, 8},
-    M_CURSE       = {5, 5}
-}
-
 DECK_BUILDER_MODE = {
     NORMAL  = 1,
     DRAFT   = 2
+}
+
+local DECK_TREASURE = {
+    {
+        T_ACTIVE  = 40,
+        T_PASSIVE = 44,
+        T_PAID    = 10,
+        T_ONE_USE = 5,
+        T_SOUL    = 1
+    },
+    {
+        T_ACTIVE  = 40,
+        T_PASSIVE = 44,
+        T_PAID    = 10,
+        T_ONE_USE = 5,
+        T_SOUL    = 1
+    }
+}
+
+local DECK_LOOT = {
+    {
+        L_TAROT_MISC    = 23,
+        L_TRINKET       = 11,
+        L_PILL          = 3,
+        L_RUNE          = 3,
+        L_BUTTER_BEAN   = 5,
+        L_BOMB          = 6,
+        L_BATTERY       = 6,
+        L_DICE_SHARD    = 3,
+        L_SOUL_HEART    = 2,
+        L_LOST_SOUL     = 1,
+        L_NICKEL        = 6,
+        L_FOUR_CENT     = 12,
+        L_THREE_CENT    = 11,
+        L_TWO_CENT      = 6,
+        L_ONE_CENT      = 2
+    },
+    {
+        L_TAROT_MISC    = 22,
+        L_TRINKET       = 10,
+        L_PILL          = 2,
+        L_RUNE          = 3,
+        L_BUTTER_BEAN   = 5,
+        L_BOMB          = 5,
+        L_BATTERY       = 5,
+        L_DICE_SHARD    = 3,
+        L_SOUL_HEART    = 2,
+        L_LOST_SOUL     = 1,
+        L_NICKEL        = 5,
+        L_FOUR_CENT     = 10,
+        L_THREE_CENT    = 10,
+        L_TWO_CENT      = 5,
+        L_ONE_CENT      = 2
+    }
+}
+
+local DECK_MONSTER = {
+    {
+        M_EPIC        = 1,
+        M_BOSS        = 30,
+        M_BASIC       = 30,
+        M_CURSED      = 9,
+        M_HOLY_CHARMED= 9,
+        M_GOOD        = 8,
+        M_BAD         = 8,
+        M_CURSE       = 5
+    },
+    {
+        M_EPIC        = 1,
+        M_BOSS        = 30,
+        M_BASIC       = 30,
+        M_CURSED      = 9,
+        M_HOLY_CHARMED= 9,
+        M_GOOD        = 8,
+        M_BAD         = 8,
+        M_CURSE       = 5
+    }
 }
 
 local function getDeckFromTable(name)
@@ -148,27 +188,37 @@ local function getDummyDeckGUID(deckZone)
     return dummyDeckGUID
 end
 
+local function buildDeck(baseDeck, cardSource, lookUpTable, tagTable)
+    for type, amount in pairs(tagTable) do
+        for i = 1, amount do
+            baseDeck.putObject(cardSource.takeObject({guid = lookUpTable[type][i]}))
+        end
+    end
+end
+
 local function buildTreasureDeck(mode)
     local treasureDeck = nil
+    local treasureZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE)
     local treasureCards = getDeckFromTable("TREASURE_CARDS")
     if treasureCards == nil then
         return nil
     end
     local lookUpTable = setUpLUT(treasureCards)
     local dummyTreasureDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE))
-    if (dummyTreasureDeckGUID == nil) or (dummyTreasureDeckGUID == "") then
+    if dummyTreasureDeckGUID == nil then
         treasureCards.setPositionSmooth(Global.getTable("DECK_POSITION").TREASURE, false)
         treasureCards.setRotationSmooth({180, 0, 0}, false)
         treasureDeck = treasureCards
     else
-        treasureDeck = getObjectFromGUID(dummyTreasureDeckGUID)
-        if treasureDeck.locked then
-            treasureDeck.setLock(false)
+        local dummyDeck = getObjectFromGUID(dummyTreasureDeckGUID)
+        if dummyDeck.locked then
+            dummyDeck.setLock(false)
         end
-        for type, amountTable in pairs(DECK_TREASURE) do
-            for i = 1, amountTable[mode] do
-                treasureDeck.putObject(treasureCards.takeObject({guid = lookUpTable[type][i]}))
-            end
+        treasureDeck = dummyDeck
+        if isDeckBuilderON() then
+            buildDeck(treasureDeck, treasureCards, lookUpTable, DECK_TREASURE[mode])
+        else
+            treasureDeck.putObject(treasureCards)
         end
         for _, dummyGUID in ipairs(DUMMY_CARDS.TREASURE) do
             treasureDeck.takeObject({guid = dummyGUID, position = {46.8, 2, 12}})
@@ -180,25 +230,27 @@ end
 
 local function buildLootDeck(mode)
     local lootDeck = nil
+    local lootZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").LOOT)
     local lootCards = getDeckFromTable("LOOT_CARDS")
     if lootCards == nil then
         return nil
     end
     local lookUpTable = setUpLUT(lootCards)
     local dummyLootDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").LOOT))
-    if (dummyLootDeckGUID == nil) or (dummyLootDeckGUID == "") then
+    if dummyLootDeckGUID == nil then
         lootCards.setPositionSmooth(Global.getTable("DECK_POSITION").LOOT, false)
         lootCards.setRotationSmooth({180, 0, 0}, false)
         lootDeck = lootCards
     else
-        lootDeck = getObjectFromGUID(dummyLootDeckGUID)
-        if lootDeck.locked then
-            lootDeck.setLock(false)
+        local dummyDeck = getObjectFromGUID(dummyLootDeckGUID)
+        if dummyDeck.locked then
+            dummyDeck.setLock(false)
         end
-        for type, amountTable in pairs(DECK_LOOT) do
-            for i = 1, amountTable[mode] do
-                lootDeck.putObject(lootCards.takeObject({guid = lookUpTable[type][i]}))
-            end
+        lootDeck = dummyDeck
+        if isDeckBuilderON() then
+            buildDeck(lootDeck, lootCards, lookUpTable, DECK_LOOT[mode])
+        else
+            lootDeck.putObject(lootCards)
         end
         for _, dummyGUID in ipairs(DUMMY_CARDS.LOOT) do
             lootDeck.takeObject({guid = dummyGUID, position = {46.8, 2, 7}})
@@ -210,28 +262,30 @@ end
 
 local function buildMonsterDeck(mode)
     local monsterDeck = nil
+    local monsterZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
     local monsterCards = getDeckFromTable("MONSTER_CARDS")
     if monsterCards == nil then
         return nil
     end
     local lookUpTable = setUpLUT(monsterCards)
-    local dummyMonsterDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER))
-    if (dummyMonsterDeckGUID == nil) or (dummyMonsterDeckGUID == "") then
+    local dummyMonsterDeckGUID = getDummyDeckGUID(monsterZone)
+    if dummyMonsterDeckGUID == nil then
         monsterCards.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER, false)
         monsterCards.setRotationSmooth({180, 0, 0}, false)
         monsterDeck = monsterCards
     else
-        monsterDeck = getObjectFromGUID(dummyMonsterDeckGUID)
-        if monsterDeck.locked then
-            monsterDeck.setLock(false)
+        local dummyDeck = getObjectFromGUID(dummyMonsterDeckGUID)
+        if dummyDeck.locked then
+            dummyDeck.setLock(false)
         end
-        for type, amountTable in pairs(DECK_MONSTER) do
-            for i = 1, amountTable[mode] do
-                monsterDeck.putObject(monsterCards.takeObject({guid = lookUpTable[type][i]}))
-            end
+        monsterDeck = dummyDeck
+        if isDeckBuilderON() then
+            buildDeck(monsterDeck, monsterCards, lookUpTable, DECK_MONSTER[mode])
+        else
+            monsterDeck.putObject(monsterCards)
         end
         for _, dummyGUID in ipairs(DUMMY_CARDS.MONSTER) do
-            monsterDeck.takeObject({guid = dummyGUID, position = {46.8, 2, -6}})
+            monsterDeck.takeObject({guid = dummyGUID, position = {46.8, 2, -7}})
         end
     end
     monsterDeck.setName("Monster Deck")
