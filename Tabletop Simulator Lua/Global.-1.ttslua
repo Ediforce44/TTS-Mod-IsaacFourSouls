@@ -476,14 +476,32 @@ end
 
 --Thank you Bone White in discord for this <3       --Edited by Ediforce44
 function findIntInScript(params)
-    if params.scriptString == nil or params.varName then
+    if params.scriptString == nil or params.varName == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'findIntInScript()'.")
         return nil
     end
-    for line in string.gmatch(scriptString,"[^\r\n]+") do -- for each line in the script
-        if string.sub(line,1,#varName) == varName then -- if the beginning of the line matches var
-            local value = string.match(line,"%d+",#varName) -- get the first number listed in that line after the var name
+    for line in string.gmatch(params.scriptString,"[^\r\n]+") do -- for each line in the script
+        if string.sub(line,1,#params.varName) == params.varName then -- if the beginning of the line matches var
+            local value = string.match(line,"%d+",#params.varName) -- get the first number listed in that line after the var name
             return tonumber(value)
+        end
+    end
+    return nil
+end
+
+function findBoolInScript(params)
+    if params.scriptString == nil or params.varName == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'findBoolInScript()'.")
+        return nil
+    end
+    for line in string.gmatch(params.scriptString,"[^\r\n]+") do -- for each line in the script
+        if string.sub(line,1,#params.varName) == params.varName then -- if the beginning of the line matches var
+            local value = string.match(line,"true",#params.varName)
+            if value == "true" then
+                return true
+            else
+                return false
+            end
         end
     end
     return nil
