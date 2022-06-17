@@ -65,15 +65,15 @@ end
 --------------------------------------------      Deck Builder        --------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
+DECK_BUILDER_MODE = {
+    NORMAL  = 1,
+    DRAFT   = 2
+}
+
 local DUMMY_CARDS = {
     TREASURE = {"20478b", "de6fa6"},
     LOOT = {"fc7f84", "d8bf8b"},
     MONSTER = {"6f7d81", "ad45a5"}
-}
-
-DECK_BUILDER_MODE = {
-    NORMAL  = 1,
-    DRAFT   = 2
 }
 
 local DECK_TREASURE = {
@@ -153,6 +153,9 @@ local DECK_MONSTER = {
     }
 }
 
+local B_TOTAL_DECK_COUNT = 3
+local B_waitingDecks = {}
+
 local function getDeckFromTable(name)
     for _, obj in ipairs(getObjectsWithTag("Deck")) do
         if obj.getName() == name then
@@ -196,6 +199,18 @@ local function buildDeck(baseDeck, cardSource, lookUpTable, tagTable)
     end
 end
 
+local function deckBuildBarrier(deckType, deck)
+    B_waitingDecks[deckType] = deck
+    local waitCount = 0
+    for _, _ in pairs(B_waitingDecks) do
+        waitCount = waitCount + 1
+    end
+    if waitCount >= B_TOTAL_DECK_COUNT then
+        getObjectFromGUID("195d79").call("decksBuilt", B_waitingDecks)
+        B_waitingDecks = {}
+    end
+end
+
 local function buildTreasureDeck(mode)
     local treasureDeck = nil
     local treasureZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE)
@@ -225,7 +240,7 @@ local function buildTreasureDeck(mode)
         end
     end
     treasureDeck.setName("Treasure Deck")
-    return treasureDeck
+    deckBuildBarrier("TREASURE", treasureDeck)
 end
 
 local function buildLootDeck(mode)
@@ -257,7 +272,7 @@ local function buildLootDeck(mode)
         end
     end
     lootDeck.setName("Loot Deck")
-    return lootDeck
+    deckBuildBarrier("LOOT", lootDeck)
 end
 
 local function buildMonsterDeck(mode)
@@ -289,7 +304,7 @@ local function buildMonsterDeck(mode)
         end
     end
     monsterDeck.setName("Monster Deck")
-    return monsterDeck
+    deckBuildBarrier("MONSTER", monsterDeck)
 end
 
 function buildDecks(params)
@@ -297,10 +312,7 @@ function buildDecks(params)
     if params.buildingMode ~= nil then
         buildingMode = params.buildingMode
     end
-
-    local newDecks = {}
-    newDecks.TREASURE = buildTreasureDeck(buildingMode)
-    newDecks.LOOT = buildLootDeck(buildingMode)
-    newDecks.MONSTER = buildMonsterDeck(buildingMode)
-    return newDecks
+    buildTreasureDeck(buildingMode)
+    buildLootDeck(buildingMode)
+    buildMonsterDeck(buildingMode)
 end
