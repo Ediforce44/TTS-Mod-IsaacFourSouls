@@ -75,6 +75,7 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > ### <u><b>Technical Functions</b></u>
 > - `hasGameStarted() : bool` returns *true* if the game has already been started (The Setting UP Note was deleted). Otherwise it returns *false*
 > - `findIntInScript({scriptString, varName}) : int` searches in the **scriptString** for a variable with the name **varName** and returns the value of it.
+> - `findBoolInScript({scriptString, varName}) : bool` searches in the **scriptString** for a variable with the name **varName** and returns *true* if the value of the variable is *true*. Otherwise it returns *false*.
 > - `isPlayerAuthorized({playerColor or player, ownerPlayer}) : bool` returns *true* if the the player **player** or player with the **playerColor** equals **ownerPlayer**. It will return also *true* if **player** or the player with the **playerColor** is an admin.
 > - `switchRewardingMode({playerColor or player})` switches the Rewarding Mode for **player** or the player with the **playerColor**.
 > - `setNewStartPlayer({playerColor}) : bool` sets the *startPlayerColor* variable and select the appropriated turn button in the middle of the Gametable. BUT ONLY if the game hasn't been started yet. If *startPlayerColor* is already equal to **playerColor** or if anything went wrong the function returns *false*.
