@@ -51,7 +51,7 @@ function onLoad(saved_data)         --EbyE44
             activePlayerColor = "Red"
         end
         if loaded_data[2] then
-            startPlayerColor = setNewStartPlayer({playerColor = loaded_data[2]})
+            setNewStartPlayer({playerColor = loaded_data[2]})
         end
         if loaded_data[3] then
             automaticRewarding.Yellow = loaded_data[3].Yellow and true

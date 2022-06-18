@@ -149,16 +149,26 @@ function onStart()
                         font_size = 0
                     })
 
+                    local startPlayerColor = Global.getVar("startPlayerColor")
+                    if startPlayerColor == "None" then
+                        startPlayerColor = "Red"
+                        for _, color in pairs(getSeatedPlayers()) do
+                            if (color == "Red") or (color == "Blue") or (color == "Green") or (color == "Yellow") then
+                                startPlayerColor = color
+                                break
+                            end
+                        end
+                        Global.call("setNewStartPlayer", {playerColor = startPlayerColor})
+                    end
+
+                    -- !!! Order matters !!!
+                    Turns.type = 1
+                    Turns.turn_color = startPlayerColor
+                    Turns.enable = true
+
                     if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
                         settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
                         destroyObject(settingUpNote)
-                    end
-
-                    Turns.enable = true
-                    Turns.type = 1
-                    local startPlayerColor = Global.getVar("startPlayerColor")
-                    if startPlayerColor ~= "None" then
-                        Turns.turn_color = startPlayerColor
                     end
 
                     self.destroy()
