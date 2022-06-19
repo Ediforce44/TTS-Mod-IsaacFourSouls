@@ -206,8 +206,9 @@ function cancelPick(player, _, idValue)
     end
 end
 
-activePlayerColor = "None"
-startPlayerColor = "None"
+activePlayerColor   = "None"
+startPlayerColor    = "None"
+gameLanguage        = "US"
 
 automaticRewarding = {
     Yellow = true,
@@ -375,6 +376,14 @@ DECK_POSITION = {
     LOOT = {},
     MONSTER = {}
 }
+
+function setGameLanguage(params)
+    if params.language == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameter in Global function 'setGameLanguage()'.")
+        return
+    end
+    gameLanguage = params.language
+end
 
 function hasGameStarted()
     local startButtonGUID = "56a44e"

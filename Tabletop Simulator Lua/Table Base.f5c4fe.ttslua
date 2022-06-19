@@ -1,0 +1,65 @@
+-- The Baseplate of the table
+----- Manages the decks and cards under the table
+
+OBJECTS_UNDER_TABLE = {
+    US_TREASURE = {
+        T_ACTIVE  = "b706e2",
+        T_PASSIVE = "ba5088",
+        T_PAID    = "aa6f53",
+        T_ONE_USE = "8932fd",
+        T_SOUL    = "2b8b2c"
+    },
+    US_LOOT     = {
+        L_TAROT_MISC    = "1e2ba2",
+        L_TRINKET       = "fc6cc0",
+        L_PILL          = "d1f490",
+        L_RUNE          = "3bc855",
+        L_BUTTER_BEAN   = "b3a842",
+        L_BOMB          = "3cc54e",
+        L_BATTERY       = "a2ce3b",
+        L_DICE_SHARD    = "a10518",
+        L_SOUL_HEART    = "e36afb",
+        L_LOST_SOUL     = "5531a8",
+        L_NICKEL        = "be9b22",
+        L_FOUR_CENT     = "7066cd",
+        L_THREE_CENT    = "3f64ec",
+        L_TWO_CENT      = "a7dd09",
+        L_ONE_CENT      = "13c535"
+    },
+    US_MONSTER  = {
+        M_EPIC        = "b8031a",
+        M_BOSS        = "2e06be",
+        M_BASIC       = "bce971",
+        M_CURSED      = "5e7c02",
+        M_HOLY_CHARMED= "abc623",
+        M_GOOD        = "f92197",
+        M_BAD         = "d2fd58",
+        M_CURSE       = "aecf91"
+    },
+}
+
+function onLoad()
+    self.interactable = false
+
+    for _, objGUIDs in pairs(OBJECTS_UNDER_TABLE) do
+        for _, guid in pairs(objGUIDs) do
+            local obj = getObjectFromGUID(guid)
+            if obj then
+                obj.interactable = false
+            end
+        end
+    end
+end
+
+function getDeckGUIDs(params)
+    local language = params.language
+    if language == nil then
+        language = "US"
+    end
+    local decks = {
+        TREASURE = OBJECTS_UNDER_TABLE[language .. "_TREASURE"],
+        LOOT = OBJECTS_UNDER_TABLE[language .. "_LOOT"],
+        MONSTER = OBJECTS_UNDER_TABLE[language .. "_MONSTER"]
+    }
+    return decks
+end

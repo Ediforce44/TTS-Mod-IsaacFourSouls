@@ -14,6 +14,7 @@ ROOM_DECK_ZONE_GUID = ZONE_GUIDS_DECK.ROOM
 
 DECK_BUILDER_GUID       = "69a80e"
 SETTING_UP_NOTE_GUID    = "56a44e"
+TABLE_BASE_GUID         = "f5c4fe"
 
 ready_for_setup = false
 
@@ -117,13 +118,11 @@ function onStart()
         return
     end
 
-    loadDecks()
-
-    cardShuffle() --use shuffle as randomizer for the deck builder ;)
-
     Wait.frames(
         function()
-            getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {buildingMode = 1})
+            local gameLanguage = Global.getVar("gameLanguage")
+            local preDeckGUIDs = getObjectFromGUID(TABLE_BASE_GUID).call("getDeckGUIDs", {language = gameLanguage})
+            getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {buildingMode = 1, preDecks = preDeckGUIDs})
 
             Wait.condition(
                 function()
@@ -179,27 +178,6 @@ function onStart()
         end)
 end
 
-function loadDecks()
-    for _, obj in ipairs(getObjectsWithTag("Deck")) do
-        if obj.getName() == "LOOT_CARDS" then
-            lootCards = obj
-            lootDeck = nil
-        elseif obj.getName() == "TREASURE_CARDS" then
-            treasureCards = obj
-            treasureDeck = nil
-        elseif obj.getName() == "MONSTER_CARDS" then
-            monsterCards = obj
-            monsterDeck = nil
-        elseif obj.getName() == "ROOM_CARDS" then
-            roomCards = obj
-            roomDeck = obj
-        elseif obj.getName() == "BONUS_SOUL_CARDS" then
-            soulCards = obj
-            soulDeck = obj
-        end
-    end
-end
-
 function isAllPlayersSelectCharacter()
     local characterPlacerObj = getObjectFromGUID(CHARACTER_PLACER_GUID)
     local playersSpawnedCharacterObj = characterPlacerObj.getTable("playersSpawnedCharacterObj")
@@ -223,32 +201,6 @@ function getPlayersCount()
     end
   end
   return counter
-end
-
-function cardShuffle()
-    local decksToShuffle = {}
-    if monsterCards ~= nil then
-      table.insert(decksToShuffle, monsterCards)
-    end
-    if soulCards ~= nil then
-      table.insert(decksToShuffle, soulCards)
-    end
-    if treasureCards ~= nil then
-      table.insert(decksToShuffle, treasureCards)
-    end
-    if lootCards ~= nil then
-      table.insert(decksToShuffle, lootCards)
-    end
-    if roomCards ~= nil then
-      table.insert(decksToShuffle, roomCards)
-    end
-
-    for i = 1, #decksToShuffle, 1 do
-        local obj = decksToShuffle[i]
-        if obj ~= nil then
-            obj.shuffle()
-        end
-    end
 end
 
 function checkAndShuffleDecks()

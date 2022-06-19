@@ -250,18 +250,14 @@ local function finishMonsterDeck(monsterDeck)
     deckBuildBarrier("MONSTER", monsterDeck)
 end
 
-local function buildTreasureDeck(mode)
+local function buildTreasureDeck(mode, preTreasureDecks)
     local treasureDeck = nil
     local treasureZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE)
-    local treasureCards = getDeckFromTable("TREASURE_CARDS")
-    if treasureCards == nil then
-        return nil
-    end
-    local lookUpTable = setUpLUT(treasureCards)
     local dummyTreasureDeckGUID = getDummyDeckGUID(getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE))
     if dummyTreasureDeckGUID == nil then
-        treasureCards.setPositionSmooth(Global.getTable("DECK_POSITION").TREASURE, false)
-        treasureCards.setRotationSmooth({180, 0, 0}, false)
+        --PUT ALL DECKS INTO ONE DECK
+        --treasureCards.setPositionSmooth(Global.getTable("DECK_POSITION").TREASURE, false)
+        --treasureCards.setRotationSmooth({180, 0, 0}, false)
         Wait.time(function() finishTreasureDeck(treasureCards) end, 2)
     else
         local dummyDeck = getObjectFromGUID(dummyTreasureDeckGUID)
@@ -273,15 +269,16 @@ local function buildTreasureDeck(mode)
         if isDeckBuilderON() then
             waitFrames = buildDeck(treasureDeck, treasureCards, lookUpTable, DECK_TREASURE[mode])
         else
-            treasureDeck.putObject(treasureCards)
+            --PUT ALL DECKS INTO ONE DECK
+            --treasureDeck.putObject(treasureCards)
         end
-        waitFrames = waitFrames + 40
-        Wait.frames(function()
+        --waitFrames = waitFrames + 40
+        --Wait.frames(function()
                 for _, dummyGUID in ipairs(DUMMY_CARDS.TREASURE) do
-                    treasureDeck.takeObject({guid = dummyGUID, position = {46.8, 2, 12}})
+                    destroyObject(treasureDeck.takeObject({guid = dummyGUID}))
                 end
                 finishTreasureDeck(treasureDeck)
-            end, waitFrames)
+        --    end, waitFrames)
     end
 end
 
@@ -360,7 +357,10 @@ function buildDecks(params)
     if params.buildingMode ~= nil then
         buildingMode = params.buildingMode
     end
-    buildTreasureDeck(buildingMode)
-    buildLootDeck(buildingMode)
-    buildMonsterDeck(buildingMode)
+    if params.preDecks == nil then
+        printToAll("[fdd835][WARNING][-] Wrong parameters in Deck Builder function 'buildDecks()'.")
+    end
+    buildTreasureDeck(buildingMode, params.preDecks.TREASURE)
+    buildLootDeck(buildingMode, params.preDecks.LOOT)
+    buildMonsterDeck(buildingMode, params.preDecks.MONSTER)
 end
