@@ -108,6 +108,8 @@ function decksBuilt(createdDecks)
     treasureDeck = createdDecks.TREASURE
     lootDeck = createdDecks.LOOT
     monsterDeck = createdDecks.MONSTER
+    roomDeck = createdDecks.ROOM
+    soulDeck = createdDecks.BONUS_SOUL
     ready_for_setup = true
 end
 
@@ -118,10 +120,13 @@ function onStart()
         return
     end
 
+    local gameLanguage = Global.getVar("gameLanguage")
+    local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
+    local preDeckGUIDs = tableBase.call("getDeckGUIDs", {language = gameLanguage})
+    tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
+
     Wait.frames(
         function()
-            local gameLanguage = Global.getVar("gameLanguage")
-            local preDeckGUIDs = getObjectFromGUID(TABLE_BASE_GUID).call("getDeckGUIDs", {language = gameLanguage})
             getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {buildingMode = 1, preDecks = preDeckGUIDs})
 
             Wait.condition(

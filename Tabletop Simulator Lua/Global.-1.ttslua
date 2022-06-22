@@ -37,6 +37,7 @@ local function setPositionTables()
     DECK_POSITION.ROOM = getObjectFromGUID(ZONE_GUID_DECK.ROOM).getPosition():setAt('y', 5)
     DECK_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DECK.LOOT).getPosition():setAt('y', 5)
     DECK_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DECK.MONSTER).getPosition():setAt('y', 5)
+    DECK_POSITION.BONUS_SOUL = getObjectFromGUID(ZONE_GUID_DECK.BONUS_SOUL).getPosition():setAt('y', 5)
 end
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -373,6 +374,7 @@ DISCARD_PILE_POSITION = {
 DECK_POSITION = {
     TREASURE = {},
     ROOM = {},
+    BONUS_SOULS = {},
     LOOT = {},
     MONSTER = {}
 }
