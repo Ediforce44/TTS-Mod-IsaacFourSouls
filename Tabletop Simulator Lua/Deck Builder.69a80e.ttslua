@@ -129,6 +129,18 @@ local DECK_MONSTER = {
     }
 }
 
+local DECK_ROOM = {
+    R_ALL   = 200
+}
+
+local DECK_BONUS_SOUL = {
+    BS_ALL  = 100
+}
+
+local DECK_MONSTER_SEP = {
+    MS_ALL  = 100
+}
+
 local B_TOTAL_DECK_COUNT = 5
 local B_waitingDecks = {}
 
@@ -141,29 +153,65 @@ local function getDeckFromTable(name)
     return nil
 end
 
-local function buildDeck(preDeckGUIDs, tagTable)
-    tagTable["EMPTY"] = 200
+local function mergeDecks(decks, startDeck)
     local buildDeck = nil
-    for type, amount in pairs(tagTable) do
-        if preDeckGUIDs[type] ~= nil then
-            local preDeck = getObjectFromGUID(preDeckGUIDs[type])
-            if preDeck.tag == "Deck" then
-                if amount == 1 then
-                    preDeck = preDeck.takeObject()  -- For the edge case that only one card should be choosen
-                else
-                    preDeck.cut(preDeck.getQuantity() - amount)
-                end
-            end
+    if (startDeck ~= nil) and (startDeck.tag == "Deck") then
+        buildDeck = startDeck
+    end
 
-            --TODO Fix bug if the first preDeck is only one card
-            if buildDeck == nil then
-                buildDeck = preDeck
+    local tempCards = {}
+    for _, nextDeck in pairs(decks) do
+        if buildDeck == nil then
+            if nextDeck.tag == "Deck" then
+                buildDeck = nextDeck
             else
-                buildDeck.putObject(preDeck)
+                table.insert(tempCards, nextDeck)
+            end
+        else
+            buildDeck.putObject(nextDeck)
+        end
+    end
+
+    if #tempCards > 0 then
+        if buildDeck == nil then
+            printToAll("[fdd835][WARNING][-] The Deck-Builder can't build a deck if all parts of the deck are single cards."
+                .. "At least one part of the deck has to be a deck already.")
+        else
+            for _, card in pairs(tempCards) do
+                buildDeck.putObject(card)
             end
         end
     end
+
     return buildDeck
+end
+
+local function buildDeck(preDeckGUIDs, tagTable)
+    local decksToMerge = {}
+    if isDeckBuilderON() then
+        tagTable["EMPTY"] = 200
+        for type, amount in pairs(tagTable) do
+            if (preDeckGUIDs[type] ~= nil) and (amount > 0) then
+                local preDeck = getObjectFromGUID(preDeckGUIDs[type])
+                if preDeck.tag == "Deck" then
+                    if amount == 1 then
+                        table.insert(decksToMerge, preDeck.takeObject())  -- For the edge case that only one card should be choosen
+                    else
+                        preDeck.cut(preDeck.getQuantity() - amount)
+                        table.insert(decksToMerge, preDeck)
+                    end
+                else
+                    table.insert(decksToMerge, preDeck)
+                end
+            end
+        end
+    else
+        for _, guid in pairs(preDeckGUIDs) do
+            table.insert(decksToMerge, getObjectFromGUID(guid))
+        end
+    end
+
+    return mergeDecks(decksToMerge)
 end
 
 local function deckBuildBarrier(deckType, deck)
@@ -178,113 +226,108 @@ local function deckBuildBarrier(deckType, deck)
     end
 end
 
-local function finishTreasureDeck(treasureDeck)
-    treasureDeck.setName("Treasure Deck")
-    deckBuildBarrier("TREASURE", treasureDeck)
-end
-
-local function finishLootDeck(lootDeck)
-    lootDeck.setName("Loot Deck")
-    deckBuildBarrier("LOOT", lootDeck)
-end
-
-local function finishMonsterDeck(monsterDeck)
-    monsterDeck.setName("Monster Deck")
-    deckBuildBarrier("MONSTER", monsterDeck)
-end
-
-local function combine(startDeck, deckGUIDs)
-    for _, guid in pairs(deckGUIDs) do
-        startDeck.putObject(getObjectFromGUID(guid))
-    end
-end
-
-local function buildTreasureDeck(mode, preTreasureDecks)
+local function buildTreasureDeck(mode, preTreasureDeckGUIDs)
     local treasureDeck = nil
-    local treasureZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").TREASURE)
+    treasureDeck = buildDeck(preTreasureDeckGUIDs, DECK_TREASURE[mode])
 
-    if isDeckBuilderON() then
-        treasureDeck = buildDeck(preTreasureDecks, DECK_TREASURE[mode])
-    else
-        treasureDeck = getObjectFromGUID(preTreasureDecks.T_ACTIVE)
-        combine(treasureDeck, preTreasureDecks)
+    if treasureDeck == nil then
+        printToAll("[fdd835][WARNING][-] Can't build treasure deck. [C30000][Please restart this map.][-]")
+        return
     end
+
     treasureDeck.setPositionSmooth(Global.getTable("DECK_POSITION").TREASURE, false)
     treasureDeck.setRotationSmooth({180, 0, 0}, false)
     treasureDeck.interactable = true
-    Wait.time(function() finishTreasureDeck(treasureDeck) end, 2)
+    treasureDeck.setName("Treasure Deck")
+
+    Wait.condition(function() deckBuildBarrier("TREASURE", treasureDeck) end, function() return treasureDeck.resting end)
 end
 
-local function buildLootDeck(mode, preLootDecks)
+local function buildLootDeck(mode, preLootDeckGUIDs)
     local lootDeck = nil
-    local lootZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").LOOT)
+    lootDeck = buildDeck(preLootDeckGUIDs, DECK_LOOT[mode])
 
-    if isDeckBuilderON() then
-        lootDeck = buildDeck(preLootDecks, DECK_LOOT[mode])
-    else
-        lootDeck = getObjectFromGUID(preLootDecks.L_TAROT_MISC)
-        combine(lootDeck, preLootDecks)
+    if lootDeck == nil then
+        printToAll("[fdd835][WARNING][-] Can't build loot deck. [C30000][Please restart this map.][-]")
+        return
     end
+
     lootDeck.setPositionSmooth(Global.getTable("DECK_POSITION").LOOT, false)
     lootDeck.setRotationSmooth({180, 0, 0}, false)
     lootDeck.interactable = true
-    Wait.time(function() finishLootDeck(lootDeck) end, 2)
+    lootDeck.setName("Loot Deck")
+
+    Wait.condition(function() deckBuildBarrier("LOOT", lootDeck) end, function() return lootDeck.resting end)
 end
 
-local function buildMonsterDeck(mode, preMonsterDecks)
+local function buildMonsterDeck(mode, preMonsterDeckGUIDs)
     local monsterDeck = nil
-    local monsterZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
+    monsterDeck = buildDeck(preMonsterDeckGUIDs, DECK_MONSTER[mode])
 
-    if isDeckBuilderON() then
-        monsterDeck = buildDeck(preMonsterDecks, DECK_MONSTER[mode])
-    else
-        monsterDeck = getObjectFromGUID(preMonsterDecks.M_BASIC)
-        combine(monsterDeck, preMonsterDecks)
+    if monsterDeck == nil then
+        printToAll("[fdd835][WARNING][-] Can't build monster deck. [C30000][Please restart this map.][-]")
+        return
     end
+
     monsterDeck.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER, false)
     monsterDeck.setRotationSmooth({180, 0, 0}, false)
     monsterDeck.interactable = true
-    Wait.time(function() finishMonsterDeck(monsterDeck) end, 2)
+    monsterDeck.setName("Monster Deck")
+
+    Wait.condition(function() deckBuildBarrier("MONSTER", monsterDeck) end, function() return monsterDeck.resting end)
 end
 
-local function buildRoomDeck(mode, preRoomDecks)
+local function buildRoomDeck(mode, preRoomDeckGUIDs)
     local roomDeck = nil
-    for _, guid in pairs(preRoomDecks) do
-        local preRoomDeck = getObjectFromGUID(guid)
-        --TODO Fix bug if the first preDeck is only one card
-        if preRoomDeck.tag == "Deck" then
-            if roomDeck == nil then
-                roomDeck = preRoomDeck
-            else
-                roomDeck.putObject(preRoomDeck)
-            end
-        end
+    roomDeck = buildDeck(preRoomDeckGUIDs, DECK_ROOM)
+
+    if roomDeck == nil then
+        printToAll("[fdd835][WARNING][-] Can't build room deck. [C30000][Please restart this map.][-]")
+        return
     end
+
     roomDeck.interactable = true
     roomDeck.setPositionSmooth(Global.getTable("DECK_POSITION").ROOM, false)
     roomDeck.setRotationSmooth({180, 0, 0}, false)
     roomDeck.setName("Room Deck")
-    deckBuildBarrier("ROOM", roomDeck)
+
+    Wait.condition(function() deckBuildBarrier("ROOM", roomDeck) end, function() return roomDeck.resting end)
 end
 
-local function buildBonusSoulDeck(mode, preBonusSoulDecks)
+local function buildBonusSoulDeck(mode, preBonusSoulDeckGUIDs)
     local bonusSoulDeck = nil
-    for _, guid in pairs(preBonusSoulDecks) do
-        local preBonusSoulDeck = getObjectFromGUID(guid)
-        --TODO Fix bug if the first preDeck is only one card
-        if preBonusSoulDeck.tag == "Deck" then
-            if bonusSoulDeck == nil then
-                bonusSoulDeck = preBonusSoulDeck
-            else
-                bonusSoulDeck.putObject(preBonusSoulDeck)
-            end
-        end
+    bonusSoulDeck = buildDeck(preBonusSoulDeckGUIDs, DECK_BONUS_SOUL)
+
+    if bonusSoulDeck == nil then
+        printToAll("[fdd835][WARNING][-] Can't build bonus soul deck. [C30000][Please restart this map.][-]")
+        return
     end
+
     bonusSoulDeck.interactable = true
     bonusSoulDeck.setPositionSmooth(Global.getTable("DECK_POSITION").BONUS_SOUL, false)
     bonusSoulDeck.setRotationSmooth({0, 270, 180}, false)
     bonusSoulDeck.setName("Bonus-Soul Deck")
-    deckBuildBarrier("BONUS_SOUL", bonusSoulDeck)
+
+    Wait.condition(function() deckBuildBarrier("BONUS_SOUL", bonusSoulDeck) end
+        , function() return bonusSoulDeck.resting end)
+end
+
+local function buildMonsterSepDeck(mode, preMonsterSepDeckGUIDs)
+    local monsterSepDeck = nil
+    monsterSepDeck = buildDeck(preMonsterSepDeckGUIDs, DECK_MONSTER_SEP)
+
+    if monsterSepDeck == nil then
+        printToAll("[fdd835][WARNING][-] Can't build seperate monster deck. [C30000][Please restart this map.][-]")
+        return
+    end
+
+    monsterSepDeck.interactable = true
+    monsterSepDeck.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER_SEP, false)
+    monsterSepDeck.setRotationSmooth({180, 0, 0}, false)
+    monsterSepDeck.setName("Seperate Monster Deck")
+
+    Wait.condition(function() deckBuildBarrier("MONSTER_SEP", monsterSepDeck) end
+        , function() return monsterSepDeck.resting end)
 end
 
 function buildDecks(params)
@@ -301,4 +344,6 @@ function buildDecks(params)
 
     buildRoomDeck(buildingMode, params.preDecks.ROOM)
     buildBonusSoulDeck(buildingMode, params.preDecks.BONUS_SOUL)
+    --TODO FIX: ONLY ONE CARD
+    --buildMonsterSepDeck(buildingMode, params.preDecks.MONSTER_SEP)
 end

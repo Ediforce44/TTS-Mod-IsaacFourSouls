@@ -36,6 +36,15 @@ OBJECTS_UNDER_TABLE = {
             M_GOOD        = "f92197",
             M_BAD         = "d2fd58",
             M_CURSE       = "aecf91"
+        },
+        ROOM = {
+            R_ALL   = "7c6d90"
+        },
+        BONUS_SOUL = {
+            BS_ALL  = "6b5923"
+        },
+        MONSTER_SEP = {
+            MS_ALL = "2f818b"
         }
     }
 }
