@@ -1,0 +1,32 @@
+UpdateID: 2828779531
+
+Description:
+[h1] Script Injector [/h1]
+This is a map to help with redundant stuff. This map will help you:
+[list] 
+ [*] If you need to write the same line of Lua-Code into multiple scripts
+ [*] If you want to create the same variable in multiple scripts with different values
+[/list]
+
+[h2] Example use case [/h2]
+We use this map to write variables into the script of 100+ cards. The cards represent monsters in our map for the game [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2526757138]Isaac: Four Souls[/url]. Each variable represent a stat of the monster.
+So we sorted the monster cards by there stat value, built decks and injected in each card of each deck the stat variable with the proper value for the deck of cards.
+
+[h2] Disclaimer [/h2]
+If you use this map with decks or bags, which contain many cards or objects, it is possible that your game lags/freezes for a couple of seconds depending on your PC.
+It shouldn't be longer than 30-60sec (worst case). But it will be a lot faster than writing every lua-code-line by hand.
+
+[h2] How to use it? [/h2]
+[olist]
+ [*] Load your own mod map and create the objects you want to [i]inject[/i]. (This is important for the generation of the guids of the objects)
+ [*] Put all the objects you want to [i]inject[/i] into an container (deck or bag).
+ [*] Save the containers you created as game objects. (So you can load them later in other maps over the menu: Objects->Saved Objects)
+ [*] Load the Script Injector map.
+ [*] Follow the instructions on the table.
+[/olist]
+
+[h2] Other Projects [/h2]
+[list]
+ [*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2526757138]Isaac: Four Souls[/url]
+[/list]
+
