@@ -32,6 +32,13 @@ local function discardRoom(zone)
     return true
 end
 
+function getRoomButtonTooltip(params)
+    --if params.newState == nil then
+    --    printToAll("[fdd835][WARNING][-] Wrong parameter in room deck zone function 'getRoomButtonTooltip()'.")
+    --end
+    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+end
+
 function placeNewRoomCard(params)
     if params.zone == nil then
         return false
