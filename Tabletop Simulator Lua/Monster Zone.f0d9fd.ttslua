@@ -380,7 +380,6 @@ function changeButtonState(params)
             if params.newState == state then
                 local buttonColor = (state == ATTACK_BUTTON_STATES.INACTIVE) and ATTACK_BUTTON_COLOR.INACTIVE
                     or ATTACK_BUTTON_COLORS.ACTIVE
-                --self.editButton({index = ATTACK_BUTTON_INDEX, label = params.newState})
                 self.editButton({index = ATTACK_BUTTON_INDEX, label = state
                         , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = state})
                         , color = buttonColor})

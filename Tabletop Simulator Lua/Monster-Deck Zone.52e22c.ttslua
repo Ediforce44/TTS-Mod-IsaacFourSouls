@@ -359,7 +359,6 @@ function placeNewMonsterCard(params)
     local newMonsterCard = Global.call("getCardFromDeck", {deck = monsterDeck})
     local placingZone = params.zone
     if newMonsterCard ~= nil then
-        newMonsterCard.addTag(MONSTER_TAGS.NEW)
         newMonsterCard.flip()
         if newMonsterCard.hasTag("Indomitable") then
             local nextInactiveZone = getNextInactiveZone()
@@ -383,9 +382,13 @@ function placeNewMonsterCard(params)
                             , functionOwner = params.zone, reason = coloredCurseName})
                     end
                 elseif params.isTargetOfAttack then
-                    Wait.frames(function () printAttackPhrase(newMonsterCard.getName()) end)
+                    printAttackPhrase(newMonsterCard.getName())
                 end
             end)
+        --Add NEW tag after card is moved above the proper zone
+        --- This avoids that other zones detect the card
+        Wait.condition(function() newMonsterCard.addTag(MONSTER_TAGS.NEW) end
+            , function() return newMonsterCard.isSmoothMoving() end)
         return placingZone
     end
     return nil
