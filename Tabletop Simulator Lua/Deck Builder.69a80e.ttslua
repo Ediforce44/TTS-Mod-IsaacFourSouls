@@ -196,8 +196,14 @@ local function buildDeck(preDeckGUIDs, tagTable)
                 if preDeck.tag == "Deck" then
                     if amount == 1 then
                         table.insert(decksToMerge, preDeck.takeObject())  -- For the edge case that only one card should be choosen
+                    elseif amount == (preDeck.getQuantity() - 1) then
+                        preDeck.takeObject().interactable = false
+                        table.insert(decksToMerge, preDeck)
                     else
-                        preDeck.cut(preDeck.getQuantity() - amount)
+                        local splitDecks = preDeck.cut(preDeck.getQuantity() - amount)
+                        if splitDecks ~= nil then
+                            splitDecks[2].interactable = false
+                        end
                         table.insert(decksToMerge, preDeck)
                     end
                 else
