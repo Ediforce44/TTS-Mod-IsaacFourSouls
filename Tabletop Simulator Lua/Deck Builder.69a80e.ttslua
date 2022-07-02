@@ -141,7 +141,7 @@ local DECK_MONSTER_SEP = {
     MS_ALL  = 100
 }
 
-local B_TOTAL_DECK_COUNT = 5
+local B_TOTAL_DECK_COUNT = 6
 local B_waitingDecks = {}
 
 local function getDeckFromTable(name)
@@ -323,17 +323,24 @@ local function buildMonsterSepDeck(mode, preMonsterSepDeckGUIDs)
     monsterSepDeck = buildDeck(preMonsterSepDeckGUIDs, DECK_MONSTER_SEP)
 
     if monsterSepDeck == nil then
-        printToAll("[fdd835][WARNING][-] Can't build seperate monster deck. [C30000][Please restart this map.][-]")
-        return
+        local lastCard = nil
+        for _, guid in pairs(preMonsterSepDeckGUIDs) do
+            local card = getObjectFromGUID(guid)
+            card.interactable = true
+            card.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER_SEP, false)
+            card.setRotationSmooth({0, 270, 0}, false)
+            lastCard = card
+        end
+        Wait.condition(function() deckBuildBarrier("MONSTER_SEP", lastCard) end
+            , function() return lastCard.isSmoothMoving() end)
+    else
+        monsterSepDeck.interactable = true
+        monsterSepDeck.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER_SEP, false)
+        monsterSepDeck.setRotationSmooth({0, 270, 0}, false)
+        monsterSepDeck.setName("Seperate Monster Deck")
+        Wait.condition(function() deckBuildBarrier("MONSTER_SEP", monsterSepDeck) end
+            , function() return monsterSepDeck.resting end)
     end
-
-    monsterSepDeck.interactable = true
-    monsterSepDeck.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER_SEP, false)
-    monsterSepDeck.setRotationSmooth({180, 0, 0}, false)
-    monsterSepDeck.setName("Seperate Monster Deck")
-
-    Wait.condition(function() deckBuildBarrier("MONSTER_SEP", monsterSepDeck) end
-        , function() return monsterSepDeck.resting end)
 end
 
 function buildDecks(params)
@@ -350,6 +357,5 @@ function buildDecks(params)
 
     buildRoomDeck(buildingMode, params.preDecks.ROOM)
     buildBonusSoulDeck(buildingMode, params.preDecks.BONUS_SOUL)
-    --TODO FIX: ONLY ONE CARD
-    --buildMonsterSepDeck(buildingMode, params.preDecks.MONSTER_SEP)
+    buildMonsterSepDeck(buildingMode, params.preDecks.MONSTER_SEP)
 end
