@@ -178,16 +178,17 @@ function colorPicked(player, _, idValue)
     local pickedColor = nil
     if idValue == "random" then
         pickedColor = getRandomPlayerColor()
+        broadcastToAll(getPlayerString({playerColor = pickedColor}) .. " was picked at random!")
     else
         pickedColor = idValue
+        local picked = getPlayerString({playerColor = pickedColor})
+        if not Player[pickedColor].seated then
+            broadcastToColor(picked .. " is not a active Player!", player.color)
+            pickColor(true)
+            return
+        end
+        broadcastToAll(picker .. " picked " .. picked .. "!")
     end
-    local picked = getPlayerString({playerColor = pickedColor})
-    if not Player[pickedColor].seated then
-        broadcastToColor(picked .. " is not a active Player!", player.color)
-        pickColor(true)
-        return
-    end
-    broadcastToAll(picker .. " picked " .. picked .. "!")
     local nextEntry = colorPickerAttachment[1]
     local functionParams = nextEntry.functionParams or {}
     functionParams.pickedColor = pickedColor
