@@ -127,7 +127,7 @@ function onStart()
 
     Wait.frames(
         function()
-            getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {buildingMode = 1, preDecks = preDeckGUIDs})
+            getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {preDecks = preDeckGUIDs})
 
             Wait.condition(
                 function()

@@ -1,27 +1,114 @@
 
 local ACTIVE_BUTTON_INDEX = 1
 
+local SELECTED_GAME_MODE = nil
+
+GAMEMODE_BUTTON_INDICES = {
+    NORMAL  = nil,
+    DRAFT   = nil
+}
+
+local function changeGameMode(newGameMode)
+    for gameMode, index in pairs(GAMEMODE_BUTTON_INDICES) do
+        if GAME_MODE[gameMode] ~= newGameMode then
+            self.editButton({index=index-1, label=""})
+        end
+    end
+
+    local modeButtonIndex
+    if newGameMode == GAME_MODE.NORMAL then
+        modeButtonIndex = GAMEMODE_BUTTON_INDICES.NORMAL
+        broadcastToAll("New Game Mode selected: " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT.. "Normal")
+        SELECTED_GAME_MODE = GAME_MODE.NORMAL
+    elseif newGameMode == GAME_MODE.DRAFT then
+        modeButtonIndex = GAMEMODE_BUTTON_INDICES.DRAFT
+        broadcastToAll("New Game Mode selected: " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. "Draft")
+        SELECTED_GAME_MODE = GAME_MODE.DRAFT
+    end
+
+    self.editButton({index=modeButtonIndex-1, label="✓", font_color={0, 0, 0}, font_size=250})
+end
+
+function gmNormal()
+    if Global.call("hasGameStarted") then
+        return
+    end
+    if (self.getButtons()[GAMEMODE_BUTTON_INDICES.NORMAL].label == "") then
+        changeGameMode(GAME_MODE.NORMAL)
+    end
+end
+
+function gmDraft()
+    if Global.call("hasGameStarted") then
+        return
+    end
+    if (self.getButtons()[GAMEMODE_BUTTON_INDICES.DRAFT].label == "") then
+        changeGameMode(GAME_MODE.DRAFT)
+    end
+end
+
 function onLoad(saved_data)
     self.createButton({
       click_function = "switchBuilderMode",
       function_owner = self,
       label          = "",
-      position       = {1.5, 1, -0.12},
+      position       = {5, 1, -0.29},
       width          = 300,
       height         = 300,
       color          = {1, 1, 1},
+      tooltip        = ""
     })
+    self.createButton({
+      click_function = "switchBuilderMode",
+      function_owner = self,
+      label          = "Manual",
+      font_size      = 250,
+      position       = {6, 1, 0.58},
+      width          = 1000,
+      height         = 300,
+      color          = {1, 1, 1},
+      tooltip        = "If you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks."
+    })
+
+    self.createButton({
+      click_function = "gmNormal",
+      function_owner = self,
+      label          = "",
+      position       = {-6.5, 1, -0.29},
+      width          = 300,
+      height         = 300,
+      color          = {1, 1, 1},
+      tooltip        = "Here you can change the game mode. The game mode will influence the Deck-Builder."
+    })
+    GAMEMODE_BUTTON_INDICES.NORMAL = 3
+
+    self.createButton({
+      click_function = "gmDraft",
+      function_owner = self,
+      label          = "",
+      position       = {-6.5, 1, 0.58},
+      width          = 300,
+      height         = 300,
+      color          = {1, 1, 1},
+      tooltip        = "Here you can change the game mode. The game mode will influence the Deck-Builder."
+    })
+    GAMEMODE_BUTTON_INDICES.DRAFT = 4
 
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         if loaded_data[1] == true then
             switchBuilderMode()
         end
+        if loaded_data[2] ~= nil then
+            changeGameMode(loaded_data[2])
+        else
+            changeGameMode(GAME_MODE.NORMAL)
+        end
     end
 end
 
 function onSave()
-    return JSON.encode({isDeckBuilderON()})
+    return JSON.encode({isDeckBuilderON(), SELECTED_GAME_MODE})
 end
 
 function isDeckBuilderON()
@@ -30,18 +117,27 @@ function isDeckBuilderON()
 end
 
 function switchBuilderMode()
+    if Global.call("hasGameStarted") then
+        return
+    end
     local newLabel = ""
+    local newTooltip = ""
     if not isDeckBuilderON() then
         newLabel = "✓"
+        newTooltip = "ACTIVE:\nIf you start the game the Deck-Builder will build decks dependent on the selected game mode."
+        broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").WARNING .. "Activated Deck-Builder")
+    else
+        newTooltip = "DEACTIVE:\nThe game will start with all playable cards."
+        broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").WARNING .. "Deactivated Deck-Builder")
     end
-    self.editButton({index=ACTIVE_BUTTON_INDEX-1, label=newLabel, font_color={0, 0, 0}, font_size=200})
+    self.editButton({index=ACTIVE_BUTTON_INDEX-1, label=newLabel, font_color={0, 0, 0}, font_size=250, tooltip = newTooltip})
 end
 
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------      Deck Builder        --------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
-DECK_BUILDER_MODE = {
+GAME_MODE = {
     NORMAL  = 1,
     DRAFT   = 2
 }
@@ -344,10 +440,7 @@ local function buildMonsterSepDeck(mode, preMonsterSepDeckGUIDs)
 end
 
 function buildDecks(params)
-    local buildingMode = 1
-    if params.buildingMode ~= nil then
-        buildingMode = params.buildingMode
-    end
+    local buildingMode = SELECTED_GAME_MODE
     if params.preDecks == nil then
         printToAll("[fdd835][WARNING][-] Wrong parameters in Deck Builder function 'buildDecks()'.")
     end
