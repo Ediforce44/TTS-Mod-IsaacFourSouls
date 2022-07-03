@@ -3,10 +3,14 @@ local ACTIVE_BUTTON_INDEX = 1
 
 local SELECTED_GAME_MODE = nil
 
+local BUTTONS_LOCKED = false
+
 GAMEMODE_BUTTON_INDICES = {
     NORMAL  = nil,
     DRAFT   = nil
 }
+
+TABLE_BASE_GUID = "f5c4fe"
 
 local function changeGameMode(newGameMode)
     for gameMode, index in pairs(GAMEMODE_BUTTON_INDICES) do
@@ -30,7 +34,7 @@ local function changeGameMode(newGameMode)
 end
 
 function gmNormal()
-    if Global.call("hasGameStarted") then
+    if Global.call("hasGameStarted") or BUTTONS_LOCKED then
         return
     end
     if (self.getButtons()[GAMEMODE_BUTTON_INDICES.NORMAL].label == "") then
@@ -39,12 +43,28 @@ function gmNormal()
 end
 
 function gmDraft()
-    if Global.call("hasGameStarted") then
+    if Global.call("hasGameStarted") or BUTTONS_LOCKED then
         return
     end
     if (self.getButtons()[GAMEMODE_BUTTON_INDICES.DRAFT].label == "") then
         changeGameMode(GAME_MODE.DRAFT)
     end
+end
+
+function prepareForManualDeckBuilding()
+    if Global.call("hasGameStarted") or BUTTONS_LOCKED then
+        return
+    end
+    if isDeckBuilderON() then
+        switchBuilderMode()
+    end
+    local gameLanguage = Global.getVar("gameLanguage")
+    local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
+    local preDeckGUIDs = tableBase.call("getDeckGUIDs", {language = gameLanguage})
+    tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
+
+    buildDecks({preDecks = preDeckGUIDs})
+    BUTTONS_LOCKED = true
 end
 
 function onLoad(saved_data)
@@ -59,7 +79,7 @@ function onLoad(saved_data)
       tooltip        = ""
     })
     self.createButton({
-      click_function = "switchBuilderMode",
+      click_function = "prepareForManualDeckBuilding",
       function_owner = self,
       label          = "Manual",
       font_size      = 250,
@@ -117,7 +137,7 @@ function isDeckBuilderON()
 end
 
 function switchBuilderMode()
-    if Global.call("hasGameStarted") then
+    if Global.call("hasGameStarted") or BUTTONS_LOCKED then
         return
     end
     local newLabel = ""

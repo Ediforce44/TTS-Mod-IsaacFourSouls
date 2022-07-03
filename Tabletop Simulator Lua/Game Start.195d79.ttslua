@@ -120,66 +120,67 @@ function onStart()
         return
     end
 
-    local gameLanguage = Global.getVar("gameLanguage")
-    local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
-    local preDeckGUIDs = tableBase.call("getDeckGUIDs", {language = gameLanguage})
-    tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
+    if not ready_for_setup then
+        local gameLanguage = Global.getVar("gameLanguage")
+        local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
+        local preDeckGUIDs = tableBase.call("getDeckGUIDs", {language = gameLanguage})
+        tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
+        Wait.frames(
+            function()
+                getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {preDecks = preDeckGUIDs})
+            end)
+    end
 
-    Wait.frames(
+    Wait.condition(
         function()
-            getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {preDecks = preDeckGUIDs})
+            checkAndShuffleDecks()
+            if lootDeck ~= nil then
+                lootDeck.deal(3)
+            end
+            setupPlayingArea()
 
-            Wait.condition(
-                function()
-                    checkAndShuffleDecks()
-                    if lootDeck ~= nil then
-                        lootDeck.deal(3)
+            for _, color in pairs(getSeatedPlayers()) do
+                Global.call("deactivateCharacter", {playerColor = color})
+            end
+
+            -- INSERT other setup steps
+
+            self.editButton({
+                index = 0,
+                click_function = "dummy",
+                label = "",
+                tooltip = "",
+                width = 0,
+                height = 0,
+                font_size = 0
+            })
+
+            local startPlayerColor = Global.getVar("startPlayerColor")
+            if startPlayerColor == "None" then
+                startPlayerColor = "Red"
+                for _, color in pairs(getSeatedPlayers()) do
+                    if (color == "Red") or (color == "Blue") or (color == "Green") or (color == "Yellow") then
+                        startPlayerColor = color
+                        break
                     end
-                    setupPlayingArea()
+                end
+                Global.call("setNewStartPlayer", {playerColor = startPlayerColor})
+            end
 
-                    for _, color in pairs(getSeatedPlayers()) do
-                        Global.call("deactivateCharacter", {playerColor = color})
-                    end
+            -- !!! Order matters !!!
+            Turns.type = 1
+            Turns.turn_color = startPlayerColor
+            Turns.enable = true
 
-                    -- INSERT other setup steps
+            if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
+                settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
+                destroyObject(settingUpNote)
+            end
 
-                    self.editButton({
-                        index = 0,
-                        click_function = "dummy",
-                        label = "",
-                        tooltip = "",
-                        width = 0,
-                        height = 0,
-                        font_size = 0
-                    })
-
-                    local startPlayerColor = Global.getVar("startPlayerColor")
-                    if startPlayerColor == "None" then
-                        startPlayerColor = "Red"
-                        for _, color in pairs(getSeatedPlayers()) do
-                            if (color == "Red") or (color == "Blue") or (color == "Green") or (color == "Yellow") then
-                                startPlayerColor = color
-                                break
-                            end
-                        end
-                        Global.call("setNewStartPlayer", {playerColor = startPlayerColor})
-                    end
-
-                    -- !!! Order matters !!!
-                    Turns.type = 1
-                    Turns.turn_color = startPlayerColor
-                    Turns.enable = true
-
-                    if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
-                        settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
-                        destroyObject(settingUpNote)
-                    end
-
-                    self.destroy()
-                end,
-                function()
-                    return getObjectFromGUID("195d79").getVar("ready_for_setup")
-                end)
+            self.destroy()
+        end,
+            function()
+                return getObjectFromGUID("195d79").getVar("ready_for_setup")
         end)
 end
 
