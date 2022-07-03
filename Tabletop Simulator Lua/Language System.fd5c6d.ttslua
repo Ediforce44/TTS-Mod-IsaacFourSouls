@@ -1,9 +1,16 @@
 
-LANGUAGES = {
-  "English",
-  "Russian",
-  "France"
+LANGUAGE = {
+  US = "US",
+  RU = "RU",
+  FR = "FR"
 }
+
+LANGUAGE_BUTTON_INDICES = {
+    US = nil,
+    RU = nil,
+    FR = nil
+}
+
 LANGUAGES_GUIDS = {
   ["English"] = {
     -- Rulebook
@@ -63,70 +70,103 @@ LANGUAGES_GUIDS = {
 curLanguage = "English"
 langChanging = false
 
-function onLoad(saved_data)
-  if saved_data ~= "" then
-      local loaded_data = JSON.decode(saved_data)
-      curLanguage = loaded_data.curLanguage
-  end
-
-  initButtons()
-end
-
-function onSave()
-    local data_to_save = {curLanguage=curLanguage}
-    saved_data = JSON.encode(data_to_save)
-    --saved_data = "" --Remove -- at start & save to clear save data
-    return saved_data
-end
-
-function initButtons()
+local function createButtons()
   self.createButton({
     click_function = 'switchToFrance',
     function_owner = self,
-    label = 'Française',
-    position = {-13.2, 1.5, 2.5},
-    width = 1400,
+    label = "",
+    position = {-13.75, 1.1, 0.5},
+    width = 400,
     height = 400,
-    font_size = 300,
+    font_size = 350,
   })
+  LANGUAGE_BUTTON_INDICES.FR = 1
+
   self.createButton({
     click_function = 'switchToRussian',
     function_owner = self,
-    label = 'Русский',
-    position = {-9, 1.5, 2.5},
-    width = 1400,
+    label = "",
+    position = {-10.75, 1.1, 0.5},
+    width = 400,
     height = 400,
-    font_size = 300,
+    font_size = 350,
   })
+  LANGUAGE_BUTTON_INDICES.RU = 2
+
   self.createButton({
     click_function = 'switchToEnglish',
     function_owner = self,
-    label = 'English',
-    position = {-4.3, 1.5, 2.5},
-    width = 1400,
+    label = "",
+    position = {-7.75, 1.1, 0.5},
+    width = 400,
     height = 400,
-    font_size = 300,
+    font_size = 350,
   })
+  LANGUAGE_BUTTON_INDICES.US = 3
+end
+
+function onLoad(saved_data)
+    createButtons()
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        if loaded_data[1] then
+            for _, language in pairs(LANGUAGE) do
+                if loaded_data[1] == language then
+                    switchLang(loaded_data[1])
+                    return
+                end
+            end
+            switchLang(LANGUAGE.US)
+        else
+            switchLang(LANGUAGE.US)
+        end
+    else
+        switchLang(LANGUAGE.US)
+    end
+end
+
+function onSave()
+    return JSON.encode({Global.getVar("gameLanguage")})
 end
 
 function switchToEnglish()
-  selectLang("English")
+    if Global.call("hasGameStarted") then
+        return
+    end
+    switchLang(LANGUAGE.US)
 end
 
 function switchToRussian()
-  selectLang("Russian")
+    if Global.call("hasGameStarted") then
+        return
+    end
+    switchLang(LANGUAGE.RU)
 end
 
 function switchToFrance()
-  selectLang("France")
+    if Global.call("hasGameStarted") then
+        return
+    end
+    switchLang(LANGUAGE.FR)
 end
 
-function selectLang(exLang)
-  if curLanguage == exLang or langChanging then return end
-  langChanging = true
-  changeLangObjsVisibility(curLanguage, true)
-  delayedCall("selectLangDelayed", 0.3, { exLang = exLang })
-  curLanguage = exLang
+function switchLang(newLang)
+    if Global.getVar("gameLanguage") == newLang then
+        return
+    end
+
+    for lang, index in pairs(LANGUAGE_BUTTON_INDICES) do
+        if LANGUAGE[lang] ~= newLang then
+            self.editButton({index=index-1, label=""})
+        end
+    end
+    self.editButton({index=LANGUAGE_BUTTON_INDICES[newLang]-1, label="✓", font_color={0, 0, 0}, font_size=350})
+    Global.call("setGameLanguage", {language = newLang})
+
+  --langChanging = true
+  --changeLangObjsVisibility(curLanguage, true)
+  --delayedCall("selectLangDelayed", 0.3, { exLang = exLang })
+  --curLanguage = exLang
 end
 
 function selectLangDelayed(params)

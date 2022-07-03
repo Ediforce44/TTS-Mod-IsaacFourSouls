@@ -211,7 +211,7 @@ end
 
 activePlayerColor   = "None"
 startPlayerColor    = "None"
-gameLanguage        = "US"
+gameLanguage        = "None"
 
 automaticRewarding = {
     Yellow = true,
