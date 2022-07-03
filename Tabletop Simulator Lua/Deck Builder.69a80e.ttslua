@@ -124,6 +124,8 @@ function onLoad(saved_data)
         else
             changeGameMode(GAME_MODE.NORMAL)
         end
+    else
+        changeGameMode(GAME_MODE.NORMAL)
     end
 end
 
