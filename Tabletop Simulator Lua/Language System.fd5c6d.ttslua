@@ -1,9 +1,5 @@
 
-LANGUAGE = {
-  US = "US",
-  RU = "RU",
-  FR = "FR"
-}
+local LANGUAGE = Global.getTable('GAME_LANGUAGE')
 
 LANGUAGE_BUTTON_INDICES = {
     US = nil,

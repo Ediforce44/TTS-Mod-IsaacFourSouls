@@ -245,13 +245,12 @@ function setCharacterPackScript(obj)
       cleanupSpawnedObj(playerClickerColor)
 
       local language = Global.getVar('gameLanguage')
-      log(language)
       local characterFound = cloneCharacterCards(playerClickerColor, language)
 
       if not characterFound then
         printToAll("[fdd835][WARNING][-] No character cards for the selected language found in this pack: " .. self.getName())
-        if not cloneCharacterCards(playerClickerColor, 'US') then
-            printToAll("[fdd835][WARNING][-] No standard (US) character cards found in this pack: " .. self.getName())
+        if not cloneCharacterCards(playerClickerColor, Global.getTable('GAME_LANGUAGE').US) then
+            printToAll("[fdd835][WARNING][-] No standard (English) character cards found in this pack: " .. self.getName())
             return
         end
       end

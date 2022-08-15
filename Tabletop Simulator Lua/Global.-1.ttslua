@@ -230,6 +230,12 @@ function table.copy(t)
     return tableCopy
 end
 
+GAME_LANGUAGE = {
+  US = "US",
+  RU = "RU",
+  FR = "FR"
+}
+
 REAL_PLAYER_COLOR = {
     Yellow = "[D0E431]",
     Green = "[2BB837]",
