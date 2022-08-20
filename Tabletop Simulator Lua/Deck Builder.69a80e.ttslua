@@ -305,7 +305,7 @@ end
 local function buildDeck(preDeckGUIDs, tagTable)
     local decksToMerge = {}
     if isDeckBuilderON() then
-        tagTable["EMPTY"] = 200
+        tagTable["EMPTY"] = 500
         for type, amount in pairs(tagTable) do
             if (preDeckGUIDs[type] ~= nil) and (amount > 0) then
                 local preDeck = getObjectFromGUID(preDeckGUIDs[type])

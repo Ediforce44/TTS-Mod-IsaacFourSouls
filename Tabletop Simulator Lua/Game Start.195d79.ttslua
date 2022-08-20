@@ -12,6 +12,8 @@ LOOT_DECK_ZONE_GUID = ZONE_GUIDS_DECK.LOOT
 SOUL_DECK_ZONE_GUID = ZONE_GUIDS_DECK.BONUS_SOUL
 ROOM_DECK_ZONE_GUID = ZONE_GUIDS_DECK.ROOM
 
+TABLE_BOUNDARIES = {x = 45, y = 0, z = 18}
+
 DECK_BUILDER_GUID       = "69a80e"
 SETTING_UP_NOTE_GUID    = "56a44e"
 TABLE_BASE_GUID         = "f5c4fe"
@@ -68,62 +70,109 @@ local function setupPlayingArea()
     end
 end
 
-function onLoad()
-    self.createButton({
-    click_function = "onStart",
-    label = "Start",
-    tooltip = "Click here to start!",
-    function_owner = self,
-    position = {0, 0.11, -1},
-    rotation = {0, 0, 0},
-    width = 1100,
-    height = 500,
-    font_size = 400
-})
-end
-
-function shuffleOptions(array)
-
-    local output = { }
-    local random = math.random
-
-    for index = 1, #array do
-        local offset = index - 1
-        local value = array[index]
-        local randomIndex = offset*random()
-        local flooredIndex = randomIndex - randomIndex%1
-
-        if flooredIndex == offset then
-            output[#output + 1] = value
-        else
-            output[#output + 1] = output[flooredIndex + 1]
-            output[flooredIndex + 1] = value
+local function detectExpansions()
+    local expansions = {}
+    local allObjects = Global.getObjects()
+    for _, obj in ipairs(allObjects) do
+        local objPosition = obj.getPosition()
+        if objPosition.y > TABLE_BOUNDARIES.y then
+            if math.abs(objPosition.x) < TABLE_BOUNDARIES.x then
+                if math.abs(objPosition.z) < TABLE_BOUNDARIES.z then
+                    if obj.hasTag('EXPANSION') then
+                        table.insert(expansions, obj)
+                    end
+                end
+            end
         end
     end
-
-    return output
+    return expansions
 end
 
-function decksBuilt(createdDecks)
-    treasureDeck = createdDecks.TREASURE
-    lootDeck = createdDecks.LOOT
-    monsterDeck = createdDecks.MONSTER
-    roomDeck = createdDecks.ROOM
-    soulDeck = createdDecks.BONUS_SOUL
-    ready_for_setup = true
+local function extractDecksToDeckPositions(containerObj, expansionBox)
+    local zoneGUIDs = Global.getTable('ZONE_GUID_DECK')
+    for _, deck in ipairs(containerObj.getObjects()) do
+        if zoneGUIDs[deck.name] ~= nil then
+            local deckInZone = nil
+            local zone = getObjectFromGUID(zoneGUIDs[deck.name])
+            for _, obj in pairs(zone.getObjects()) do
+                if obj.tag == "Deck" then
+                    deckInZone = obj
+                    break
+                end
+            end
+            extractedDeck = containerObj.takeObject({guid = deck.guid, position = zone.getPosition(), smooth = false,
+                rotation = Vector(180, 0, 0)})
+            if deckInZone ~= nil then
+                deckInZone.putObject(extractedDeck)
+            end
+        else
+            printToAll("[fdd835][WARNING][-] Can't find the zone where the \"" + deck.name +
+                " deck of this expansion belongs to: " + expansionBox.getName())
+        end
+    end
 end
 
-function onStart()
-    local isAllReady = isAllPlayersSelectCharacter()
-    if isAllReady == false or isAllReady == nil then
-        printToAll("[fdd835][WARNING][-] Each player must take a character before start.")
-        return
+local function extractExpansion(expansionBox, language)
+    local objectsInBox = expansionBox.getObjects()
+    for _, obj in ipairs(objectsInBox) do
+        if obj.name == language then
+            local extractedObject = expansionBox.takeObject({index = obj.index,
+                position = expansionBox.getPosition():sub(Vector(0,0, 4)), smooth = false})
+            extractDecksToDeckPositions(extractedObject, expansionBox)
+            Wait.frames(function() destroyObject(extractedObject) end, 2)
+        end
+    end
+end
+
+local function getPreDecksOnTable()
+    local preDecksOnTable = {}
+    local zoneGUIDs = Global.getTable('ZONE_GUID_DECK')
+    for zoneType, zoneGUID in pairs(zoneGUIDs) do
+        local zone = getObjectFromGUID(zoneGUID)
+        for _, obj in pairs(zone.getObjects()) do
+            if obj.tag == "Deck" then
+                preDecksOnTable[zoneType] = {EMPTY = obj.getGUID()}
+                break
+            end
+        end
+    end
+    return preDecksOnTable
+end
+
+-- deckTableTwo overwrites deckTableOne entries if there a any duplicates
+local function mergePreDecks(deckTableOne, deckTableTwo)
+    if deckTableOne == nil then
+        if deckTableTwo == nil then
+            return {}
+        else
+            return deckTableTwo
+        end
+    elseif deckTableTwo == nil then
+        return deckTableOne
     end
 
+    local resultingDeckTable = deckTableOne
+    for deckType, guidTable in pairs(deckTableTwo) do
+        local preDeckTableEntry = resultingDeckTable[deckType]
+        if preDeckTableEntry == nil then
+            preDeckTableEntry = {}
+        end
+        for cardType, GUID in pairs(guidTable) do
+            preDeckTableEntry[cardType] = GUID
+        end
+        resultingDeckTable[deckType] = preDeckTableEntry
+    end
+    return resultingDeckTable
+end
+
+local function setupOfficialContent(gameLanguage)
     if not ready_for_setup then
-        local gameLanguage = Global.getVar("gameLanguage")
         local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
+
         local preDeckGUIDs = tableBase.call("getDeckGUIDs", {language = gameLanguage})
+        local preExpansionDeckGUIDs = getPreDecksOnTable()
+        preDeckGUIDs = mergePreDecks(preDeckGUIDs, preExpansionDeckGUIDs)
+
         tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
         Wait.frames(
             function()
@@ -179,9 +228,74 @@ function onStart()
 
             self.destroy()
         end,
-            function()
-                return getObjectFromGUID("195d79").getVar("ready_for_setup")
+        function()
+            return ready_for_setup
         end)
+end
+
+function onLoad()
+    self.createButton({
+    click_function = "onStart",
+    label = "Start",
+    tooltip = "Click here to start!",
+    function_owner = self,
+    position = {0, 0.11, -1},
+    rotation = {0, 0, 0},
+    width = 1100,
+    height = 500,
+    font_size = 400
+})
+end
+
+function shuffleOptions(array)
+
+    local output = { }
+    local random = math.random
+
+    for index = 1, #array do
+        local offset = index - 1
+        local value = array[index]
+        local randomIndex = offset*random()
+        local flooredIndex = randomIndex - randomIndex%1
+
+        if flooredIndex == offset then
+            output[#output + 1] = value
+        else
+            output[#output + 1] = output[flooredIndex + 1]
+            output[flooredIndex + 1] = value
+        end
+    end
+
+    return output
+end
+
+function decksBuilt(createdDecks)
+    treasureDeck = createdDecks.TREASURE
+    lootDeck = createdDecks.LOOT
+    monsterDeck = createdDecks.MONSTER
+    roomDeck = createdDecks.ROOM
+    soulDeck = createdDecks.BONUS_SOUL
+    ready_for_setup = true
+end
+
+function onStart()
+    local isAllReady = isAllPlayersSelectCharacter()
+    if isAllReady == false or isAllReady == nil then
+        printToAll("[fdd835][WARNING][-] Each player must take a character before start.")
+        return
+    end
+
+    local gameLanguage = Global.getVar("gameLanguage")
+    local expansions = detectExpansions()
+    for _, expansion in ipairs(expansions) do
+        extractExpansion(expansion, gameLanguage)
+        Wait.frames(function() destroyObject(expansion) end, 2)
+    end
+
+    Wait.time(
+        function()
+            setupOfficialContent(gameLanguage)
+        end, 2)
 end
 
 function isAllPlayersSelectCharacter()
