@@ -48,6 +48,96 @@ OBJECTS_UNDER_TABLE = {
         MONSTER_SEP = {
             MS_ALL = "2f818b"
         }
+    },
+    RU = {
+        TREASURE = {
+            T_ACTIVE  = "c2b313",
+            T_PASSIVE = "bee8da",
+            T_PAID    = "ea08ae",
+            T_ONE_USE = "5aa37f",
+            T_SOUL    = "0c7644"
+        },
+        LOOT = {
+            L_TAROT_MISC    = "c98157",
+            L_TRINKET       = "1f497c",
+            L_PILL          = "2ea6fe",
+            L_RUNE          = "127198",
+            L_BUTTER_BEAN   = "9dafb1",
+            L_BOMB          = "ffe4df",
+            L_BATTERY       = "b621b8",
+            L_DICE_SHARD    = "939d60",
+            L_SOUL_HEART    = "7393d0",
+            L_LOST_SOUL     = "22875f",
+            L_NICKEL        = "5a8229",
+            L_FOUR_CENT     = "43a2db",
+            L_THREE_CENT    = "5de503",
+            L_TWO_CENT      = "41164a",
+            L_ONE_CENT      = "571f03"
+        },
+        MONSTER = {
+            M_EPIC        = "6ebe2d",
+            M_BOSS        = "cbdd46",
+            M_BASIC       = "bc5d83",
+            M_CURSED      = "fec70e",
+            M_HOLY_CHARMED= "48ee37",
+            M_GOOD        = "60b972",
+            M_BAD         = "135197",
+            M_CURSE       = "e74578"
+        },
+        ROOM = {
+            R_ALL   = "e2f488"
+        },
+        BONUS_SOUL = {
+            BS_ALL  = "77a365"
+        },
+        MONSTER_SEP = {
+            MS_ALL = "2a3272"
+        }
+    },
+    ES = {
+        TREASURE = {
+            T_ACTIVE  = "3a39c0",
+            T_PASSIVE = "c245e4",
+            T_PAID    = "b4f6d2",
+            T_ONE_USE = "054560",
+            T_SOUL    = "c97e30"
+        },
+        LOOT = {
+            L_TAROT_MISC    = "090e03",
+            L_TRINKET       = "e1f3c5",
+            L_PILL          = "2f9e5b",
+            L_RUNE          = "1de45f",
+            L_BUTTER_BEAN   = "7901e8",
+            L_BOMB          = "3dfc41",
+            L_BATTERY       = "f4edad",
+            L_DICE_SHARD    = "b6004b",
+            L_SOUL_HEART    = "a66cce",
+            L_LOST_SOUL     = "03e1af",
+            L_NICKEL        = "77d2b2",
+            L_FOUR_CENT     = "c7a49f",
+            L_THREE_CENT    = "0686ae",
+            L_TWO_CENT      = "7066e1",
+            L_ONE_CENT      = "ec2c81"
+        },
+        MONSTER = {
+            M_EPIC        = "969a9c",
+            M_BOSS        = "88586b",
+            M_BASIC       = "79615e",
+            M_CURSED      = "33433f",
+            M_HOLY_CHARMED= "8ae1a7",
+            M_GOOD        = "1dd9cc",
+            M_BAD         = "8bcdb7",
+            M_CURSE       = "cdcb48"
+        },
+        ROOM = {
+            R_ALL   = "d8e0cb"
+        },
+        BONUS_SOUL = {
+            BS_ALL  = "8fcabc"
+        },
+        MONSTER_SEP = {
+            MS_ALL = "11585a"
+        }
     }
 }
 
