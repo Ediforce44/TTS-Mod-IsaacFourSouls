@@ -1,6 +1,8 @@
 -- The Baseplate of the table
 ----- Manages the decks and cards under the table
 
+DEBUG = false    -- Only activate if you want to make changes to the card repository under the table
+
 OBJECTS_UNDER_TABLE = {
     US = {
         TREASURE = {
@@ -49,7 +51,48 @@ OBJECTS_UNDER_TABLE = {
     }
 }
 
+local function prepareDebug()
+    local basePosition = self.getPosition()
+    if basePosition.y < 0 then
+        self.interactable = false
+        for _, languageTable in pairs(OBJECTS_UNDER_TABLE) do
+            for _, objGUIDs in pairs(languageTable) do
+                for _, guid in pairs(objGUIDs) do
+                    local obj = getObjectFromGUID(guid)
+                    if obj then
+                        obj.interactable = true
+                        local newObjPosition = obj.getPosition():setAt('y', self.getPosition().y + 16)
+                        obj.setPosition(newObjPosition)
+                    end
+                end
+            end
+        end
+        local newPosition = basePosition:setAt('y', basePosition.y + 15)
+        self.setPosition(newPosition)
+    else
+        self.interactable = false
+        for _, languageTable in pairs(OBJECTS_UNDER_TABLE) do
+            for _, objGUIDs in pairs(languageTable) do
+                for _, guid in pairs(objGUIDs) do
+                    local obj = getObjectFromGUID(guid)
+                    if obj then
+                        obj.interactable = false
+                        local newObjPosition = obj.getPosition():setAt('y', obj.getPosition().y - 15)
+                        obj.setPosition(newObjPosition)
+                    end
+                end
+            end
+        end
+        local newPosition = basePosition:setAt('y', basePosition.y - 15)
+        self.setPosition(newPosition)
+    end
+end
+
 function onLoad()
+    if DEBUG then
+        prepareDebug()
+        return
+    end
     self.interactable = false
 
     for _, languageTable in pairs(OBJECTS_UNDER_TABLE) do
@@ -58,6 +101,7 @@ function onLoad()
                 local obj = getObjectFromGUID(guid)
                 if obj then
                     obj.interactable = false
+                    obj.setLock(false)
                 end
             end
         end
