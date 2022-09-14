@@ -6,6 +6,7 @@ This is a map to help with redundant stuff. This map will help you:
 [list] 
  [*] If you need to write the same line of Lua-Code into multiple scripts
  [*] If you want to create the same variable in multiple scripts with different values
+ [*] if you want to add the same tags to a lot of objects
 [/list]
 
 [h2] Example use case [/h2]
