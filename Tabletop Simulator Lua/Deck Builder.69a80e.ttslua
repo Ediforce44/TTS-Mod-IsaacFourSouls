@@ -303,37 +303,40 @@ local function mergeDecks(decks, startDeck)
 end
 
 local function buildDeck(preDeckGUIDs, tagTable)
-    local decksToMerge = {}
+    local selectedDecks = {}
+    local leftoverDecks = {}
     if isDeckBuilderON() then
         tagTable["EMPTY"] = 500
-        for type, amount in pairs(tagTable) do
-            if (preDeckGUIDs[type] ~= nil) and (amount > 0) then
+        for type, amountToTake in pairs(tagTable) do
+            if (preDeckGUIDs[type] ~= nil) and (amountToTake > 0) then
                 local preDeck = getObjectFromGUID(preDeckGUIDs[type])
                 if preDeck.tag == "Deck" then
-                    if amount == 1 then
-                        table.insert(decksToMerge, preDeck.takeObject())  -- For the edge case that only one card should be choosen
-                    elseif amount == (preDeck.getQuantity() - 1) then
-                        preDeck.takeObject().interactable = false
-                        table.insert(decksToMerge, preDeck)
+                    if amountToTake == 1 then
+                        table.insert(selectedDecks, preDeck.takeObject())  -- For the edge case that only one card should be choosen
+                        table.insert(leftoverDecks, preDeck)
+                    elseif amountToTake == (preDeck.getQuantity() - 1) then
+                        local cardLeft = preDeck.takeObject()
+                        table.insert(selectedDecks, preDeck)
+                        table.insert(leftoverDecks, cardLeft)
                     else
-                        local splitDecks = preDeck.cut(preDeck.getQuantity() - amount)
+                        local splitDecks = preDeck.cut(preDeck.getQuantity() - amountToTake)
                         if splitDecks ~= nil then
-                            splitDecks[2].interactable = false
+                            table.insert(leftoverDecks, splitDecks[2])
                         end
-                        table.insert(decksToMerge, preDeck)
+                        table.insert(selectedDecks, preDeck)
                     end
                 else
-                    table.insert(decksToMerge, preDeck)
+                    table.insert(selectedDecks, preDeck)
                 end
             end
         end
     else
         for _, guid in pairs(preDeckGUIDs) do
-            table.insert(decksToMerge, getObjectFromGUID(guid))
+            table.insert(selectedDecks, getObjectFromGUID(guid))
         end
     end
 
-    return mergeDecks(decksToMerge)
+    return {mergeDecks(selectedDecks), mergeDecks(leftoverDecks)}
 end
 
 local function deckBuildBarrier(deckType, deck)
@@ -348,9 +351,20 @@ local function deckBuildBarrier(deckType, deck)
     end
 end
 
+local function placeLeftoverDeck(deck, position, name)
+    if deck == nil then
+        return
+    end
+    deck.setPositionSmooth(position)
+    deck.setRotationSmooth({0, 270, 180}, false)
+    deck.interactable = true,
+    deck.setName(name)
+end
+
 local function buildTreasureDeck(mode, preTreasureDeckGUIDs)
-    local treasureDeck = nil
-    treasureDeck = buildDeck(preTreasureDeckGUIDs, DECK_TREASURE[mode])
+    local treasureDecks = buildDeck(preTreasureDeckGUIDs, DECK_TREASURE[mode])
+    local treasureDeck = treasureDecks[1]
+    local leftOverTreasureDeck = treasureDecks[2]
 
     if treasureDeck == nil then
         printToAll("[fdd835][WARNING][-] Can't build treasure deck. [C30000][Please restart this map.][-]")
@@ -362,12 +376,15 @@ local function buildTreasureDeck(mode, preTreasureDeckGUIDs)
     treasureDeck.interactable = true
     treasureDeck.setName("Treasure Deck")
 
+    placeLeftoverDeck(leftOverTreasureDeck, Global.getTable("DECK_POSITION").LO_TREASURE, "Leftover Treasure Cards")
+
     Wait.condition(function() deckBuildBarrier("TREASURE", treasureDeck) end, function() return treasureDeck.resting end)
 end
 
 local function buildLootDeck(mode, preLootDeckGUIDs)
-    local lootDeck = nil
-    lootDeck = buildDeck(preLootDeckGUIDs, DECK_LOOT[mode])
+    local lootDecks = buildDeck(preLootDeckGUIDs, DECK_LOOT[mode])
+    local lootDeck = lootDecks[1]
+    local leftOverLootDeck = lootDecks[2]
 
     if lootDeck == nil then
         printToAll("[fdd835][WARNING][-] Can't build loot deck. [C30000][Please restart this map.][-]")
@@ -379,12 +396,15 @@ local function buildLootDeck(mode, preLootDeckGUIDs)
     lootDeck.interactable = true
     lootDeck.setName("Loot Deck")
 
+    placeLeftoverDeck(leftOverLootDeck, Global.getTable("DECK_POSITION").LO_LOOT, "Leftover Loot Cards")
+
     Wait.condition(function() deckBuildBarrier("LOOT", lootDeck) end, function() return lootDeck.resting end)
 end
 
 local function buildMonsterDeck(mode, preMonsterDeckGUIDs)
-    local monsterDeck = nil
-    monsterDeck = buildDeck(preMonsterDeckGUIDs, DECK_MONSTER[mode])
+    local monsterDecks = buildDeck(preMonsterDeckGUIDs, DECK_MONSTER[mode])
+    local monsterDeck = monsterDecks[1]
+    local leftOverMonsterDeck = monsterDecks[2]
 
     if monsterDeck == nil then
         printToAll("[fdd835][WARNING][-] Can't build monster deck. [C30000][Please restart this map.][-]")
@@ -396,29 +416,29 @@ local function buildMonsterDeck(mode, preMonsterDeckGUIDs)
     monsterDeck.interactable = true
     monsterDeck.setName("Monster Deck")
 
+    placeLeftoverDeck(leftOverMonsterDeck, Global.getTable("DECK_POSITION").LO_MONSTER, "Leftover Monster Cards")
+
     Wait.condition(function() deckBuildBarrier("MONSTER", monsterDeck) end, function() return monsterDeck.resting end)
 end
 
 local function buildRoomDeck(mode, preRoomDeckGUIDs)
-    local roomDeck = nil
-    roomDeck = buildDeck(preRoomDeckGUIDs, DECK_ROOM)
+    local roomDeck = buildDeck(preRoomDeckGUIDs, DECK_ROOM)[1]
 
     if roomDeck == nil then
         printToAll("[fdd835][WARNING][-] Can't build room deck. [C30000][Please restart this map.][-]")
         return
     end
 
-    roomDeck.interactable = true
     roomDeck.setPositionSmooth(Global.getTable("DECK_POSITION").ROOM, false)
     roomDeck.setRotationSmooth({180, 0, 0}, false)
+    roomDeck.interactable = true
     roomDeck.setName("Room Deck")
 
     Wait.condition(function() deckBuildBarrier("ROOM", roomDeck) end, function() return roomDeck.resting end)
 end
 
 local function buildBonusSoulDeck(mode, preBonusSoulDeckGUIDs)
-    local bonusSoulDeck = nil
-    bonusSoulDeck = buildDeck(preBonusSoulDeckGUIDs, DECK_BONUS_SOUL)
+    local bonusSoulDeck = buildDeck(preBonusSoulDeckGUIDs, DECK_BONUS_SOUL)[1]
 
     if bonusSoulDeck == nil then
         printToAll("[fdd835][WARNING][-] Can't build bonus soul deck. [C30000][Please restart this map.][-]")
@@ -435,8 +455,7 @@ local function buildBonusSoulDeck(mode, preBonusSoulDeckGUIDs)
 end
 
 local function buildMonsterSepDeck(mode, preMonsterSepDeckGUIDs)
-    local monsterSepDeck = nil
-    monsterSepDeck = buildDeck(preMonsterSepDeckGUIDs, DECK_MONSTER_SEP)
+    local monsterSepDeck = buildDeck(preMonsterSepDeckGUIDs, DECK_MONSTER_SEP)[1]
 
     if monsterSepDeck == nil then
         local lastCard = nil

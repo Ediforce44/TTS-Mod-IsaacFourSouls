@@ -39,6 +39,9 @@ local function setPositionTables()
     DECK_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DECK.MONSTER).getPosition():setAt('y', 5)
     DECK_POSITION.BONUS_SOUL = getObjectFromGUID(ZONE_GUID_DECK.BONUS_SOUL).getPosition():setAt('y', 5)
     DECK_POSITION.MONSTER_SEP = {41.73, 5, -11.51}
+    DECK_POSITION.LO_TREASURE = {41.73, 5, 15.06}
+    DECK_POSITION.LO_LOOT = {41.73, 5, 11.73}
+    DECK_POSITION.LO_MONSTER = {41.73, 5, -14.84}
 end
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -386,7 +389,10 @@ DECK_POSITION = {
     BONUS_SOULS = {},
     LOOT = {},
     MONSTER = {},
-    MONSTER_SEP = {}
+    MONSTER_SEP = {},
+    LO_TREASURE = {},
+    LO_LOOT = {},
+    LO_MONSTER = {}
 }
 
 function setGameLanguage(params)
