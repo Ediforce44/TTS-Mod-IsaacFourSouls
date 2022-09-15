@@ -398,8 +398,8 @@ function setGameLanguage(params)
 end
 
 function hasGameStarted()
-    local startButtonGUID = "56a44e"
-    if getObjectFromGUID(startButtonGUID) then
+    local setupNoteGUID = "56a44e"
+    if getObjectFromGUID(setupNoteGUID) then
         return false
     end
     return true

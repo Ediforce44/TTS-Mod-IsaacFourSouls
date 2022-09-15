@@ -3,6 +3,8 @@ FLOOR_CHANGE_GUID = "69a80d"
 
 PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
 
+START_BUTTON_INDEX = 1
+
 --- Edited by Ediforce44
 ZONE_GUIDS_DECK = Global.getTable("ZONE_GUID_DECK")
 MONSTER_DECK_ZONE_GUID = ZONE_GUIDS_DECK.MONSTER
@@ -165,6 +167,14 @@ local function mergePreDecks(deckTableOne, deckTableTwo)
     return resultingDeckTable
 end
 
+local function setupExpansions(gameLanguage)
+    local expansions = detectExpansions()
+    for _, expansion in ipairs(expansions) do
+        extractExpansion(expansion, gameLanguage)
+        Wait.frames(function() destroyObject(expansion) end, 2)
+    end
+end
+
 local function setupOfficialContent(gameLanguage)
     if not ready_for_setup then
         local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
@@ -221,11 +231,6 @@ local function setupOfficialContent(gameLanguage)
             Turns.turn_color = startPlayerColor
             Turns.enable = true
 
-            if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
-                settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
-                destroyObject(settingUpNote)
-            end
-
             self.destroy()
         end,
         function()
@@ -241,6 +246,7 @@ function onLoad()
     function_owner = self,
     position = {0, 0.11, -1},
     rotation = {0, 0, 0},
+    color = {1, 1, 1},
     width = 1100,
     height = 500,
     font_size = 400
@@ -278,24 +284,44 @@ function decksBuilt(createdDecks)
     ready_for_setup = true
 end
 
+function fadeOutButton(timeToFade)
+    local timeSlices = timeToFade * 30
+    local sliceLength = timeToFade / timeSlices
+    local startColor = self.getButtons()[START_BUTTON_INDEX].color
+    local colorSub = {sliceLength * startColor[1], sliceLength * startColor[2], sliceLength * startColor[3]}
+    for slice = 0, timeSlices do
+        Wait.time(function ()
+            local preColor = self.getButtons()[START_BUTTON_INDEX].color
+            local newColor = {preColor[1] - colorSub[1], preColor[2] - colorSub[2], preColor[3] - colorSub[3]}
+            self.editButton({index = START_BUTTON_INDEX - 1, color = newColor})
+        end, slice * sliceLength)
+    end
+end
+
 function onStart()
+    if Global.call("hasGameStarted") then
+        return
+    end
+    
     local isAllReady = isAllPlayersSelectCharacter()
     if isAllReady == false or isAllReady == nil then
         printToAll("[fdd835][WARNING][-] Each player must take a character before start.")
         return
     end
 
-    local gameLanguage = Global.getVar("gameLanguage")
-    local expansions = detectExpansions()
-    for _, expansion in ipairs(expansions) do
-        extractExpansion(expansion, gameLanguage)
-        Wait.frames(function() destroyObject(expansion) end, 2)
+    if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
+        settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
+        destroyObject(settingUpNote)
     end
 
-    Wait.time(
-        function()
+    local gameLanguage = Global.getVar("gameLanguage")
+    --TODO: Implement better version for the expansions
+    --setupExpansions(gameLanguage)
+
+    --Wait.time(
+    --    function()
             setupOfficialContent(gameLanguage)
-        end, 2)
+    --    end, 2)
 end
 
 function isAllPlayersSelectCharacter()
