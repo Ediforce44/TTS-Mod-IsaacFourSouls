@@ -225,7 +225,7 @@ end
 function getDeckGUIDs(params)
     local language = params.language
     if language == nil then
-        language = "US"
+        language = Global.getTable("GAME_LANGUAGE").US
     end
     return OBJECTS_UNDER_TABLE[language]
 end

@@ -233,7 +233,8 @@ end
 GAME_LANGUAGE = {
   US = "US",
   RU = "RU",
-  FR = "FR"
+  FR = "FR",
+  ES = "ES"
 }
 
 REAL_PLAYER_COLOR = {

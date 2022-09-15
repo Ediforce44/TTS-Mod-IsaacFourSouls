@@ -4,7 +4,8 @@ local LANGUAGE = Global.getTable('GAME_LANGUAGE')
 LANGUAGE_BUTTON_INDICES = {
     US = nil,
     RU = nil,
-    FR = nil
+    FR = nil,
+    ES = nil
 }
 
 LANGUAGES_GUIDS = {
@@ -70,11 +71,14 @@ local function createButtons()
   self.createButton({
     click_function = 'switchToFrance',
     function_owner = self,
-    label = "",
+    --label = "",
+    label = "✘",                        --TODO DELETE
+    font_color = {0.8, 0, 0},           --TODO DELETE
     position = {-13.75, 1.1, 0.5},
     width = 400,
     height = 400,
-    font_size = 350,
+    --font_size = 350,
+    font_size = 400                     --TODO DELETE
   })
   LANGUAGE_BUTTON_INDICES.FR = 1
 
@@ -99,6 +103,17 @@ local function createButtons()
     font_size = 350,
   })
   LANGUAGE_BUTTON_INDICES.US = 3
+
+  self.createButton({
+    click_function = 'switchToSpanish',
+    function_owner = self,
+    label = "",
+    position = {-4.75, 1.1, 0.5},
+    width = 400,
+    height = 400,
+    font_size = 350,
+  })
+  LANGUAGE_BUTTON_INDICES.ES = 4
 end
 
 function onLoad(saved_data)
@@ -140,10 +155,22 @@ function switchToRussian()
 end
 
 function switchToFrance()
+    --TODO Delete if france cards are added
+        if true then
+            return
+        end
+
     if Global.call("hasGameStarted") then
         return
     end
     switchLang(LANGUAGE.FR)
+end
+
+function switchToSpanish()
+    if Global.call("hasGameStarted") then
+        return
+    end
+    switchLang(LANGUAGE.ES)
 end
 
 function switchLang(newLang)
@@ -153,7 +180,9 @@ function switchLang(newLang)
 
     for lang, index in pairs(LANGUAGE_BUTTON_INDICES) do
         if LANGUAGE[lang] ~= newLang then
-            self.editButton({index=index-1, label=""})
+            if LANGUAGE[lang] ~= LANGUAGE.FR then               --TODO DELETE
+                self.editButton({index=index-1, label=""})
+            end
         end
     end
     self.editButton({index=LANGUAGE_BUTTON_INDICES[newLang]-1, label="✓", font_color={0, 0, 0}, font_size=350})
