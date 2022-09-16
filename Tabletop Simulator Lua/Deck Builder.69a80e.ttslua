@@ -290,8 +290,8 @@ local function mergeDecks(decks, startDeck)
 
     if #tempCards > 0 then
         if buildDeck == nil then
-            printToAll("[fdd835][WARNING][-] The Deck-Builder can't build a deck if all parts of the deck are single cards."
-                .. "At least one part of the deck has to be a deck already.")
+            Global.call("printWarning", {text = "The Deck-Builder can't build a deck if all parts of the deck are single cards."
+                .. "At least one part of the deck has to be a deck already."})
         else
             for _, card in pairs(tempCards) do
                 buildDeck.putObject(card)
@@ -367,7 +367,7 @@ local function buildTreasureDeck(mode, preTreasureDeckGUIDs)
     local leftOverTreasureDeck = treasureDecks[2]
 
     if treasureDeck == nil then
-        printToAll("[fdd835][WARNING][-] Can't build treasure deck. [C30000][Please restart this map.][-]")
+        Global.call("printWarning", {text = "Can't build treasure deck. [C30000][Please restart this map.][-]"})
         return
     end
 
@@ -387,7 +387,7 @@ local function buildLootDeck(mode, preLootDeckGUIDs)
     local leftOverLootDeck = lootDecks[2]
 
     if lootDeck == nil then
-        printToAll("[fdd835][WARNING][-] Can't build loot deck. [C30000][Please restart this map.][-]")
+        Global.call("printWarning", {text = "Can't build loot deck. [C30000][Please restart this map.][-]"})
         return
     end
 
@@ -407,7 +407,7 @@ local function buildMonsterDeck(mode, preMonsterDeckGUIDs)
     local leftOverMonsterDeck = monsterDecks[2]
 
     if monsterDeck == nil then
-        printToAll("[fdd835][WARNING][-] Can't build monster deck. [C30000][Please restart this map.][-]")
+        Global.call("printWarning", {text = "Can't build monster deck. [C30000][Please restart this map.][-]"})
         return
     end
 
@@ -425,7 +425,7 @@ local function buildRoomDeck(mode, preRoomDeckGUIDs)
     local roomDeck = buildDeck(preRoomDeckGUIDs, DECK_ROOM)[1]
 
     if roomDeck == nil then
-        printToAll("[fdd835][WARNING][-] Can't build room deck. [C30000][Please restart this map.][-]")
+        Global.call("printWarning", {text = "Can't build room deck. [C30000][Please restart this map.][-]"})
         return
     end
 
@@ -441,7 +441,7 @@ local function buildBonusSoulDeck(mode, preBonusSoulDeckGUIDs)
     local bonusSoulDeck = buildDeck(preBonusSoulDeckGUIDs, DECK_BONUS_SOUL)[1]
 
     if bonusSoulDeck == nil then
-        printToAll("[fdd835][WARNING][-] Can't build bonus soul deck. [C30000][Please restart this map.][-]")
+        Global.call("printWarning", {text = "Can't build bonus soul deck. [C30000][Please restart this map.][-]"})
         return
     end
 
@@ -481,7 +481,7 @@ end
 function buildDecks(params)
     local buildingMode = SELECTED_GAME_MODE
     if params.preDecks == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in Deck Builder function 'buildDecks()'.")
+        Global.call("printWarning", {text = "Wrong parameters in Deck Builder function 'buildDecks()'."})
     end
     buildTreasureDeck(buildingMode, params.preDecks.TREASURE)
     buildLootDeck(buildingMode, params.preDecks.LOOT)

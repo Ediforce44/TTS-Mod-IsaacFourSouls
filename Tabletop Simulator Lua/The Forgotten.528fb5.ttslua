@@ -43,55 +43,83 @@
       })
     end
 
+    local function cloneByGUID(cloneGUID)
+        local obj = self.takeObject({guid = cloneGUID})
+        local objClone = obj.clone()
+        Wait.frames(function() self.putObject(obj) end, 5)
+        return objClone
+    end
+
+    local function cloneCharacterCards(playerClickerColor, languagePrefix)
+        local spawnedObj = {}
+        local characterPlaced = false
+        local content = self.getObjects()
+        for index = 1, self.getQuantity() do
+          local nextObj = content[index]
+          local nextObjDescription = nextObj.description
+          local objClone = nil
+
+          if nextObjDescription == languagePrefix .. "_character" then
+            objClone = cloneByGUID(nextObj.guid)
+            Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
+            characterPlaced = true
+          elseif nextObjDescription == languagePrefix .. "_character-item" or nextObjDescription == "character-item-counter" then
+            objClone = cloneByGUID(nextObj.guid)
+            Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
+          elseif nextObjDescription == languagePrefix .. "_character-soul" then
+            objClone = cloneByGUID(nextObj.guid)
+            Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
+          else
+            goto continue
+          end
+
+          if objClone.getStateId() != -1 then
+            for _, state in pairs(objClone.getStates()) do
+              table.insert(spawnedObj, state.guid)
+            end
+          end
+
+          table.insert(spawnedObj, objClone.guid)
+          ::continue::
+        end
+        if characterPlaced then
+          updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
+          return true
+        else
+          return false
+        end
+    end
+
     function selectCharacter(_, playerClickerColor)
       if PLAYER_COLORS[playerClickerColor] == nil then
-        printToColor("[fdd835][WARNING][-] Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", playerClickerColor)
+        Global.call("printWarningTP", {text = "Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", color =  playerClickerColor})
         return
       end
 
       local characterRandomizer = getObjectFromGUID(CHARACTER_RANDOMIZER_GUID)
       local waitForSelectCharacters = characterRandomizer.getTable("waitForSelectCharacters")
       if #waitForSelectCharacters[playerClickerColor] > 0 and not isCharacterInPullToSelect(waitForSelectCharacters) then
-        printToColor("[fdd835][WARNING][-] You can't select character from global pull while you select from random.", playerClickerColor)
+        Global.call("printWarningTP", {text = "You can't select character from global pull while you select from random.", color =  playerClickerColor})
         return
       end
 
       if isCharacterInAnotherPlayerPullToSelect(playerClickerColor, waitForSelectCharacters) then
-        printToColor("[fdd835][WARNING][-] You can't select character from another player pull.", playerClickerColor)
+        Global.call("printWarningTP", {text = "You can't select character from another player pull.", color =  playerClickerColor})
         return
       end
 
       cleanupSpawnedObj(playerClickerColor)
 
-      local spawnedObj = {}
-      local cardsInPackCount = self.getQuantity()
-      for i = 1, cardsInPackCount do
-        local obj = self.takeObject({ index = 0 })
-        local objClone = obj.clone()
-        Wait.frames(function() self.putObject(obj) end, 5)
-        local objDescription = objClone.getDescription()
+      local language = Global.getVar('gameLanguage')
+      local characterFound = cloneCharacterCards(playerClickerColor, language)
 
-        if objDescription == "character" then
-          Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
-        elseif objDescription == "character-item" or objDescription == "character-item-counter" then
-          Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
-        elseif objDescription == "character-soul" then
-          Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
-        else
-          printToColor("[ef5350][ERROR][-] Unknown " .. objDescription .. " card description matadata. Maybe you changed description of card?" , playerClickerColor)
-          return
+      if not characterFound then
+        Global.call("printWarning", {text = "No character cards for the selected language found in this pack: " .. self.getName()})
+        if not cloneCharacterCards(playerClickerColor, Global.getTable('GAME_LANGUAGE').US) then
+            Global.call("printWarning", {text = "No standard (English) character cards found in this pack: " .. self.getName()})
+            return
         end
-
-        if objClone.getStateId() != -1 then
-          for _, state in pairs(objClone.getStates()) do
-            table.insert(spawnedObj, state.guid)
-          end
-        end
-
-        table.insert(spawnedObj, objClone.guid)
       end
-
-      updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
     end
 
     function isCharacterInPullToSelect(waitForSelectCharacters)
@@ -168,3 +196,4 @@
     function isCharacterInPullToSelectByCall(params)
       return isCharacterInPullToSelect(params.waitForSelectCharacters)
     end
+  

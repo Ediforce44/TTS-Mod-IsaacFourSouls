@@ -203,7 +203,7 @@ function shufflePreDecks(params)
 
     if params.language == nil then
         if params.preDecks == nil then
-            printToAll("[fdd835][WARNING][-] Wrong parameters in Table Base function 'shufflePreDecks()'.")
+            Global.call("printWarning", {text = "Wrong parameters in Table Base function 'shufflePreDecks()'."})
             return
         else
             preDecks = params.preDecks

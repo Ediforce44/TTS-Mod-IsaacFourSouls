@@ -226,19 +226,19 @@ function setCharacterPackScript(obj)
 
     function selectCharacter(_, playerClickerColor)
       if PLAYER_COLORS[playerClickerColor] == nil then
-        printToColor("[fdd835][WARNING][-] Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", playerClickerColor)
+        Global.call("printWarningTP", {text = "Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", color =  playerClickerColor})
         return
       end
 
       local characterRandomizer = getObjectFromGUID(CHARACTER_RANDOMIZER_GUID)
       local waitForSelectCharacters = characterRandomizer.getTable("waitForSelectCharacters")
       if #waitForSelectCharacters[playerClickerColor] > 0 and not isCharacterInPullToSelect(waitForSelectCharacters) then
-        printToColor("[fdd835][WARNING][-] You can't select character from global pull while you select from random.", playerClickerColor)
+        Global.call("printWarningTP", {text = "You can't select character from global pull while you select from random.", color =  playerClickerColor})
         return
       end
 
       if isCharacterInAnotherPlayerPullToSelect(playerClickerColor, waitForSelectCharacters) then
-        printToColor("[fdd835][WARNING][-] You can't select character from another player pull.", playerClickerColor)
+        Global.call("printWarningTP", {text = "You can't select character from another player pull.", color =  playerClickerColor})
         return
       end
 
@@ -248,9 +248,9 @@ function setCharacterPackScript(obj)
       local characterFound = cloneCharacterCards(playerClickerColor, language)
 
       if not characterFound then
-        printToAll("[fdd835][WARNING][-] No character cards for the selected language found in this pack: " .. self.getName())
+        Global.call("printWarning", {text = "No character cards for the selected language found in this pack: " .. self.getName()})
         if not cloneCharacterCards(playerClickerColor, Global.getTable('GAME_LANGUAGE').US) then
-            printToAll("[fdd835][WARNING][-] No standard (English) character cards found in this pack: " .. self.getName())
+            Global.call("printWarning", {text = "No standard (English) character cards found in this pack: " .. self.getName()})
             return
         end
       end

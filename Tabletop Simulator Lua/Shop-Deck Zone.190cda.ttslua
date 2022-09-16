@@ -17,7 +17,7 @@ SHOP_BUTTON_INDEX = nil
 local function printBuyPhrase(itemName)
     local phrase = nil
     if itemName == "" then
-        printToAll("[fdd835][WARNING][-] There is no item to purchase in this zone. The attribute 'NAME' is empty.")
+        Global.call("printWarning", {text = "There is no item to purchase in this zone. The attribute 'NAME' is empty."})
     else
         phrase = Global.call("getActivePlayerString")
         phrase = phrase .. " got " .. Global.getTable("PRINT_COLOR_SPECIAL").TREASURE_LIGHT .. itemName .. "[-] !!!"
@@ -264,7 +264,7 @@ function click_function_PurchaseButton(zone, color, alt_click)
                     end, 60)
             end
         else
-            printToAll("[fdd835][WARNING][-] Unknown shop button state: " .. tostring(attackButton.label) .. ".")
+            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(attackButton.label) .. "."})
         end
     end
 end
@@ -275,7 +275,7 @@ function click_function_ShopButton(zone, color, alt_click)
         if shopButton.label == SHOP_BUTTON_STATES.PURCHASE then
             purchaseShopDeckItem()
         else
-            printToAll("[fdd835][WARNING][-] Unknown shop button state: " .. tostring(attackButton.label) .. ".")
+            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(attackButton.label) .. "."})
         end
     end
 end

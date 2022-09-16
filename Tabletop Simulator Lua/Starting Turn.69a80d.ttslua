@@ -137,7 +137,7 @@ end
 
 function selectStartTurn(params)
   if params.playerColor == nil then
-    printToAll("[fdd835][WARNING][-] Wrong parameters in starting turn function 'selectStartTurn()'.")
+    Global.call("printWarning", {text = "Wrong parameters in starting turn function 'selectStartTurn()'."})
     return
   end
 

@@ -102,7 +102,7 @@ end
 function randomizeToAll(_, playerClickerColor)
   loadCharactersFromWorld()
   if #characterPull < 6 then
-    printToColor("[fdd835][WARNING][-] Too few characters (min: 6). Maybe you forget  press \"Place characters\" button?", playerClickerColor)
+    Global.call("printWarningTP", {text = "Too few characters (min: 6). Maybe you forget  press \"Place characters\" button?", color =  playerClickerColor})
     return
   end
 
@@ -115,7 +115,7 @@ end
 function randomizeToMe(_, playerClickerColor)
   loadCharactersFromWorld()
   if #characterPull < 2 then
-    printToColor("[fdd835][WARNING][-] Too few characters (min: 2). Maybe you forget  press \"Place characters\" button?", playerClickerColor)
+    Global.call("printWarningTP", {text = "Too few characters (min: 2). Maybe you forget  press \"Place characters\" button?", color =  playerClickerColor})
     return
   end
 
@@ -124,12 +124,12 @@ end
 
 function randomizeToPlayer(playerColor)
   if waitForSelectCharacters[playerColor] == nil then
-    printToColor("[fdd835][WARNING][-] " .. playerColor .. " is invalid color. " .. playerColor .. " must change color to one of valid: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", playerColor)
+    Global.call("printWarningTP", {text = "" .. playerColor .. " is invalid color. " .. playerColor .. " must change color to one of valid: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", color =  playerColor})
     return
   end
 
   if #waitForSelectCharacters[playerColor] ~= 0 then
-    printToColor("[fdd835][WARNING][-] " .. playerColor .. " already selecting character.", playerColor)
+    Global.call("printWarningTP", {text = "" .. playerColor .. " already selecting character.", color =  playerColor})
     return
   end
 

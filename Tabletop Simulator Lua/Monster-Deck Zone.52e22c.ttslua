@@ -255,7 +255,7 @@ end
 
 function containsDeckOrCard(params)
     if params.zone == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'containsDeckOrCard()'.")
+        Global.call("printWarning", {text = "Wrong parameters in 'monster deck' function 'containsDeckOrCard()'."})
     else
         for _ , obj in pairs(params.zone.getObjects()) do
             if obj.tag == "Deck" or obj.tag == "Card" then
@@ -268,7 +268,7 @@ end
 
 function discardMonsterObject(params)
     if params.object == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'discardMonsterObject()'.")
+        Global.call("printWarning", {text = "Wrong parameters in 'monster deck' function 'discardMonsterObject()'."})
     end
     params.object.addTag(MONSTER_TAGS.DEAD)
     params.object.setPositionSmooth(DISCARD_PILE_POSITION)
@@ -349,10 +349,10 @@ end
 
 function placeNewMonsterCard(params)
     if params.zone == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in 'monster deck' function 'placeNewMonsterCard()'.")
+        Global.call("printWarning", {text = "Wrong parameters in 'monster deck' function 'placeNewMonsterCard()'."})
     end
     if params.zone.getTable("active_monster_attrs").INDOMITABLE then
-        printToAll("[fdd835][WARNING][-] Can't place a monster on an 'indomitable' monster.")
+        Global.call("printWarning", {text = "Can't place a monster on an 'indomitable' monster."})
         return nil
     end
     local monsterDeck = Global.call("getMonsterDeck")
@@ -636,7 +636,7 @@ function click_function_ChooseButton(_, color, alt_click)
                 end
             end
         else
-            printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
+            Global.call("printWarning", {text = "Unknown monster button state: " .. tostring(attackButton.label) .. "."})
         end
     end
 end
@@ -662,7 +662,7 @@ function click_function_AttackButton(zone, color, alt_click)
         elseif attackButtonState == ATTACK_BUTTON_STATES.ATTACKING then
             local monsterName = zone.getTable("active_monster_attrs").NAME
             if monsterName == "" then
-                printToAll("[fdd835][WARNING][-] There is no active monster to attack. The attribute 'NAME' is empty.")
+                Global.call("printWarning", {text = "There is no active monster to attack. The attribute 'NAME' is empty."})
             else
                 broadcastToAll(Global.call("getActivePlayerString") .. " cancels the Attack on "
                                 .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. monsterName .. "[-] !!!")
@@ -674,7 +674,7 @@ function click_function_AttackButton(zone, color, alt_click)
         elseif attackButtonState == ATTACK_BUTTON_STATES.EVENT then
             discardActiveMonsterCard({zone = zone})
         else
-            printToAll("[fdd835][WARNING][-] Unknown monster button state: " .. tostring(attackButton.label) .. ".")
+            Global.call("printWarning", {text = "Unknown monster button state: " .. tostring(attackButton.label) .. "."})
         end
     end
 end

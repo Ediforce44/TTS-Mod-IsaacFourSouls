@@ -65,7 +65,7 @@ end
 
 function dealLootCard()    --EbyE44
     if owner == nil then
-        printToAll("[fdd835][WARNING][-] Wrong color. Choose a player color and try it again.")
+        Global.call("printWarning", {text = "Wrong color. Choose a player color and try it again."})
         return
     end
     local zone = getObjectFromGUID(LOOT_DECK_ZONE_GUID)
@@ -75,7 +75,7 @@ function dealLootCard()    --EbyE44
             return
         end
     end
-    printToAll("[fdd835][WARNING][-] Can't find the Loot deck. Place the Loot deck on its starting position.")
+    Global.call("printWarning", {text = "Can't find the Loot deck. Place the Loot deck on its starting position."})
 end
 
 function isDoubleClick()

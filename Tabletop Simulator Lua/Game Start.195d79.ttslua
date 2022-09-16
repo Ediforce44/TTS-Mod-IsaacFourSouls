@@ -108,8 +108,8 @@ local function extractDecksToDeckPositions(containerObj, expansionBox)
                 deckInZone.putObject(extractedDeck)
             end
         else
-            printToAll("[fdd835][WARNING][-] Can't find the zone where the \"" + deck.name +
-                " deck of this expansion belongs to: " + expansionBox.getName())
+            Global.call("printWarning", {text = "Can't find the zone where the \"" + deck.name +
+                " deck of this expansion belongs to: " + expansionBox.getName()})
         end
     end
 end
@@ -303,7 +303,7 @@ function onStart()
         end
 
         if startPlayerColor == "None" then
-            printToAll("[fdd835][WARNING][-] At least 1 player must select a player color: Red, Blue, Green or Yellow.")
+            Global.call("printWarning", {text = "At least 1 player must select a player color: Red, Blue, Green or Yellow."})
             return
         end
         Global.call("setNewStartPlayer", {playerColor = startPlayerColor})
@@ -311,7 +311,7 @@ function onStart()
 
     local isAllReady = isAllPlayersSelectCharacter()
     if isAllReady == false or isAllReady == nil then
-        printToAll("[fdd835][WARNING][-] Each player must take a character before start.")
+        Global.call("printWarning", {text = "Each player must take a character before start."})
         return
     end
 
@@ -360,27 +360,27 @@ function checkAndShuffleDecks()
     if monsterDeck ~= nil then
       table.insert(decksToShuffle, monsterDeck)
     else
-      printToAll("[fdd835][WARNING][-] Can't find the Monster Deck!!!")
+      Global.call("printWarning", {text = "Can't find the Monster Deck!!!"})
     end
     if soulDeck ~= nil then
       table.insert(decksToShuffle, soulDeck)
     else
-      printToAll("[fdd835][WARNING][-] Can't find the Bonus Soul Deck!!!")
+      Global.call("printWarning", {text = "Can't find the Bonus Soul Deck!!!"})
     end
     if treasureDeck ~= nil then
       table.insert(decksToShuffle, treasureDeck)
     else
-      printToAll("[fdd835][WARNING][-] Can't find the Treasure Deck!!!")
+      Global.call("printWarning", {text = "Can't find the Treasure Deck!!!"})
     end
     if lootDeck ~= nil then
       table.insert(decksToShuffle, lootDeck)
     else
-      printToAll("[fdd835][WARNING][-] Can't find the Loot Deck!!!")
+      Global.call("printWarning", {text = "Can't find the Loot Deck!!!"})
     end
     if roomDeck ~= nil then
       table.insert(decksToShuffle, roomDeck)
     else
-      printToAll("[fdd835][WARNING][-] Can't find the Room Deck!!!")
+      Global.call("printWarning", {text = "Can't find the Room Deck!!!"})
     end
 
     for i = 1, #decksToShuffle, 1 do
