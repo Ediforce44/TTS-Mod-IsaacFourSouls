@@ -391,7 +391,7 @@ function placeNewMonsterCard(params)
         --Add NEW tag after card is moved above the proper zone
         --- This avoids that other zones detect the card
         Wait.condition(function() newMonsterCard.addTag(MONSTER_TAGS.NEW) end
-            , function() return newMonsterCard.isSmoothMoving() end)
+            , function() return not newMonsterCard.isSmoothMoving() end)
         return placingZone
     end
     return nil

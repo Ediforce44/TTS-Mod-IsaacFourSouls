@@ -215,16 +215,6 @@ local function setupOfficialContent(gameLanguage)
             })
 
             local startPlayerColor = Global.getVar("startPlayerColor")
-            if startPlayerColor == "None" then
-                startPlayerColor = "Red"
-                for _, color in pairs(getSeatedPlayers()) do
-                    if (color == "Red") or (color == "Blue") or (color == "Green") or (color == "Yellow") then
-                        startPlayerColor = color
-                        break
-                    end
-                end
-                Global.call("setNewStartPlayer", {playerColor = startPlayerColor})
-            end
 
             -- !!! Order matters !!!
             Turns.type = 1
@@ -302,7 +292,23 @@ function onStart()
     if Global.call("hasGameStarted") then
         return
     end
-    
+
+    local startPlayerColor = Global.getVar("startPlayerColor")
+    if startPlayerColor == "None" then
+        for _, color in pairs(getSeatedPlayers()) do
+            if (color == "Red") or (color == "Blue") or (color == "Green") or (color == "Yellow") then
+                startPlayerColor = color
+                break
+            end
+        end
+
+        if startPlayerColor == "None" then
+            printToAll("[fdd835][WARNING][-] At least 1 player must select a player color: Red, Blue, Green or Yellow.")
+            return
+        end
+        Global.call("setNewStartPlayer", {playerColor = startPlayerColor})
+    end
+
     local isAllReady = isAllPlayersSelectCharacter()
     if isAllReady == false or isAllReady == nil then
         printToAll("[fdd835][WARNING][-] Each player must take a character before start.")
