@@ -370,9 +370,10 @@ function placeNewMonsterCard(params)
         newMonsterCard.setPositionSmooth(placingZone.getPosition():setAt('y', 5), false)
         Wait.frames(function ()
                 if newMonsterCard.getVar("isEvent") then
-                    local eventType = newMonsterCard.getVar("type")
+                    local eventType = newMonsterCard.getVar("eventType")
                     if eventType == nil then
-                        eventType = newMonsterCard.getVar("eventType")
+                        --Watch out: eventType is a FUNCTION if the card does not have the attribute 'type'
+                        eventType = newMonsterCard.getVar("type")
                     end
                     printEventPhrase(newMonsterCard.getName(), eventType)
                     if eventType == EVENT_TYPES.CURSE then
@@ -380,6 +381,8 @@ function placeNewMonsterCard(params)
                             .. newMonsterCard.getName()
                             Global.call("colorPicker_attach", {afterPickFunction = "dealEventToPlayer"
                             , functionOwner = params.zone, reason = coloredCurseName})
+                    else
+                        return
                     end
                 elseif params.isTargetOfAttack then
                     printAttackPhrase(newMonsterCard.getName())
