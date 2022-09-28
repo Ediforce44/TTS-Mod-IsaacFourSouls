@@ -264,7 +264,7 @@ function click_function_PurchaseButton(zone, color, alt_click)
                     end, 60)
             end
         else
-            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(attackButton.label) .. "."})
+            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(purchaseButton.label) .. "."})
         end
     end
 end
@@ -275,7 +275,7 @@ function click_function_ShopButton(zone, color, alt_click)
         if shopButton.label == SHOP_BUTTON_STATES.PURCHASE then
             purchaseShopDeckItem()
         else
-            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(attackButton.label) .. "."})
+            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(shopButton.label) .. "."})
         end
     end
 end

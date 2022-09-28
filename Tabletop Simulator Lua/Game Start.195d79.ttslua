@@ -59,6 +59,9 @@ local function setupPlayingArea()
     getObjectFromGUID(shopZoneGUIDs.SIX).call("deactivateZone")
     getObjectFromGUID(TREASURE_DECK_ZONE_GUID).call("activateShopButton")
 
+    -- Init Loot Zone and Loot Button
+    getObjectFromGUID(LOOT_DECK_ZONE_GUID).call("activateLootButton")
+
     -- Init Room Zones and Room Buttons
     local roomZoneGUIDs = Global.getTable("ZONE_GUID_ROOM")
     getObjectFromGUID(roomZoneGUIDs.ONE).call("activateZone")
