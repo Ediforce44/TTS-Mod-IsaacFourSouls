@@ -3,7 +3,59 @@
 
 DEBUG = false    -- Only activate if you want to make changes to the card repository under the table
 
+LANGUAGE_OBJECT_POSITIONS = {
+    LOOT = {
+        L_BATTERY = {x = -20.95, y = -3.46,z = 5},
+        L_BOMB = {x = -31.86, y = -3.45, z = 5},
+        L_BUTTER_BEAN = {x = -24.57, y = -3.47, z = 0},
+        L_DICE_SHARD = {x = -42.75, y = -3.47, z = 0},
+        L_FOUR_CENT = {x = -42.75, y = -3.42, z = 5},
+        L_LOST_SOUL = {x = -39.11, y = -3.5, z = 0},
+        L_NICKEL = {x = -28.21, y = -3.46, z = 5},
+        L_ONE_CENT = {x = -31.86, y = -3.44, z = 0},
+        L_PILL = {x = -35.50, y = -3.46, z = 0},
+        L_RUNE = {x = -39.11, y = -3.45, z = 5},
+        L_SOUL_HEART = {x = -35.50, y = -3.47, z = 5},
+        L_TAROT_MISC = {x = -17.27, y = -3.31, z = 5},
+        L_THREE_CENT = {x = -20.95, y = -3.36, z = 0},
+        L_TRINKET = {x = -24.57, y = -3.38, z = 5},
+        L_TWO_CENT = {x = -28.21, y = -3.4, z = 0}
+    },
+    MONSTER = {
+        M_BAD = {x = 0.87, y = -3.43, z = 5},
+        M_BASIC = {x = -9.88, y = -3.17, z = 5},
+        M_BOSS = {x = -6.26, y = -3.21, z = 5},
+        M_CURSE = {x = -2.7, y = -3.44, z = 0},
+        M_CURSED = {x = -6.26, y = -3.44, z = 0},
+        M_EPIC = {x = -2.7, y = -3.44, z = 5},
+        M_GOOD = {x = 0.86, y = -3.4,z = 0},
+        M_HOLY_CHARMED = {x = -9.88, y = -3.41, z = 0}
+    },
+    TREASURE = {
+        T_ACTIVE = {x = 8.13, y = -3.14, z = 5},
+        T_ONE_USE = {x = 19., y = -3.44, z = 5},
+        T_PAID = {x = 15.39, y = -3.41, z = 5},
+        T_PASSIVE = {x = 11.75, y = -2.92, z = 5},
+        T_SOUL = {x = 22.64, y = -3.48, z = 5}
+    },
+    ROOM = {
+        R_ALL = {x = 29.5, y = -3.21, z = 5}
+    },
+    BONUS_SOUL = {
+        BS_ALL = {x = 36, y = -3.46, z = 5}
+    },
+    MONSTER_SEP = {
+        MS_ALL = {x = 42, y = -3.5, z = 5}
+    }
+}
+
 OBJECTS_UNDER_TABLE = {
+    US = "7f7406",
+    RU = "ac9ceb",
+    ES = "5a30af"
+}
+
+LANGUAGE_OBJECTS = {
     US = {
         TREASURE = {
             T_ACTIVE  = "b706e2",
@@ -130,7 +182,7 @@ OBJECTS_UNDER_TABLE = {
             M_CURSE       = "cdcb48"
         },
         ROOM = {
-            R_ALL   = "d8e0cb"
+            R_ALL   = "5447fb"
         },
         BONUS_SOUL = {
             BS_ALL  = "8fcabc"
@@ -141,36 +193,30 @@ OBJECTS_UNDER_TABLE = {
     }
 }
 
+local LANGUAGE_OBJECTS_JSON = {}
+
 local function prepareDebug()
     local basePosition = self.getPosition()
     if basePosition.y < 0 then
         self.interactable = false
-        for _, languageTable in pairs(OBJECTS_UNDER_TABLE) do
-            for _, objGUIDs in pairs(languageTable) do
-                for _, guid in pairs(objGUIDs) do
-                    local obj = getObjectFromGUID(guid)
-                    if obj then
-                        obj.interactable = true
-                        local newObjPosition = obj.getPosition():setAt('y', self.getPosition().y + 16)
-                        obj.setPosition(newObjPosition)
-                    end
-                end
+        for _, guid in pairs(OBJECTS_UNDER_TABLE) do
+            local obj = getObjectFromGUID(guid)
+            if obj then
+                obj.interactable = true
+                local newObjPosition = obj.getPosition():setAt('y', self.getPosition().y + 16)
+                obj.setPosition(newObjPosition)
             end
         end
         local newPosition = basePosition:setAt('y', basePosition.y + 15)
         self.setPosition(newPosition)
     else
         self.interactable = false
-        for _, languageTable in pairs(OBJECTS_UNDER_TABLE) do
-            for _, objGUIDs in pairs(languageTable) do
-                for _, guid in pairs(objGUIDs) do
-                    local obj = getObjectFromGUID(guid)
-                    if obj then
-                        obj.interactable = false
-                        local newObjPosition = obj.getPosition():setAt('y', obj.getPosition().y - 15)
-                        obj.setPosition(newObjPosition)
-                    end
-                end
+        for _, guid in pairs(OBJECTS_UNDER_TABLE) do
+            local obj = getObjectFromGUID(guid)
+            if obj then
+                obj.interactable = false
+                local newObjPosition = obj.getPosition():setAt('y', obj.getPosition().y - 15)
+                obj.setPosition(newObjPosition)
             end
         end
         local newPosition = basePosition:setAt('y', basePosition.y - 15)
@@ -185,15 +231,98 @@ function onLoad()
     end
     self.interactable = false
 
-    for _, languageTable in pairs(OBJECTS_UNDER_TABLE) do
-        for _, objGUIDs in pairs(languageTable) do
+    for _, guid in pairs(OBJECTS_UNDER_TABLE) do
+        local obj = getObjectFromGUID(guid)
+        if obj then
+            obj.interactable = false
+            obj.setLock(false)
+        end
+    end
+
+    --[[for language, bagGUID in pairs(OBJECTS_UNDER_TABLE) do
+        LANGUAGE_OBJECTS_JSON[language] = {}
+        for category, objGUIDs in pairs(LANGUAGE_OBJECTS[language]) do
+            LANGUAGE_OBJECTS_JSON[language][category] = {}
+            for type, guid in pairs(objGUIDs) do
+                getObjectFromGUID(bagGUID).takeObject({
+                    guid = guid,
+                    smooth = false,
+                    callback_function = function(object)
+                        LANGUAGE_OBJECTS_JSON[language][category][type] = object.getJSON()
+                        destroyObject(object)
+                    end
+                })
+            end
+        end
+    end]]
+end
+
+local function returnLanguageObjects()
+    for language, objTable in pairs(LANGUAGE_OBJECTS) do
+        local languageBag = getObjectFromGUID(OBJECTS_UNDER_TABLE[language])
+        for _, objGUIDs in pairs(objTable) do
             for _, guid in pairs(objGUIDs) do
-                local obj = getObjectFromGUID(guid)
-                if obj then
-                    obj.interactable = false
-                    obj.setLock(false)
+                local object = getObjectFromGUID(guid)
+                if object then
+                    languageBag.putObject(object)
                 end
             end
+        end
+    end
+end
+
+function extractLanguageObjects(params)
+    if params.language == nil then
+        Global.call("printWarning", {text = "Wrong parameter in Table Base function extractLanguageObjects()."})
+        return
+    end
+
+    returnLanguageObjects()
+
+    local language = params.language
+    local languageBag = getObjectFromGUID(OBJECTS_UNDER_TABLE[language])
+    for category, objGUIDs in pairs(LANGUAGE_OBJECTS[language]) do
+        for type, guid in pairs(objGUIDs) do
+            languageBag.takeObject({
+                position    = LANGUAGE_OBJECT_POSITIONS[category][type],
+                smooth      = false,
+                rotation    = {0, 180, 180},
+                guid        = guid,
+                callback_function = function(object) object.interactable = false end
+            })
+        end
+    end
+end
+
+local function despawnLanguageObjects()
+    for _, objTable in pairs(LANGUAGE_OBJECTS) do
+        for _, objGUIDs in pairs(objTable) do
+            for _, guid in pairs(objGUIDs) do
+                local object = getObjectFromGUID(guid)
+                if object then
+                    destroyObject(object)
+                end
+            end
+        end
+    end
+end
+
+function spawnLanguageObjects(params)
+    if params.language == nil then
+        Global.call("printWarning", {text = "Wrong parameter in Table Base function spawnLanguageObjects()."})
+        return
+    end
+
+    despawnLanguageObjects()
+
+    for category, objJSONs in pairs(LANGUAGE_OBJECTS_JSON[params.language]) do
+        for type, json in pairs(objJSONs) do
+            spawnObjectJSON({
+                json = json,
+                position = LANGUAGE_OBJECT_POSITIONS[category][type],
+                rotation = {0, 180, 180},
+                callback_function = function(object) object.interactable = false end
+            })
         end
     end
 end
@@ -209,7 +338,7 @@ function shufflePreDecks(params)
             preDecks = params.preDecks
         end
     else
-        preDecks = OBJECTS_UNDER_TABLE[params.language]
+        preDecks = LANGUAGE_OBJECTS[params.language]
     end
 
     for _, preDeck in pairs(preDecks) do
@@ -227,5 +356,5 @@ function getDeckGUIDs(params)
     if language == nil then
         language = Global.getTable("GAME_LANGUAGE").US
     end
-    return OBJECTS_UNDER_TABLE[language]
+    return LANGUAGE_OBJECTS[language]
 end
