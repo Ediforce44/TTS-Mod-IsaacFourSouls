@@ -110,7 +110,6 @@ function setLanguage(params)
         return
     end
     getObjectFromGUID(GUID_TABLE_BASE).call("extractLanguageObjects", {language = language})
-    --getObjectFromGUID(GUID_TABLE_BASE).call("spawnLanguageObjects", {language = language})
     Global.call("setGameLanguage", {language = language})
 end
 

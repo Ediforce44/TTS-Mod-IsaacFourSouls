@@ -193,8 +193,6 @@ LANGUAGE_OBJECTS = {
     }
 }
 
-local LANGUAGE_OBJECTS_JSON = {}
-
 local function prepareDebug()
     local basePosition = self.getPosition()
     if basePosition.y < 0 then
@@ -238,23 +236,6 @@ function onLoad()
             obj.setLock(false)
         end
     end
-
-    --[[for language, bagGUID in pairs(OBJECTS_UNDER_TABLE) do
-        LANGUAGE_OBJECTS_JSON[language] = {}
-        for category, objGUIDs in pairs(LANGUAGE_OBJECTS[language]) do
-            LANGUAGE_OBJECTS_JSON[language][category] = {}
-            for type, guid in pairs(objGUIDs) do
-                getObjectFromGUID(bagGUID).takeObject({
-                    guid = guid,
-                    smooth = false,
-                    callback_function = function(object)
-                        LANGUAGE_OBJECTS_JSON[language][category][type] = object.getJSON()
-                        destroyObject(object)
-                    end
-                })
-            end
-        end
-    end]]
 end
 
 local function returnLanguageObjects()
@@ -288,39 +269,6 @@ function extractLanguageObjects(params)
                 smooth      = false,
                 rotation    = {0, 180, 180},
                 guid        = guid,
-                callback_function = function(object) object.interactable = false end
-            })
-        end
-    end
-end
-
-local function despawnLanguageObjects()
-    for _, objTable in pairs(LANGUAGE_OBJECTS) do
-        for _, objGUIDs in pairs(objTable) do
-            for _, guid in pairs(objGUIDs) do
-                local object = getObjectFromGUID(guid)
-                if object then
-                    destroyObject(object)
-                end
-            end
-        end
-    end
-end
-
-function spawnLanguageObjects(params)
-    if params.language == nil then
-        Global.call("printWarning", {text = "Wrong parameter in Table Base function spawnLanguageObjects()."})
-        return
-    end
-
-    despawnLanguageObjects()
-
-    for category, objJSONs in pairs(LANGUAGE_OBJECTS_JSON[params.language]) do
-        for type, json in pairs(objJSONs) do
-            spawnObjectJSON({
-                json = json,
-                position = LANGUAGE_OBJECT_POSITIONS[category][type],
-                rotation = {0, 180, 180},
                 callback_function = function(object) object.interactable = false end
             })
         end
