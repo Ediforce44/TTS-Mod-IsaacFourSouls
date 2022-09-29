@@ -1,7 +1,20 @@
 -- The Baseplate of the table
 ----- Manages the decks and cards under the table
 
-DEBUG = false    -- Only activate if you want to make changes to the card repository under the table
+DEBUG = true    -- Only activate if you want to make changes to the card repository under the table
+
+local function createDebugButton()
+    self.createButton({
+      click_function = "prepareDebug",
+      function_owner = self,
+      label          = "",
+      position       = {5, 0.2, 0},
+      rotation       = {180, 270, 180},
+      width          = 300,
+      height         = 300 * 17,
+      color          = {1, 1, 1}
+    })
+end
 
 LANGUAGE_OBJECT_POSITIONS = {
     LOOT = {
@@ -52,7 +65,7 @@ LANGUAGE_OBJECT_POSITIONS = {
 OBJECTS_UNDER_TABLE = {
     US = "7f7406",
     RU = "ac9ceb",
-    ES = "5a30af"
+    ES = "5a30af",
 }
 
 LANGUAGE_OBJECTS = {
@@ -119,7 +132,7 @@ LANGUAGE_OBJECTS = {
             L_BATTERY       = "b621b8",
             L_DICE_SHARD    = "939d60",
             L_SOUL_HEART    = "7393d0",
-            L_LOST_SOUL     = "22875f",
+            L_LOST_SOUL     = "751079",
             L_NICKEL        = "5a8229",
             L_FOUR_CENT     = "43a2db",
             L_THREE_CENT    = "5de503",
@@ -193,21 +206,13 @@ LANGUAGE_OBJECTS = {
     }
 }
 
-local function prepareDebug()
+local function isBaseRaised()
+    return self.getPosition().y > 0
+end
+
+function prepareDebug()
     local basePosition = self.getPosition()
-    if basePosition.y < 0 then
-        self.interactable = false
-        for _, guid in pairs(OBJECTS_UNDER_TABLE) do
-            local obj = getObjectFromGUID(guid)
-            if obj then
-                obj.interactable = true
-                local newObjPosition = obj.getPosition():setAt('y', self.getPosition().y + 16)
-                obj.setPosition(newObjPosition)
-            end
-        end
-        local newPosition = basePosition:setAt('y', basePosition.y + 15)
-        self.setPosition(newPosition)
-    else
+    if isBaseRaised() then
         self.interactable = false
         for _, guid in pairs(OBJECTS_UNDER_TABLE) do
             local obj = getObjectFromGUID(guid)
@@ -219,13 +224,31 @@ local function prepareDebug()
         end
         local newPosition = basePosition:setAt('y', basePosition.y - 15)
         self.setPosition(newPosition)
+    else
+        self.interactable = false
+        for _, guid in pairs(OBJECTS_UNDER_TABLE) do
+            local obj = getObjectFromGUID(guid)
+            if obj then
+                obj.interactable = true
+                local newObjPosition = obj.getPosition():setAt('y', self.getPosition().y + 16)
+                obj.setPosition(newObjPosition)
+            end
+        end
+        local newPosition = basePosition:setAt('y', basePosition.y + 15)
+        self.setPosition(newPosition)
     end
 end
 
 function onLoad()
     if DEBUG then
-        prepareDebug()
-        return
+        for language, objTable in pairs(LANGUAGE_OBJECTS) do
+            for _, objGUIDs in pairs(objTable) do
+                for objName, guid in pairs(objGUIDs) do
+                    OBJECTS_UNDER_TABLE[language .. "_" .. objName] = guid
+                end
+            end
+        end
+        createDebugButton()
     end
     self.interactable = false
 
@@ -238,7 +261,7 @@ function onLoad()
     end
 end
 
-local function returnLanguageObjects()
+function returnLanguageObjects()
     for language, objTable in pairs(LANGUAGE_OBJECTS) do
         local languageBag = getObjectFromGUID(OBJECTS_UNDER_TABLE[language])
         for _, objGUIDs in pairs(objTable) do
@@ -258,18 +281,19 @@ function extractLanguageObjects(params)
         return
     end
 
-    returnLanguageObjects()
-
     local language = params.language
     local languageBag = getObjectFromGUID(OBJECTS_UNDER_TABLE[language])
+    if languageBag.getQuantity() == 0 then
+        return
+    end
     for category, objGUIDs in pairs(LANGUAGE_OBJECTS[language]) do
         for type, guid in pairs(objGUIDs) do
             languageBag.takeObject({
-                position    = LANGUAGE_OBJECT_POSITIONS[category][type],
+                position    = Vector(LANGUAGE_OBJECT_POSITIONS[category][type]):setAt('y', self.getPosition().y + 0.5),
                 smooth      = false,
                 rotation    = {0, 180, 180},
                 guid        = guid,
-                callback_function = function(object) object.interactable = false end
+                callback_function = function(object) object.interactable = isBaseRaised() end
             })
         end
     end

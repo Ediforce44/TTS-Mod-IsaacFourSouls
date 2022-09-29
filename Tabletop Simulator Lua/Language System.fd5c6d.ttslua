@@ -82,7 +82,9 @@ local function switchLanguage(newLanguage)
         end
     end
     getObjectFromGUID(LANGUAGE_FLAGS[newLanguage]).editButton({index=0, label="✓", font_color={0, 0, 0}, font_size=450})
-    setLanguage({language = newLanguage})
+    getObjectFromGUID(GUID_TABLE_BASE).call("returnLanguageObjects", {language = newLanguage})
+    getObjectFromGUID(GUID_TABLE_BASE).call("extractLanguageObjects", {language = newLanguage})
+    Global.call("setGameLanguage", {language = newLanguage})
 end
 
 local function getLanguageFromObject(obj)
@@ -102,9 +104,7 @@ end
 --Only exist to set the game language at the beginning
 function setLanguage(params)
     local language = nil
-    if params.language then
-        language = params.language
-    elseif params.obj then
+    if params.obj then
         language = getLanguageFromObject(params.obj)
     else
         return
