@@ -5,6 +5,8 @@ local SELECTED_GAME_MODE = nil
 
 local BUTTONS_LOCKED = false
 
+local ACTIVE_NO_GOES = {}
+
 GAMEMODE_BUTTON_INDICES = {
     NORMAL  = nil,
     DRAFT   = nil
@@ -152,6 +154,31 @@ function switchBuilderMode()
     end
     self.editButton({index=ACTIVE_BUTTON_INDEX-1, label=newLabel, font_color={0, 0, 0}, font_size=250, tooltip = newTooltip})
 end
+
+------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------      NO GOES       ------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+local function isInTable(table, contentToCheck)
+    for _, entry in pairs(table) do
+        if entry == contentToCheck then
+            return true
+        end
+    end
+    return false
+end
+
+NO_GO_TYPES = {
+    ONLY_MULTIPLAYER = "ONLY_MULTIPLAYER",
+    ALT_ART = "ALT_ART",
+    PROMO = "PROMO"
+}
+
+-- objTable needs the following fields:       name,  lua_script,  tags
+NO_GO_FILTERS = {
+    ONLY_MULTIPLAYER = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.ONLY_MULTIPLAYER) end,
+    Unkown = function(_) Global.call("printWarning", {text = "Deck Builder: No idea what NO-GO you try to check!?"}) end
+}
 
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------      Deck Builder        --------------------------------------------------
@@ -302,7 +329,26 @@ local function mergeDecks(decks, startDeck)
     return buildDeck
 end
 
-local function buildDeck(preDeckGUIDs, tagTable)
+local function checkForNoGoes(objTable)
+    for _, noGoType in pairs(ACTIVE_NO_GOES) do
+        if NO_GO_FILTERS[noGoType](objTable) then
+            return false
+        end
+    end
+    return true
+end
+
+local function takeCardsFromDeck(deck, cardGUIDs, takenCardsTable)
+    for _, guid in pairs(cardGUIDs) do
+        local card = deck.takeObject({
+            guid = guid
+        })
+        table.insert(takenCardsTable, card)
+    end
+    return takenCardsTable
+end
+
+local function buildDeckSpeed(preDeckGUIDs, tagTable)
     local selectedDecks = {}
     local leftoverDecks = {}
     if isDeckBuilderON() then
@@ -311,8 +357,9 @@ local function buildDeck(preDeckGUIDs, tagTable)
             if (preDeckGUIDs[type] ~= nil) and (amountToTake > 0) then
                 local preDeck = getObjectFromGUID(preDeckGUIDs[type])
                 if preDeck.tag == "Deck" then
+                    -- For the edge case that only one card should be choosen
                     if amountToTake == 1 then
-                        table.insert(selectedDecks, preDeck.takeObject())  -- For the edge case that only one card should be choosen
+                        table.insert(selectedDecks, preDeck.takeObject())
                         table.insert(leftoverDecks, preDeck)
                     elseif amountToTake == (preDeck.getQuantity() - 1) then
                         local cardLeft = preDeck.takeObject()
@@ -337,6 +384,92 @@ local function buildDeck(preDeckGUIDs, tagTable)
     end
 
     return {mergeDecks(selectedDecks), mergeDecks(leftoverDecks)}
+end
+
+local function buildDeckFilter(preDeckGUIDs, tagTable)
+    local selectedDecks = {}
+    local leftoverDecks = {}
+    if isDeckBuilderON() then
+        tagTable["EMPTY"] = 500
+        for type, amountToTake in pairs(tagTable) do
+            if (preDeckGUIDs[type] ~= nil) and (amountToTake > 0) then
+                local preDeck = getObjectFromGUID(preDeckGUIDs[type])
+                if preDeck.tag == "Deck" then
+                    -- For the edge case that only one card should be choosen
+                    if amountToTake == 1 then
+                        for _, objTable in pairs(preDeck.getObjects())do
+                            if checkForNoGoes(objTable) then
+                                table.insert(selectedDecks, preDeck.takeObject({guid = objTable.guid}))
+                                break
+                            end
+                        end
+                        table.insert(leftoverDecks, preDeck)
+                    else
+                        local cardsToDestroy = {}
+                        local goodCards = 0
+                        local badCards = 0
+                        for _, objTable in pairs(preDeck.getObjects()) do
+                            if checkForNoGoes(objTable) then
+                                goodCards = goodCards + 1
+                                if goodCards == amountToTake then
+                                    break
+                                end
+                            else
+                                badCards = badCards + 1
+                                table.insert(cardsToDestroy, objTable.guid)
+                            end
+                        end
+                        if (goodCards + badCards) < preDeck.getQuantity() then
+                            if (goodCards + badCards) == (preDeck.getQuantity() - 1) then
+                                leftoverDecks = takeCardsFromDeck(preDeck, cardsToDestroy, leftoverDecks)
+                                local cardLeft = preDeck.takeObject({top = false})
+                                table.insert(selectedDecks, preDeck)
+                                table.insert(leftoverDecks, cardLeft)
+                            else
+                                local splitDecks = preDeck.cut(preDeck.getQuantity() - (goodCards + badCards))
+                                if splitDecks ~= nil then
+                                    table.insert(leftoverDecks, splitDecks[2])
+                                end
+                                leftoverDecks = takeCardsFromDeck(preDeck, cardsToDestroy, leftoverDecks)
+                                table.insert(selectedDecks, preDeck)
+                            end
+                        else
+                            if goodCards > 0 then
+                                if goodCards == 1 then
+                                    for _, objTable in pairs(preDeck.getObjects()) do
+                                        if checkForNoGoes(objTable) then
+                                            table.insert(selectedDecks, preDeck.takeObject({guid = objTable.guid}))
+                                            break
+                                        end
+                                    end
+                                    table.insert(leftoverDecks, preDeck)
+                                else
+                                    leftoverDecks = takeCardsFromDeck(preDeck, cardsToDestroy, leftoverDecks)
+                                    table.insert(selectedDecks, preDeck)
+                                end
+                            end
+                        end
+                    end
+                else
+                    if checkForNoGoes({name = preDeck.getName(), lua_script = preDeck.getLuaScript()
+                        , tags = preDeck.getTags()}) then
+                        table.insert(selectedDecks, preDeck)
+                    end
+                end
+            end
+        end
+    else
+        for _, guid in pairs(preDeckGUIDs) do
+            table.insert(selectedDecks, getObjectFromGUID(guid))
+        end
+    end
+
+    return {mergeDecks(selectedDecks), mergeDecks(leftoverDecks)}
+end
+
+local function buildDeck(preDeckGUIDs, tagTable)
+    return buildDeckSpeed(preDeckGUIDs, tagTable)
+    --return buildDeckFilter(preDeckGUIDs, tagTable)
 end
 
 local function deckBuildBarrier(deckType, deck)
