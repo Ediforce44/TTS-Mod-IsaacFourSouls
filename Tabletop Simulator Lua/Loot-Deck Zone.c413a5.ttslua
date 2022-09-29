@@ -40,7 +40,7 @@ function onLoad(saved_data)
     end
 
     local loaded_data = JSON.decode(saved_data)
-    if loaded_data[1] or true then
+    if loaded_data[1] then
         activateLootButton()
 
         for _ , state in pairs(LOOT_BUTTON_STATES) do

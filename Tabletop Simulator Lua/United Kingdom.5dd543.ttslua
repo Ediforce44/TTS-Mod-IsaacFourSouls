@@ -12,8 +12,7 @@ function onLoad(saved_data)
             if loaded_data[1] ~= "" then
                 label = "✓"
                 --Bad but best solution to avoid redundance
-                --TODO Remove Comment
-                --getObjectFromGUID(LANGUAGE_SYSTEM_GUID).call("setLanguage", {obj = self})
+                getObjectFromGUID(LANGUAGE_SYSTEM_GUID).call("setLanguage", {obj = self})
             end
         end
     end
