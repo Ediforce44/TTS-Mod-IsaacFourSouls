@@ -8,6 +8,7 @@ local LANGUAGE_FLAGS = {
 }
 
 local GUID_TABLE_BASE = "f5c4fe"
+local GUID_DECK_BUILDER = "69a80e"
 
 LANGUAGES_GUIDS = {
   ["English"] = {
@@ -72,7 +73,8 @@ local function switchLanguage(newLanguage)
     if newLanguage == nil then
         return
     end
-    if (Global.getVar("gameLanguage") == newLanguage) or Global.call("hasGameStarted") then
+    if (Global.getVar("gameLanguage") == newLanguage) or Global.call("hasGameStarted")
+        or getObjectFromGUID(GUID_DECK_BUILDER).call("isDeckBuilderBlocked") then
         return
     end
 

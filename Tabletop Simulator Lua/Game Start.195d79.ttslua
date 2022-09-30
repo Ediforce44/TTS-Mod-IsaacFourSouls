@@ -338,6 +338,12 @@ function onStart()
         return
     end
 
+    local isAllReady = isAllPlayersSelectCharacter()
+    if isAllReady == false or isAllReady == nil then
+        Global.call("printWarning", {text = "Each player must take a character before start."})
+        return
+    end
+
     local startPlayerColor = Global.getVar("startPlayerColor")
     if startPlayerColor == "None" then
         for _, color in pairs(getSeatedPlayers()) do
@@ -354,19 +360,14 @@ function onStart()
         Global.call("setNewStartPlayer", {playerColor = startPlayerColor})
     end
 
-    local isAllReady = isAllPlayersSelectCharacter()
-    if isAllReady == false or isAllReady == nil then
-        Global.call("printWarning", {text = "Each player must take a character before start."})
-        return
-    end
-
     if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
         settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
         destroyObject(settingUpNote)
     end
 
     local gameLanguage = Global.getVar("gameLanguage")
-    broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Load Expansions")
+
+    broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Expansions")
     local amountOfExpansionsInPlay = setupExpansions(gameLanguage)
     if amountOfExpansionsInPlay > 0 then
         local elBag = getObjectFromGUID(EXPANSION_LEFTOVERS_BAG_GUID)
@@ -380,7 +381,7 @@ function onStart()
 
     Wait.time(
         function()
-            broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Load official Content")
+            broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Official Content")
             setupOfficialContent(gameLanguage)
         end, amountOfExpansionsInPlay)
 end

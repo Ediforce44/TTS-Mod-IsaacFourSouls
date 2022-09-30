@@ -138,6 +138,11 @@ function isDeckBuilderON()
     return (activeButton.label ~= "")
 end
 
+-- returns true, if decks were put ontop of the table due to manual deck-building
+function isDeckBuilderBlocked()
+    return BUTTONS_LOCKED
+end
+
 function switchBuilderMode()
     if Global.call("hasGameStarted") or BUTTONS_LOCKED then
         return
@@ -300,29 +305,20 @@ local function mergeDecks(decks, startDeck)
     local buildDeck = nil
     if (startDeck ~= nil) and (startDeck.tag == "Deck") then
         buildDeck = startDeck
-    end
-
-    local tempCards = {}
-    for _, nextDeck in pairs(decks) do
-        if buildDeck == nil then
-            if nextDeck.tag == "Deck" then
-                buildDeck = nextDeck
-            else
-                table.insert(tempCards, nextDeck)
-            end
-        else
+        for _, nextDeck in pairs(decks) do
             buildDeck.putObject(nextDeck)
         end
-    end
-
-    if #tempCards > 0 then
-        if buildDeck == nil then
+    else
+        for index, nextDeck in pairs(decks) do
+            if nextDeck.tag == "Deck" then
+                table.remove(decks, index)
+                return mergeDecks(decks, nextDeck)
+            end
+        end
+        -- If decks is not empty
+        if next(decks) then
             Global.call("printWarning", {text = "The Deck-Builder can't build a deck if all parts of the deck are single cards."
                 .. "At least one part of the deck has to be a deck already."})
-        else
-            for _, card in pairs(tempCards) do
-                buildDeck.putObject(card)
-            end
         end
     end
 
