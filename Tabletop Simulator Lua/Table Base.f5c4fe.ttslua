@@ -66,6 +66,7 @@ OBJECTS_UNDER_TABLE = {
     US = "7f7406",
     RU = "ac9ceb",
     ES = "5a30af",
+    EL_BAG = "3316b6"
 }
 
 LANGUAGE_OBJECTS = {
