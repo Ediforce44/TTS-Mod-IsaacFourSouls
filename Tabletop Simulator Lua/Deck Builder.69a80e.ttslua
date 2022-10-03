@@ -355,8 +355,14 @@ local function buildDeckSpeed(preDeckGUIDs, tagTable)
                 if preDeck.tag == "Deck" then
                     -- For the edge case that only one card should be choosen
                     if amountToTake == 1 then
-                        table.insert(selectedDecks, preDeck.takeObject())
-                        table.insert(leftoverDecks, preDeck)
+                        if preDeck.getQuantity() == 2 then
+                            local secondCardGUID = preDeck.getObjects()[2].guid
+                            table.insert(selectedDecks, preDeck.takeObject())
+                            table.insert(leftoverDecks, getObjectFromGUID(secondCardGUID))
+                        else
+                            table.insert(selectedDecks, preDeck.takeObject())
+                            table.insert(leftoverDecks, preDeck)
+                        end
                     elseif amountToTake == (preDeck.getQuantity() - 1) then
                         local cardLeft = preDeck.takeObject()
                         table.insert(selectedDecks, preDeck)
@@ -393,13 +399,26 @@ local function buildDeckFilter(preDeckGUIDs, tagTable)
                 if preDeck.tag == "Deck" then
                     -- For the edge case that only one card should be choosen
                     if amountToTake == 1 then
-                        for _, objTable in pairs(preDeck.getObjects())do
-                            if checkForNoGoes(objTable) then
-                                table.insert(selectedDecks, preDeck.takeObject({guid = objTable.guid}))
-                                break
+                        if preDeck.getQuantity() == 2 then
+                            local preDeckObjects = preDeck.getObjects()
+                            local leftoverObject = preDeck.getGUID()
+                            if checkForNoGoes(preDeckObjects[1]) then
+                                table.insert(selectedDecks, preDeck.takeObject({guid = preDeckObjects[1].guid}))
+                                leftoverObject = getObjectFromGUID(preDeckObjects[2].guid)
+                            elseif checkForNoGoes(preDeckObjects[2]) then
+                                table.insert(selectedDecks, preDeck.takeObject({guid = preDeckObjects[2].guid}))
+                                leftoverObject = getObjectFromGUID(preDeckObjects[1].guid)
                             end
+                            table.insert(leftoverDecks, leftoverObject)
+                        else
+                            for _, objTable in pairs(preDeck.getObjects())do
+                                if checkForNoGoes(objTable) then
+                                    table.insert(selectedDecks, preDeck.takeObject({guid = objTable.guid}))
+                                    break
+                                end
+                            end
+                            table.insert(leftoverDecks, preDeck)
                         end
-                        table.insert(leftoverDecks, preDeck)
                     else
                         local cardsToDestroy = {}
                         local goodCards = 0
