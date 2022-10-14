@@ -412,7 +412,7 @@ end
 function checkAndShuffleDecks()
     local decksToShuffle = {}
     for type, _ in pairs(BUILT_DECKS) do
-        if BUILT_DECKS[type] ~= nil then
+        if (BUILT_DECKS[type] ~= nil) and (BUILT_DECKS[type].tag == "Deck") then
           table.insert(decksToShuffle, BUILT_DECKS[type])
         else
           Global.call("printWarning", {text = "Can't find the " .. tostring(type) .. " Deck!!!"})
