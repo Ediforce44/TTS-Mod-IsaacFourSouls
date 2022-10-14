@@ -111,18 +111,16 @@ local function extractDecksToDeckPositions(containerObj)
                 end
             end
             if deckInZone ~= nil then
-                print("1")
                 local extractedDeck = containerObj.takeObject({
                     guid = deck.guid
                 })
                 deckInZone.putObject(extractedDeck)
             else
-                print("2")
                 containerObj.takeObject({
                     guid = deck.guid,
                     position = zone.getPosition(),
                     smooth = false,
-                    rotation = Vector(180, 0, 0)
+                    rotation = zone.getRotation():setAt(3, 180)
                 })
             end
         else
