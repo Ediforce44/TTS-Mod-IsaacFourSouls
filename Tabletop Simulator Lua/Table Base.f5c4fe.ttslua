@@ -324,7 +324,7 @@ function shufflePreDecks(params)
     end
 end
 
-function getDeckGUIDs(params)
+function getPreDeckGUIDs(params)
     local language = params.language
     if language == nil then
         language = Global.getTable("GAME_LANGUAGE").US

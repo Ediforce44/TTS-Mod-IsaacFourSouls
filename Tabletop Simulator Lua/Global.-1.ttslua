@@ -38,10 +38,10 @@ local function setPositionTables()
     DECK_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DECK.LOOT).getPosition():setAt('y', 5)
     DECK_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DECK.MONSTER).getPosition():setAt('y', 5)
     DECK_POSITION.BONUS_SOUL = getObjectFromGUID(ZONE_GUID_DECK.BONUS_SOUL).getPosition():setAt('y', 5)
-    DECK_POSITION.MONSTER_SEP = {41.73, 5, -11.51}
-    DECK_POSITION.LO_TREASURE = {41.73, 5, 15.06}
-    DECK_POSITION.LO_LOOT = {41.73, 5, 11.73}
-    DECK_POSITION.LO_MONSTER = {41.73, 5, -14.84}
+    DECK_POSITION.MONSTER_SEP = Vector(41.73, 5, -11.51)
+    DECK_POSITION.LO_TREASURE = Vector(41.73, 5, 15.06)
+    DECK_POSITION.LO_LOOT = Vector(41.73, 5, 11.73)
+    DECK_POSITION.LO_MONSTER = Vector(41.73, 5, -14.84)
 end
 ------------------------------------------------------------------------------------------------------------------------
 

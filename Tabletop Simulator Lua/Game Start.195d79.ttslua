@@ -226,14 +226,14 @@ local function setupOfficialContent(gameLanguage)
     if not ready_for_setup then
         local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
 
-        local preDeckGUIDs = tableBase.call("getDeckGUIDs", {language = gameLanguage})
+        local preDeckGUIDs = tableBase.call("getPreDeckGUIDs", {language = gameLanguage})
         local preExpansionDeckGUIDs = getPreDecksOnTable()
         preDeckGUIDs = mergePreDecks(preDeckGUIDs, preExpansionDeckGUIDs)
 
         tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
         Wait.frames(
             function()
-                getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {preDecks = preDeckGUIDs})
+                getObjectFromGUID(DECK_BUILDER_GUID).call("buildAllDecks", {preDecks = preDeckGUIDs})
             end)
     end
 

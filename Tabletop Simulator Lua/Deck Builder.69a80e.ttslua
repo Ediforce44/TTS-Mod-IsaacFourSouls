@@ -1,46 +1,67 @@
 
 local ACTIVE_BUTTON_INDEX = 1
 
-local SELECTED_GAME_MODE = nil
-
 local BUTTONS_LOCKED = false
 
-local ACTIVE_NO_GOES = {}
+local SELECTED_BUILD_MODE = nil
 
-GAMEMODE_BUTTON_INDICES = {
+local TABLE_BASE_GUID = "f5c4fe"
+
+BUILD_MODE = {
+    NORMAL  = 1,
+    DRAFT   = 2
+}
+
+BUILD_MODE_NAME = {
+    "Normal",
+    "Draft"
+}
+
+BUILDMODE_BUTTON_INDICES = {
     NORMAL  = nil,
     DRAFT   = nil
 }
 
-TABLE_BASE_GUID = "f5c4fe"
+-- Table base
+ENTRY_POINT = {
+    GUID            = "195d79",
+    CALL_FUNCTION   = "decksBuilt"
+}
 
-local function changeGameMode(newGameMode)
-    for gameMode, index in pairs(GAMEMODE_BUTTON_INDICES) do
-        if GAME_MODE[gameMode] ~= newGameMode then
-            self.editButton({index=index-1, label=""})
+local function changeBuildMode(newBuildMode)
+    if newBuildMode == SELECTED_BUILD_MODE then
+        return true
+    end
+
+    -- check if newBuildMode exists
+    for modeName, buildMode in pairs(BUILD_MODE) do
+        if buildMode == newBuildMode then
+            local modeButtonIndex = BUILDMODE_BUTTON_INDICES[modeName]
+
+            for buildMode, index in pairs(BUILDMODE_BUTTON_INDICES) do
+                if BUILD_MODE[buildMode] ~= newBuildMode then
+                    self.editButton({index=index-1, label=""})
+                end
+            end
+
+            local newBuildModeName = BUILD_MODE_NAME[newBuildMode] or "Name Unkown"
+            broadcastToAll("New Game Mode selected: " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT
+                .. newBuildModeName .. "[-]")
+            SELECTED_BUILD_MODE = newBuildMode
+
+            self.editButton({index=modeButtonIndex-1, label="✓", font_color={0, 0, 0}, font_size=250})
+            return true
         end
     end
-
-    local modeButtonIndex
-    if newGameMode == GAME_MODE.NORMAL then
-        modeButtonIndex = GAMEMODE_BUTTON_INDICES.NORMAL
-        broadcastToAll("New Game Mode selected: " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT.. "Normal")
-        SELECTED_GAME_MODE = GAME_MODE.NORMAL
-    elseif newGameMode == GAME_MODE.DRAFT then
-        modeButtonIndex = GAMEMODE_BUTTON_INDICES.DRAFT
-        broadcastToAll("New Game Mode selected: " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. "Draft")
-        SELECTED_GAME_MODE = GAME_MODE.DRAFT
-    end
-
-    self.editButton({index=modeButtonIndex-1, label="✓", font_color={0, 0, 0}, font_size=250})
+    return false
 end
 
 function gmNormal()
     if Global.call("hasGameStarted") or BUTTONS_LOCKED then
         return
     end
-    if (self.getButtons()[GAMEMODE_BUTTON_INDICES.NORMAL].label == "") then
-        changeGameMode(GAME_MODE.NORMAL)
+    if (self.getButtons()[BUILDMODE_BUTTON_INDICES.NORMAL].label == "") then
+        changeBuildMode(BUILD_MODE.NORMAL)
     end
 end
 
@@ -48,8 +69,8 @@ function gmDraft()
     if Global.call("hasGameStarted") or BUTTONS_LOCKED then
         return
     end
-    if (self.getButtons()[GAMEMODE_BUTTON_INDICES.DRAFT].label == "") then
-        changeGameMode(GAME_MODE.DRAFT)
+    if (self.getButtons()[BUILDMODE_BUTTON_INDICES.DRAFT].label == "") then
+        changeBuildMode(BUILD_MODE.DRAFT)
     end
 end
 
@@ -57,93 +78,21 @@ function prepareForManualDeckBuilding()
     if Global.call("hasGameStarted") or BUTTONS_LOCKED then
         return
     end
+
     if isDeckBuilderON() then
-        switchBuilderMode()
+        toggleDeckBuilderActivation()
     end
+    BUTTONS_LOCKED = true
+    
     local gameLanguage = Global.getVar("gameLanguage")
     local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
-    local preDeckGUIDs = tableBase.call("getDeckGUIDs", {language = gameLanguage})
+    local preDeckGUIDs = tableBase.call("getPreDeckGUIDs", {language = gameLanguage})
     tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
 
-    buildDecks({preDecks = preDeckGUIDs})
-    BUTTONS_LOCKED = true
+    buildAllDecks({preDecks = preDeckGUIDs})
 end
 
-function onLoad(saved_data)
-    self.createButton({
-      click_function = "switchBuilderMode",
-      function_owner = self,
-      label          = "",
-      position       = {5, 1, -0.29},
-      width          = 300,
-      height         = 300,
-      color          = {1, 1, 1},
-      tooltip        = ""
-    })
-    self.createButton({
-      click_function = "prepareForManualDeckBuilding",
-      function_owner = self,
-      label          = "Manual",
-      font_size      = 250,
-      position       = {6, 1, 0.58},
-      width          = 1000,
-      height         = 300,
-      color          = {1, 1, 1},
-      tooltip        = "If you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks."
-    })
-
-    self.createButton({
-      click_function = "gmNormal",
-      function_owner = self,
-      label          = "",
-      position       = {-6.5, 1, -0.29},
-      width          = 300,
-      height         = 300,
-      color          = {1, 1, 1},
-      tooltip        = "Here you can change the game mode. The game mode will influence the Deck-Builder."
-    })
-    GAMEMODE_BUTTON_INDICES.NORMAL = 3
-
-    self.createButton({
-      click_function = "gmDraft",
-      function_owner = self,
-      label          = "",
-      position       = {-6.5, 1, 0.58},
-      width          = 300,
-      height         = 300,
-      color          = {1, 1, 1},
-      tooltip        = "Here you can change the game mode. The game mode will influence the Deck-Builder."
-    })
-    GAMEMODE_BUTTON_INDICES.DRAFT = 4
-
-    if saved_data ~= "" then
-        local loaded_data = JSON.decode(saved_data)
-        if loaded_data[1] == true then
-            switchBuilderMode()
-        end
-        if loaded_data[2] ~= nil then
-            changeGameMode(loaded_data[2])
-        else
-            changeGameMode(GAME_MODE.NORMAL)
-        end
-    end
-end
-
-function onSave()
-    return JSON.encode({isDeckBuilderON(), SELECTED_GAME_MODE})
-end
-
-function isDeckBuilderON()
-    local activeButton = self.getButtons()[ACTIVE_BUTTON_INDEX]
-    return (activeButton.label ~= "")
-end
-
--- returns true, if decks were put ontop of the table due to manual deck-building
-function isDeckBuilderBlocked()
-    return BUTTONS_LOCKED
-end
-
-function switchBuilderMode()
+function toggleDeckBuilderActivation()
     if Global.call("hasGameStarted") or BUTTONS_LOCKED then
         return
     end
@@ -160,9 +109,29 @@ function switchBuilderMode()
     self.editButton({index=ACTIVE_BUTTON_INDEX-1, label=newLabel, font_color={0, 0, 0}, font_size=250, tooltip = newTooltip})
 end
 
+function isDeckBuilderON()
+    local activeButton = self.getButtons()[ACTIVE_BUTTON_INDEX]
+    return (activeButton.label ~= "")
+end
+
+-- returns true, if decks were put ontop of the table due to manual deck-building
+function isDeckBuilderBlocked()
+    return BUTTONS_LOCKED
+end
+
+function switchBuildMode(params)
+    if params.buildMode == nil then
+        Global.call("printWarning", {text = "Wrong parameter in function switchBuildMode()."})
+        return false
+    end
+    return changeBuildMode(params.buildMode)
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------      NO GOES       ------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+local ACTIVE_NO_GOES = {}
+local nogo_failure_counter = 0
 
 local function isInTable(table, contentToCheck)
     for _, entry in pairs(table) do
@@ -173,34 +142,40 @@ local function isInTable(table, contentToCheck)
     return false
 end
 
+local function getIntFromScript(luaScript, varName)
+    for line in string.gmatch(luaScript,"[^\r\n]+") do
+        if string.sub(line,1,#varName) == varName then
+            local value = string.match(line,"%d+",#varName)
+            return tonumber(value)
+        end
+    end
+    return -1
+end
+
+local function customNoGoScriptFunction(luaScript, varName)
+    return getIntFromScript(luaScript, varName) > 10
+end
+
 NO_GO_TYPES = {
-    ONLY_MULTIPLAYER = "ONLY_MULTIPLAYER",
-    ALT_ART = "ALT_ART",
-    PROMO = "PROMO"
+    ONLY_MULTIPLAYER    = "ONLY_MULTIPLAYER",
+    ALT_ART             = "ALT_ART",
+    PROMO               = "PROMO"
 }
 
 -- objTable needs the following fields:       name,  lua_script,  tags
-NO_GO_FILTERS = {
+NO_GO_FILTERS = {       --conf
     ONLY_MULTIPLAYER = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.ONLY_MULTIPLAYER) end,
-    Unkown = function(_) Global.call("printWarning", {text = "Deck Builder: No idea what NO-GO you try to check!?"}) end
+
+    Unkown = function(_)
+        nogo_failure_counter = nogo_failure_counter + 1
+        return false
+    end
 }
 
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------      Deck Builder        --------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-
-GAME_MODE = {
-    NORMAL  = 1,
-    DRAFT   = 2
-}
-
-local DUMMY_CARDS = {
-    TREASURE = {"20478b", "de6fa6"},
-    LOOT = {"fc7f84", "d8bf8b"},
-    MONSTER = {"6f7d81", "ad45a5"}
-}
-
-local DECK_TREASURE = {
+local DECK_TREASURE_RATIOS = {
     {
         T_ACTIVE  = 40,
         T_PASSIVE = 44,
@@ -217,7 +192,7 @@ local DECK_TREASURE = {
     }
 }
 
-local DECK_LOOT = {
+local DECK_LOOT_RATIOS = {
     {
         L_TAROT_MISC    = 23,
         L_TRINKET       = 11,
@@ -254,7 +229,7 @@ local DECK_LOOT = {
     }
 }
 
-local DECK_MONSTER = {
+local DECK_MONSTER_RATIOS = {
     {
         M_BOSS        = 30,
         M_EPIC        = 1,
@@ -277,48 +252,313 @@ local DECK_MONSTER = {
     }
 }
 
-local DECK_ROOM = {
-    R_ALL   = 200
+local DECK_ROOM_RATIOS = {
+    {
+        R_ALL   = 200
+    },
+    {
+        R_ALL   = 200
+    }
 }
 
-local DECK_BONUS_SOUL = {
-    BS_ALL  = 100
+local DECK_BONUS_SOUL_RATIOS = {
+    {
+        BS_ALL  = 100
+    },
+    {
+        BS_ALL  = 100
+    }
 }
 
-local DECK_MONSTER_SEP = {
-    MS_ALL  = 100
+local DECK_MONSTER_SEP_RATIOS = {
+    {
+        MS_ALL  = 100
+    },
+    {
+        MS_ALL  = 100
+    }
 }
 
-local B_TOTAL_DECK_COUNT = 6
-local B_waitingDecks = {}
+local DECK_INFOS = {
+    TREASURE = {
+        ID                  = "TREASURE",
+        RATIOS              = DECK_TREASURE_RATIOS,
+        DECK_POSITION       = nil,
+        DECK_ROTATION       = Vector(180, 0, 0),
+        DECK_NAME           = "Treasure Deck",
+        LEFTOVERS_POSITION  = nil,
+        LEFTOVERS_ROTATION  = Vector(0, 270, 180),
+        LEFTOVERS_NAME      = "Leftover Treasure Cards"
+    },
+    LOOT = {
+        ID                  = "LOOT",
+        RATIOS              = DECK_LOOT_RATIOS,
+        DECK_POSITION       = nil,
+        DECK_ROTATION       = Vector(180, 0, 0),
+        DECK_NAME           = "Loot Deck",
+        LEFTOVERS_POSITION  = nil,
+        LEFTOVERS_ROTATION  = Vector(0, 270, 180),
+        LEFTOVERS_NAME      = "Leftover Loot Cards"
+    },
+    MONSTER = {
+        ID                  = "MONSTER",
+        RATIOS              = DECK_MONSTER_RATIOS,
+        DECK_POSITION       = nil,
+        DECK_ROTATION       = Vector(180, 0, 0),
+        DECK_NAME           = "Monster Deck",
+        LEFTOVERS_POSITION  = nil,
+        LEFTOVERS_ROTATION  = Vector(0, 270, 180),
+        LEFTOVERS_NAME      = "Leftover Monster Cards"
+    },
+    ROOM = {
+        ID                  = "ROOM",
+        RATIOS              = DECK_ROOM_RATIOS,
+        DECK_POSITION       = nil,
+        DECK_ROTATION       = Vector(180, 0, 0),
+        DECK_NAME           = "Room Deck",
+        LEFTOVERS_POSITION  = nil,
+        LEFTOVERS_ROTATION  = Vector(0, 270, 180),
+        LEFTOVERS_NAME      = "Leftover Room Cards"
+    },
+    BONUS_SOUL = {
+        ID                  = "BONUS_SOUL",
+        RATIOS              = DECK_BONUS_SOUL_RATIOS,
+        DECK_POSITION       = nil,
+        DECK_ROTATION       = Vector(0, 270, 180),
+        DECK_NAME           = "Bonus Soul Deck",
+        LEFTOVERS_POSITION  = nil,
+        LEFTOVERS_ROTATION  = Vector(0, 270, 180),
+        LEFTOVERS_NAME      = "Leftover Bonus Soul Cards"
+    },
+    MONSTER_SEP = {
+        ID                  = "MONSTER_SEP",
+        RATIOS              = DECK_MONSTER_SEP_RATIOS,
+        DECK_POSITION       = nil,
+        DECK_ROTATION       = Vector(0, 270, 0),
+        DECK_NAME           = "Separate Monster Deck",
+        LEFTOVERS_POSITION  = nil,
+        LEFTOVERS_ROTATION  = Vector(0, 270, 180),
+        LEFTOVERS_NAME      = "Leftover Sep. Monster Cards"
+    }
+}
 
-local function getDeckFromTable(name)
-    for _, obj in ipairs(getObjectsWithTag("Deck")) do
-        if obj.getName() == name then
-            return obj
+local TOTAL_DECK_COUNT = 0  --Will be set in onLoad() function
+
+local function buildDeck(preDeckGUIDs, tagTable)
+    local deckAndLeftover = nil
+    if #ACTIVE_NO_GOES > 0 then
+        deckAndLeftover = buildDeckFilter(preDeckGUIDs, tagTable)       -- If you want to use filter options (see NO GOES)
+
+        if nogo_failure_counter > 0 then
+            Global.call("printWarning", {text = "Deck Builder: No idea what NO-GO you try to check!? ("
+                .. tostring(nogo_failure_counter) .. ")"})
+        end
+    else
+        deckAndLeftover = buildDeckSpeed(preDeckGUIDs, tagTable)        -- If you want a fast and smooth deck builder
+    end
+    return deckAndLeftover
+end
+
+-------------------------------------------------- Load and Save -------------------------------------------------------
+local function createButtons()
+    self.createButton({
+        click_function = "toggleDeckBuilderActivation",
+        function_owner = self,
+        label          = "",
+        position       = {5, 1, -0.29},
+        width          = 300,
+        height         = 300,
+        color          = {1, 1, 1},
+        tooltip        = ""
+    })
+    self.createButton({
+        click_function = "prepareForManualDeckBuilding",
+        function_owner = self,
+        label          = "Manual",
+        font_size      = 250,
+        position       = {6, 1, 0.58},
+        width          = 1000,
+        height         = 300,
+        color          = {1, 1, 1},
+        tooltip        = "If you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks."
+    })
+
+    self.createButton({
+        click_function = "gmNormal",
+        function_owner = self,
+        label          = "",
+        position       = {-6.5, 1, -0.29},
+        width          = 300,
+        height         = 300,
+        color          = {1, 1, 1},
+        tooltip        = "Here you can change the game mode. The game mode will influence the Deck-Builder."
+    })
+    BUILDMODE_BUTTON_INDICES.NORMAL = 3
+
+    self.createButton({
+        click_function = "gmDraft",
+        function_owner = self,
+        label          = "",
+        position       = {-6.5, 1, 0.58},
+        width          = 300,
+        height         = 300,
+        color          = {1, 1, 1},
+        tooltip        = "Here you can change the game mode. The game mode will influence the Deck-Builder."
+    })
+    BUILDMODE_BUTTON_INDICES.DRAFT = 4
+end
+
+function onLoad(saved_data)
+    createButtons()
+
+    for deckType, _ in pairs(DECK_INFOS) do
+        DECK_INFOS[deckType].DECK_POSITION = Global.getTable("DECK_POSITION")[deckType] or Vector(0, 5, 0)
+        DECK_INFOS[deckType].LEFTOVERS_POSITION = Global.getTable("DECK_POSITION")["LO_" .. deckType] or Vector(0, 5, 0)
+    end
+
+    TOTAL_DECK_COUNT = 0
+    for _, _ in pairs(DECK_INFOS) do
+        TOTAL_DECK_COUNT = TOTAL_DECK_COUNT + 1
+    end
+
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        if loaded_data[1] == true then
+            toggleDeckBuilderActivation()
+        end
+        if loaded_data[2] ~= nil then
+            changeBuildMode(loaded_data[2])
+        else
+            changeBuildMode(BUILD_MODE.NORMAL)
         end
     end
-    return nil
+end
+
+function onSave()
+    return JSON.encode({isDeckBuilderON(), SELECTED_BUILD_MODE})
+end
+
+------------------------------------------------------ No goes ---------------------------------------------------------
+function setNoGo(params)
+    if params.nogo == nil then
+        return
+    end
+    for _, nogo in ipairs(ACTIVE_NO_GOES) do
+        if nogo == tostring(params.nogo) then
+            return
+        end
+    end
+    table.insert(ACTIVE_NO_GOES, tostring(params.nogo))
+end
+
+function setNoGoForDeck(params)
+    if params.nogo == nil or params.deckName == nil then
+        return
+    end
+    if DECK_INFOS[params.deckName] == nil then
+        return
+    end
+    local nogoList = DECK_INFOS[params.deckName].NO_GOES or {}
+    for _, nogo in ipairs(nogoList) do
+        if nogo == tostring(params.nogo) then
+            return
+        end
+    end
+    table.insert(nogoList, tostring(params.nogo))
+    DECK_INFOS[params.deckName].NO_GOES = nogoList
+end
+
+---------------------------------------------------- Deck builder ------------------------------------------------------
+local B_waitingDecks = {}
+
+local function deckBuildBarrier(deckType, deck)
+    B_waitingDecks[deckType] = deck
+    local waitCount = 0
+    for _, _ in pairs(B_waitingDecks) do
+        waitCount = waitCount + 1
+    end
+    if waitCount >= TOTAL_DECK_COUNT then
+        getObjectFromGUID(ENTRY_POINT.GUID).call(ENTRY_POINT.CALL_FUNCTION, B_waitingDecks)
+        B_waitingDecks = {}
+    end
+end
+
+local function placeDeck(deck, position, rotation, name)
+    if deck == nil then
+        return
+    end
+    deck.setPositionSmooth(Vector(position), false)
+    deck.setRotationSmooth(Vector(rotation) or Vector(180, 0, 0), false)
+    deck.interactable = true
+    if name ~= nil then deck.setName(name) end
+end
+
+local function setupDeck(buildMode, preDeckGUIDs, deckInfoTable)
+    local _temp_currentNoGoes = ACTIVE_NO_GOES
+    ACTIVE_NO_GOES = deckInfoTable.NO_GOES or _temp_currentNoGoes
+    local createdDecks = buildDeck(preDeckGUIDs, deckInfoTable.RATIOS[buildMode])
+    ACTIVE_NO_GOES = _temp_currentNoGoes
+
+    local buildDeck = createdDecks[1]
+    local leftoverDeck = createdDecks[2]
+
+    if buildDeck == nil then
+        Global.call("printWarning", {text = "Can't build deck " .. deckInfoTable.DECK_NAME or "Unkown"
+            .. ". [C30000][Please restart this map.][-]"})
+        return
+    end
+    placeDeck(buildDeck, deckInfoTable.DECK_POSITION, deckInfoTable.DECK_ROTATION, deckInfoTable.DECK_NAME)
+    placeDeck(leftoverDeck, deckInfoTable.LEFTOVERS_POSITION, deckInfoTable.LEFTOVERS_ROTATION
+        , deckInfoTable.LEFTOVERS_NAME)
+
+    Wait.condition(function() deckBuildBarrier(deckInfoTable.ID, buildDeck) end, function() return buildDeck.resting end)
+end
+
+function buildAllDecks(params)
+    local buildMode = SELECTED_BUILD_MODE
+    if params.preDecks == nil then
+        Global.call("printWarning", {text = "Wrong parameters in Deck Builder function 'buildAllDecks()'."})
+    end
+    for deckName, infoTable in pairs(DECK_INFOS) do
+        setupDeck(buildMode, params.preDecks[deckName], infoTable)
+    end
+end
+
+------------------------------------------------------------------------------------------------------------------------
+-------------------------------------- Implementation of the two deck builder ------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+local function mergeCards(cards)
+    local buildDeck = cards[1]
+    if #cards > 1 then
+        buildDeck = buildDeck.putObject(cards[2])
+        for i = 3, #cards do
+            buildDeck.putObject(cards[i])
+            destroyObject(cards[i])                 -- Necessary for TTS (otherwise TTS would create card duplicates)
+        end
+    end
+    return buildDeck
 end
 
 local function mergeDecks(decks, startDeck)
     local buildDeck = nil
-    if (startDeck ~= nil) and (startDeck.tag == "Deck") then
+    if (startDeck ~= nil) and (startDeck.type == "Deck") then
         buildDeck = startDeck
         for _, nextDeck in pairs(decks) do
-            buildDeck.putObject(nextDeck)
+            if nextDeck ~= nil then
+                buildDeck.putObject(nextDeck)
+                destroyObject(nextDeck)             -- Necessary for TTS (otherwise TTS would create card duplicates)
+            end
         end
     else
         for index, nextDeck in pairs(decks) do
-            if nextDeck.tag == "Deck" then
+            if nextDeck.type == "Deck" then
                 table.remove(decks, index)
                 return mergeDecks(decks, nextDeck)
             end
         end
-        -- If decks is not empty
-        if next(decks) then
-            Global.call("printWarning", {text = "The Deck-Builder can't build a deck if all parts of the deck are single cards."
-                .. "At least one part of the deck has to be a deck already."})
+
+        if #decks > 0 then
+            buildDeck = mergeCards(decks)
         end
     end
 
@@ -327,7 +567,7 @@ end
 
 local function checkForNoGoes(objTable)
     for _, noGoType in pairs(ACTIVE_NO_GOES) do
-        if NO_GO_FILTERS[noGoType](objTable) then
+        if (NO_GO_FILTERS[noGoType] or NO_GO_FILTERS.Unkown)(objTable) then
             return false
         end
     end
@@ -336,46 +576,47 @@ end
 
 local function takeCardsFromDeck(deck, cardGUIDs, takenCardsTable)
     for _, guid in pairs(cardGUIDs) do
-        local card = deck.takeObject({
-            guid = guid
-        })
-        table.insert(takenCardsTable, card)
+        table.insert(takenCardsTable, deck.takeObject({guid = guid}))
     end
     return takenCardsTable
 end
 
-local function buildDeckSpeed(preDeckGUIDs, tagTable)
+function buildDeckSpeed(preDeckGUIDs, tagTable)
     local selectedDecks = {}
     local leftoverDecks = {}
     if isDeckBuilderON() then
         tagTable["EMPTY"] = 500
         for type, amountToTake in pairs(tagTable) do
-            if (preDeckGUIDs[type] ~= nil) and (amountToTake > 0) then
+            if preDeckGUIDs[type] ~= nil then
                 local preDeck = getObjectFromGUID(preDeckGUIDs[type])
-                if preDeck.tag == "Deck" then
-                    -- For the edge case that only one card should be choosen
-                    if amountToTake == 1 then
-                        if preDeck.getQuantity() == 2 then
-                            local secondCardGUID = preDeck.getObjects()[2].guid
-                            table.insert(selectedDecks, preDeck.takeObject())
-                            table.insert(leftoverDecks, getObjectFromGUID(secondCardGUID))
+                if amountToTake > 0 then
+                    if preDeck.tag == "Deck" then
+                        -- For the edge case that only one card should be choosen
+                        if amountToTake == 1 then
+                            if preDeck.getQuantity() == 2 then
+                                local secondCardGUID = preDeck.getObjects()[2].guid
+                                table.insert(selectedDecks, preDeck.takeObject())
+                                table.insert(leftoverDecks, getObjectFromGUID(secondCardGUID))
+                            else
+                                table.insert(selectedDecks, preDeck.takeObject())
+                                table.insert(leftoverDecks, preDeck)
+                            end
+                        elseif amountToTake == (preDeck.getQuantity() - 1) then
+                            local cardLeft = preDeck.takeObject()
+                            table.insert(selectedDecks, preDeck)
+                            table.insert(leftoverDecks, cardLeft)
                         else
-                            table.insert(selectedDecks, preDeck.takeObject())
-                            table.insert(leftoverDecks, preDeck)
+                            local splitDecks = preDeck.cut(preDeck.getQuantity() - amountToTake)
+                            if splitDecks ~= nil then
+                                table.insert(leftoverDecks, splitDecks[2])
+                            end
+                            table.insert(selectedDecks, preDeck)
                         end
-                    elseif amountToTake == (preDeck.getQuantity() - 1) then
-                        local cardLeft = preDeck.takeObject()
-                        table.insert(selectedDecks, preDeck)
-                        table.insert(leftoverDecks, cardLeft)
                     else
-                        local splitDecks = preDeck.cut(preDeck.getQuantity() - amountToTake)
-                        if splitDecks ~= nil then
-                            table.insert(leftoverDecks, splitDecks[2])
-                        end
                         table.insert(selectedDecks, preDeck)
                     end
                 else
-                    table.insert(selectedDecks, preDeck)
+                    table.insert(leftoverDecks, preDeck)
                 end
             end
         end
@@ -388,88 +629,112 @@ local function buildDeckSpeed(preDeckGUIDs, tagTable)
     return {mergeDecks(selectedDecks), mergeDecks(leftoverDecks)}
 end
 
-local function buildDeckFilter(preDeckGUIDs, tagTable)
+local function _dbf_takeFirstAcceptableCard(preDeck)
+    local selectedCard = nil
+    local leftoverDeck = preDeck
+    if preDeck.getQuantity() == 2 then
+        local preDeckObjects = preDeck.getObjects()
+        if checkForNoGoes(preDeckObjects[1]) then
+            selectedCard = preDeck.takeObject({guid = preDeckObjects[1].guid})
+            leftoverDeck = getObjectFromGUID(preDeckObjects[2].guid)
+        elseif checkForNoGoes(preDeckObjects[2]) then
+            selectedCard = preDeck.takeObject({guid = preDeckObjects[2].guid})
+            leftoverDeck = getObjectFromGUID(preDeckObjects[1].guid)
+        end
+    else
+        for _, objTable in pairs(preDeck.getObjects())do
+            if checkForNoGoes(objTable) then
+                selectedCard = preDeck.takeObject({guid = objTable.guid})
+                break
+            end
+        end
+    end
+    return {selectedCard, leftoverDeck}
+end
+
+local function _dbf_determineGoodAndBadCards(preDeck, amountToTake)
+    local cardsToRemove = {}
+    local cardsToKeep = {}
+    local goodCards = 0
+    for _, objTable in pairs(preDeck.getObjects()) do
+        if checkForNoGoes(objTable) then
+            table.insert(cardsToKeep, objTable.guid)
+            goodCards = goodCards + 1
+            if goodCards == amountToTake then
+                break
+            end
+        else
+            table.insert(cardsToRemove, objTable.guid)
+        end
+    end
+    return {GOOD = cardsToKeep, BAD = cardsToRemove, GOOD_AMOUNT = #cardsToKeep, BAD_AMOUNT = #cardsToRemove}
+end
+
+function buildDeckFilter(preDeckGUIDs, tagTable)
     local selectedDecks = {}
     local leftoverDecks = {}
     if isDeckBuilderON() then
         tagTable["EMPTY"] = 500
         for type, amountToTake in pairs(tagTable) do
-            if (preDeckGUIDs[type] ~= nil) and (amountToTake > 0) then
+            if preDeckGUIDs[type] ~= nil then
                 local preDeck = getObjectFromGUID(preDeckGUIDs[type])
-                if preDeck.tag == "Deck" then
-                    -- For the edge case that only one card should be choosen
-                    if amountToTake == 1 then
-                        if preDeck.getQuantity() == 2 then
-                            local preDeckObjects = preDeck.getObjects()
-                            local leftoverObject = preDeck.getGUID()
-                            if checkForNoGoes(preDeckObjects[1]) then
-                                table.insert(selectedDecks, preDeck.takeObject({guid = preDeckObjects[1].guid}))
-                                leftoverObject = getObjectFromGUID(preDeckObjects[2].guid)
-                            elseif checkForNoGoes(preDeckObjects[2]) then
-                                table.insert(selectedDecks, preDeck.takeObject({guid = preDeckObjects[2].guid}))
-                                leftoverObject = getObjectFromGUID(preDeckObjects[1].guid)
+                if amountToTake > 0 then
+                    if preDeck.tag == "Deck" then
+                        -- For the edge case that only one card should be choosen
+                        if amountToTake == 1 then
+                            local selectionTable = _dbf_takeFirstAcceptableCard(preDeck)
+                            if selectionTable[1] ~= nil then
+                                table.insert(selectedDecks, selectionTable[1])
                             end
-                            table.insert(leftoverDecks, leftoverObject)
+                            table.insert(leftoverDecks, selectionTable[2])
                         else
-                            for _, objTable in pairs(preDeck.getObjects())do
-                                if checkForNoGoes(objTable) then
-                                    table.insert(selectedDecks, preDeck.takeObject({guid = objTable.guid}))
-                                    break
-                                end
-                            end
-                            table.insert(leftoverDecks, preDeck)
-                        end
-                    else
-                        local cardsToDestroy = {}
-                        local goodCards = 0
-                        local badCards = 0
-                        for _, objTable in pairs(preDeck.getObjects()) do
-                            if checkForNoGoes(objTable) then
-                                goodCards = goodCards + 1
-                                if goodCards == amountToTake then
-                                    break
-                                end
-                            else
-                                badCards = badCards + 1
-                                table.insert(cardsToDestroy, objTable.guid)
-                            end
-                        end
-                        if (goodCards + badCards) < preDeck.getQuantity() then
-                            if (goodCards + badCards) == (preDeck.getQuantity() - 1) then
-                                leftoverDecks = takeCardsFromDeck(preDeck, cardsToDestroy, leftoverDecks)
-                                local cardLeft = preDeck.takeObject({top = false})
-                                table.insert(selectedDecks, preDeck)
-                                table.insert(leftoverDecks, cardLeft)
-                            else
-                                local splitDecks = preDeck.cut(preDeck.getQuantity() - (goodCards + badCards))
-                                if splitDecks ~= nil then
-                                    table.insert(leftoverDecks, splitDecks[2])
-                                end
-                                leftoverDecks = takeCardsFromDeck(preDeck, cardsToDestroy, leftoverDecks)
-                                table.insert(selectedDecks, preDeck)
-                            end
-                        else
-                            if goodCards > 0 then
-                                if goodCards == 1 then
-                                    for _, objTable in pairs(preDeck.getObjects()) do
-                                        if checkForNoGoes(objTable) then
-                                            table.insert(selectedDecks, preDeck.takeObject({guid = objTable.guid}))
-                                            break
+                            local goodAndBad = _dbf_determineGoodAndBadCards(preDeck, amountToTake)
+                            if goodAndBad.GOOD_AMOUNT > 0 then
+                                if goodAndBad.GOOD_AMOUNT > goodAndBad.BAD_AMOUNT then
+                                    -- More good than bad cards
+                                    leftoverDecks = takeCardsFromDeck(preDeck, goodAndBad.BAD, leftoverDecks)
+                                    if (goodAndBad.GOOD_AMOUNT + goodAndBad.BAD_AMOUNT) < preDeck.getQuantity() then
+                                        -- There are more cards in the preDeck than the counted good and bad cards
+                                            -- This appears if _dbf_determineGoodAndBadCards() found enough good cards to return
+                                        if goodAndBad.GOOD_AMOUNT == (preDeck.getQuantity() - 1) then
+                                            -- One needless card left
+                                            local cardLeft = preDeck.takeObject({top = false})
+                                            table.insert(leftoverDecks, cardLeft)
+                                            table.insert(selectedDecks, preDeck)
+                                        else
+                                            -- More than one needless card left => cut()
+                                            local splitDecks = preDeck.cut(goodAndBad.GOOD_AMOUNT)
+                                            if splitDecks ~= nil then
+                                                table.insert(selectedDecks, splitDecks[2])
+                                            end
+                                            table.insert(leftoverDecks, preDeck)
                                         end
+                                    else
+                                        -- Whole deck is split into good and bad cards
+                                        table.insert(selectedDecks, preDeck)
                                     end
-                                    table.insert(leftoverDecks, preDeck)
                                 else
-                                    leftoverDecks = takeCardsFromDeck(preDeck, cardsToDestroy, leftoverDecks)
-                                    table.insert(selectedDecks, preDeck)
+                                    -- More bad than good cards
+                                    selectedDecks = takeCardsFromDeck(preDeck, goodAndBad.GOOD, selectedDecks)
+                                    table.insert(leftoverDecks, preDeck)
                                 end
+                            else
+                                -- No good cards found
+                                table.insert(leftoverDecks, preDeck)
                             end
+                        end
+                    else
+                        -- preDeck is Card
+                        if checkForNoGoes({name = preDeck.getName(), lua_script = preDeck.getLuaScript()
+                            , tags = preDeck.getTags()}) then
+                            table.insert(selectedDecks, preDeck)
+                        else
+                            table.insert(leftoverDecks, preDeck)
                         end
                     end
                 else
-                    if checkForNoGoes({name = preDeck.getName(), lua_script = preDeck.getLuaScript()
-                        , tags = preDeck.getTags()}) then
-                        table.insert(selectedDecks, preDeck)
-                    end
+                    -- No cards needed from this preDeck
+                    table.insert(leftoverDecks, preDeck)
                 end
             end
         end
@@ -480,162 +745,4 @@ local function buildDeckFilter(preDeckGUIDs, tagTable)
     end
 
     return {mergeDecks(selectedDecks), mergeDecks(leftoverDecks)}
-end
-
-local function buildDeck(preDeckGUIDs, tagTable)
-    return buildDeckSpeed(preDeckGUIDs, tagTable)
-    --return buildDeckFilter(preDeckGUIDs, tagTable)
-end
-
-local function deckBuildBarrier(deckType, deck)
-    B_waitingDecks[deckType] = deck
-    local waitCount = 0
-    for _, _ in pairs(B_waitingDecks) do
-        waitCount = waitCount + 1
-    end
-    if waitCount >= B_TOTAL_DECK_COUNT then
-        getObjectFromGUID("195d79").call("decksBuilt", B_waitingDecks)
-        B_waitingDecks = {}
-    end
-end
-
-local function placeLeftoverDeck(deck, position, name)
-    if deck == nil then
-        return
-    end
-    deck.setPositionSmooth(position)
-    deck.setRotationSmooth({0, 270, 180}, false)
-    deck.interactable = true,
-    deck.setName(name)
-end
-
-local function buildTreasureDeck(mode, preTreasureDeckGUIDs)
-    local treasureDecks = buildDeck(preTreasureDeckGUIDs, DECK_TREASURE[mode])
-    local treasureDeck = treasureDecks[1]
-    local leftOverTreasureDeck = treasureDecks[2]
-
-    if treasureDeck == nil then
-        Global.call("printWarning", {text = "Can't build treasure deck. [C30000][Please restart this map.][-]"})
-        return
-    end
-
-    treasureDeck.setPositionSmooth(Global.getTable("DECK_POSITION").TREASURE, false)
-    treasureDeck.setRotationSmooth({180, 0, 0}, false)
-    treasureDeck.interactable = true
-    treasureDeck.setName("Treasure Deck")
-
-    placeLeftoverDeck(leftOverTreasureDeck, Global.getTable("DECK_POSITION").LO_TREASURE, "Leftover Treasure Cards")
-
-    Wait.condition(function() deckBuildBarrier("TREASURE", treasureDeck) end, function() return treasureDeck.resting end)
-end
-
-local function buildLootDeck(mode, preLootDeckGUIDs)
-    local lootDecks = buildDeck(preLootDeckGUIDs, DECK_LOOT[mode])
-    local lootDeck = lootDecks[1]
-    local leftOverLootDeck = lootDecks[2]
-
-    if lootDeck == nil then
-        Global.call("printWarning", {text = "Can't build loot deck. [C30000][Please restart this map.][-]"})
-        return
-    end
-
-    lootDeck.setPositionSmooth(Global.getTable("DECK_POSITION").LOOT, false)
-    lootDeck.setRotationSmooth({180, 0, 0}, false)
-    lootDeck.interactable = true
-    lootDeck.setName("Loot Deck")
-
-    placeLeftoverDeck(leftOverLootDeck, Global.getTable("DECK_POSITION").LO_LOOT, "Leftover Loot Cards")
-
-    Wait.condition(function() deckBuildBarrier("LOOT", lootDeck) end, function() return lootDeck.resting end)
-end
-
-local function buildMonsterDeck(mode, preMonsterDeckGUIDs)
-    local monsterDecks = buildDeck(preMonsterDeckGUIDs, DECK_MONSTER[mode])
-    local monsterDeck = monsterDecks[1]
-    local leftOverMonsterDeck = monsterDecks[2]
-
-    if monsterDeck == nil then
-        Global.call("printWarning", {text = "Can't build monster deck. [C30000][Please restart this map.][-]"})
-        return
-    end
-
-    monsterDeck.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER, false)
-    monsterDeck.setRotationSmooth({180, 0, 0}, false)
-    monsterDeck.interactable = true
-    monsterDeck.setName("Monster Deck")
-
-    placeLeftoverDeck(leftOverMonsterDeck, Global.getTable("DECK_POSITION").LO_MONSTER, "Leftover Monster Cards")
-
-    Wait.condition(function() deckBuildBarrier("MONSTER", monsterDeck) end, function() return monsterDeck.resting end)
-end
-
-local function buildRoomDeck(mode, preRoomDeckGUIDs)
-    local roomDeck = buildDeck(preRoomDeckGUIDs, DECK_ROOM)[1]
-
-    if roomDeck == nil then
-        Global.call("printWarning", {text = "Can't build room deck. [C30000][Please restart this map.][-]"})
-        return
-    end
-
-    roomDeck.setPositionSmooth(Global.getTable("DECK_POSITION").ROOM, false)
-    roomDeck.setRotationSmooth({180, 0, 0}, false)
-    roomDeck.interactable = true
-    roomDeck.setName("Room Deck")
-
-    Wait.condition(function() deckBuildBarrier("ROOM", roomDeck) end, function() return roomDeck.resting end)
-end
-
-local function buildBonusSoulDeck(mode, preBonusSoulDeckGUIDs)
-    local bonusSoulDeck = buildDeck(preBonusSoulDeckGUIDs, DECK_BONUS_SOUL)[1]
-
-    if bonusSoulDeck == nil then
-        Global.call("printWarning", {text = "Can't build bonus soul deck. [C30000][Please restart this map.][-]"})
-        return
-    end
-
-    bonusSoulDeck.interactable = true
-    bonusSoulDeck.setPositionSmooth(Global.getTable("DECK_POSITION").BONUS_SOUL, false)
-    bonusSoulDeck.setRotationSmooth({0, 270, 180}, false)
-    bonusSoulDeck.setName("Bonus-Soul Deck")
-
-    Wait.condition(function() deckBuildBarrier("BONUS_SOUL", bonusSoulDeck) end
-        , function() return bonusSoulDeck.resting end)
-end
-
-local function buildMonsterSepDeck(mode, preMonsterSepDeckGUIDs)
-    local monsterSepDeck = buildDeck(preMonsterSepDeckGUIDs, DECK_MONSTER_SEP)[1]
-
-    if monsterSepDeck == nil then
-        local lastCard = nil
-        for _, guid in pairs(preMonsterSepDeckGUIDs) do
-            local card = getObjectFromGUID(guid)
-            card.interactable = true
-            card.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER_SEP, false)
-            card.setRotationSmooth({0, 270, 0}, false)
-            lastCard = card
-        end
-        Wait.condition(function() deckBuildBarrier("MONSTER_SEP", lastCard) end
-            , function() return lastCard.isSmoothMoving() end)
-    else
-        monsterSepDeck.interactable = true
-        monsterSepDeck.setPositionSmooth(Global.getTable("DECK_POSITION").MONSTER_SEP, false)
-        monsterSepDeck.setRotationSmooth({0, 270, 0}, false)
-        monsterSepDeck.setName("Seperate Monster Deck")
-        Wait.condition(function() deckBuildBarrier("MONSTER_SEP", monsterSepDeck) end
-            , function() return monsterSepDeck.resting end)
-    end
-end
-
-function buildDecks(params)
-    local buildingMode = SELECTED_GAME_MODE
-    if params.preDecks == nil then
-        Global.call("printWarning", {text = "Wrong parameters in Deck Builder function 'buildDecks()'."})
-    end
-    buildTreasureDeck(buildingMode, params.preDecks.TREASURE)
-    buildLootDeck(buildingMode, params.preDecks.LOOT)
-    buildMonsterDeck(buildingMode, params.preDecks.MONSTER)
-
-    buildRoomDeck(buildingMode, params.preDecks.ROOM)
-    buildBonusSoulDeck(buildingMode, params.preDecks.BONUS_SOUL)
-    buildMonsterSepDeck(buildingMode, params.preDecks.MONSTER_SEP)
 end
