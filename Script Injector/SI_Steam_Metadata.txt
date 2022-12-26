@@ -29,5 +29,6 @@ It shouldn't be longer than 30-60sec (worst case). But it will be a lot faster t
 [h2] Other Projects [/h2]
 [list]
  [*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2526757138]Isaac: Four Souls[/url]
+ [*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2872430272]The Deck Builder[/url]
 [/list]
 
