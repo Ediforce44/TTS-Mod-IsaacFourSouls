@@ -262,7 +262,8 @@ local function setupOfficialContent(gameLanguage)
             local startPlayerColor = Global.getVar("startPlayerColor")
 
             -- !!! Order matters !!!
-            Turns.type = 1
+            Turns.type = 2
+            Turns.order = {"Red", "Blue", "Green", "Yellow"}
             Turns.turn_color = startPlayerColor
             Turns.enable = true
 
