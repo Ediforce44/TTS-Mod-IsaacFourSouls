@@ -284,39 +284,45 @@ function setCharacterPackScript(obj)
         local spawnedObj = {}
         local characterPlaced = false
         local content = self.getObjects()
+        local characterItemCounter = 0
         for index = 1, self.getQuantity() do
-          local nextObj = content[index]
-          local nextObjDescription = nextObj.description
-          local objClone = nil
+            local nextObj = content[index]
+            local nextObjDescription = nextObj.description
+            local objClone = nil
 
-          if nextObjDescription == languagePrefix .. "_character" then
-            objClone = cloneByGUID(nextObj.guid)
-            Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
-            characterPlaced = true
-          elseif nextObjDescription == languagePrefix .. "_character-item" or nextObjDescription == "character-item-counter" then
-            objClone = cloneByGUID(nextObj.guid)
-            Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
-          elseif nextObjDescription == languagePrefix .. "_character-soul" then
-            objClone = cloneByGUID(nextObj.guid)
-            Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
-          else
-            goto continue
-          end
-
-          if objClone.getStateId() != -1 then
-            for _, state in pairs(objClone.getStates()) do
-              table.insert(spawnedObj, state.guid)
+            if nextObjDescription == languagePrefix .. "_character" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
+                characterPlaced = true
+            elseif nextObjDescription == languagePrefix .. "_character-item" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}
+                    , index = 2 + characterItemCounter})
+                characterItemCounter = characterItemCounter + 1
+            elseif nextObjDescription == "character-item-counter" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
+            elseif nextObjDescription == languagePrefix .. "_character-soul" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
+            else
+                goto continue
             end
-          end
 
-          table.insert(spawnedObj, objClone.guid)
-          ::continue::
+            if objClone.getStateId() != -1 then
+                for _, state in pairs(objClone.getStates()) do
+                    table.insert(spawnedObj, state.guid)
+                end
+            end
+
+            table.insert(spawnedObj, objClone.guid)
+            ::continue::
         end
         if characterPlaced then
-          updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
-          return true
+            updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
+            return true
         else
-          return false
+            return false
         end
     end
 
