@@ -15,8 +15,6 @@ ROOM_DECK_ZONE_GUID = ZONE_GUIDS_DECK.ROOM
 
 BUILT_DECKS = {}
 
-TABLE_BOUNDARIES = {x = 45, y = 0, z = 18}
-
 EXPANSION_LEFTOVERS_POSITION = {x = 46.8, y = 5, z = 0}
 EXPANSION_LEFTOVERS_BAG_GUID = "3316b6"
 
@@ -77,24 +75,6 @@ local function setupPlayingArea()
         BUILT_DECKS.BONUS_SOUL.takeObject({position=getObjectFromGUID(bonusSoulZones.TWO).getPosition(), flip=true})
         BUILT_DECKS.BONUS_SOUL.takeObject({position=getObjectFromGUID(bonusSoulZones.THREE).getPosition(), flip=true})
     end
-end
-
-local function detectExpansions()
-    local expansions = {}
-    local allObjects = Global.getObjects()
-    for _, obj in ipairs(allObjects) do
-        local objPosition = obj.getPosition()
-        if objPosition.y > TABLE_BOUNDARIES.y then
-            if math.abs(objPosition.x) < TABLE_BOUNDARIES.x then
-                if math.abs(objPosition.z) < TABLE_BOUNDARIES.z then
-                    if obj.hasTag('EXPANSION') then
-                        table.insert(expansions, obj)
-                    end
-                end
-            end
-        end
-    end
-    return expansions
 end
 
 local function extractDecksToDeckPositions(containerObj)
@@ -211,7 +191,7 @@ local function mergePreDecks(deckTableOne, deckTableTwo)
 end
 
 local function setupExpansions(gameLanguage)
-    local expansions = detectExpansions()
+    local expansions = Global.call("detectExpansions")
     for i, expansion in ipairs(expansions) do
         Wait.frames(function()
             extractExpansion(expansion, gameLanguage)

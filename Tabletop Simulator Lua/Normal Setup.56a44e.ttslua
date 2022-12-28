@@ -26,10 +26,10 @@ SWAP_I_TEXT = {
 3) When everyone has selected a character, press the 'Start' button."]],
 
     OPTIONAL =
-[[- Drag & drop all expansions (red bags), which you want to use in the playing area.
+[[- Drag & drop all expansions (red bags) in the playing area, which you want to use.
 
-- Take out the character packs from the expansions, which you want to use and place them inside the Character Placer on the left side.
-    - Press the "Place Characters" button beneath it.
+- To place the characters from the selected expansions press the "Place Characters (Playing area)" button beneath the Character Placer.
+    - OR: Take out the brown character bags from the expansions and use the Character Placer manually.
 
 - Select the player, who should go first (for example with the "Who goes first" die on the left side).]]
 }

@@ -135,6 +135,26 @@ end
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+TABLE_BOUNDARIES = {x = 45, y = 0, z = 18}
+
+function detectExpansions()
+    local expansions = {}
+    local allObjects = Global.getObjects()
+    for _, obj in ipairs(allObjects) do
+        local objPosition = obj.getPosition()
+        if objPosition.y > TABLE_BOUNDARIES.y then
+            if math.abs(objPosition.x) < TABLE_BOUNDARIES.x then
+                if math.abs(objPosition.z) < TABLE_BOUNDARIES.z then
+                    if obj.hasTag('EXPANSION') then
+                        table.insert(expansions, obj)
+                    end
+                end
+            end
+        end
+    end
+    return expansions
+end
+
 function getRandomPlayerColor()
     local allPlayerColors = {"Red", "Blue", "Green", "Yellow"}
     local allActivePlayerColors = {}

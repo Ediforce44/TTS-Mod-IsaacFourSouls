@@ -99,11 +99,12 @@ end
 
 function initButton()
   self.createButton({
-    click_function = "placeCharactersCallback",
+    click_function = "placeChestCharactersCallback",
     function_owner = self,
-    label          = "Place characters",
+    label          = "Place characters (Chest)",
+    tooltip        = "Places every character put inside this chest.",
     position       = {0, 0.2, 2},
-    width          = 1500,
+    width          = 2200,
     height         = 300,
     font_size      = 200,
     font_color     = {1, 1, 1},
@@ -120,10 +121,26 @@ function initButton()
     font_color     = {1, 1, 1},
     color          = {0.78, 0.25, 0.25}
   })
+  self.createButton({
+    click_function = "placePlayingAreaCharactersCallback",
+    function_owner = self,
+    label          = "Place characters (Playing area)",
+    tooltip        = "Places every character from every expansions you draged and dropped into the playing area.",
+    position       = {0, 0.2, 2.8},
+    width          = 2700,
+    height         = 300,
+    font_size      = 200,
+    font_color     = {1, 1, 1},
+    color          = {0.25, 0.78, 0.25}
+  })
 end
 
-function placeCharactersCallback()
+function placeChestCharactersCallback()
   placeCharactersFromBag(self, false)
+end
+
+function placePlayingAreaCharactersCallback()
+    placeCharactersFromPlayingArea()
 end
 
 function loadCharactersFromWorld()
@@ -137,6 +154,29 @@ function loadCharactersFromWorld()
       table.insert(charObjs, obj)
     end
   end
+end
+
+function placeCharactersFromPlayingArea()
+    local expansions = Global.call("detectExpansions")
+    for i, expansion in ipairs(expansions) do
+        Wait.frames(function()
+            local objectsInExpansion = expansion.getObjects()
+            for _, obj in ipairs(objectsInExpansion) do
+                if obj.name == "Characters" then
+                    expansion.takeObject({
+                        index = obj.index,
+                        position = expansion.getPosition():sub(Vector(0,0, 4)),
+                        smooth = false,
+                        callback_function =
+                            function(characterBag)
+                                placeCharactersFromBag(characterBag, false)
+                                destroyObject(characterBag)
+                            end
+                    })
+                end
+            end
+        end, i)
+    end
 end
 
 local function placeCardsInNewCharBag(newCharacterBag, cards)
