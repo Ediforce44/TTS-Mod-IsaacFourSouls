@@ -160,7 +160,7 @@ end
 
 function placeObjectInZone(params)
     if params.object == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in player zone function 'placeCardInPlayerZone()'.")
+        Global.call("printWarning", {text = "Wrong parameters in player zone function 'placeCardInPlayerZone()'."})
         return
     end
     local position = nil

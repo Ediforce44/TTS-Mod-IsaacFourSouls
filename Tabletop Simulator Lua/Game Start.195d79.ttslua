@@ -3,14 +3,20 @@ FLOOR_CHANGE_GUID = "69a80d"
 
 PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
 
+START_BUTTON_INDEX = 1
+
 --- Edited by Ediforce44
 ZONE_GUIDS_DECK = Global.getTable("ZONE_GUID_DECK")
 MONSTER_DECK_ZONE_GUID = ZONE_GUIDS_DECK.MONSTER
-HAPPEN_DECK_ZONE_GUID = ZONE_GUIDS_DECK.HAPPEN
 TREASURE_DECK_ZONE_GUID = ZONE_GUIDS_DECK.TREASURE
 LOOT_DECK_ZONE_GUID = ZONE_GUIDS_DECK.LOOT
 SOUL_DECK_ZONE_GUID = ZONE_GUIDS_DECK.BONUS_SOUL
 ROOM_DECK_ZONE_GUID = ZONE_GUIDS_DECK.ROOM
+
+BUILT_DECKS = {}
+
+EXPANSION_LEFTOVERS_POSITION = {x = 46.8, y = 5, z = 0}
+EXPANSION_LEFTOVERS_BAG_GUID = "3316b6"
 
 DECK_BUILDER_GUID       = "69a80e"
 SETTING_UP_NOTE_GUID    = "56a44e"
@@ -30,9 +36,9 @@ end
 local function setupPlayingArea()
     -- Edited by Ediforce44
     -- Init Monster Zones and Monster Buttons
-    local allMonsterCards = monsterDeck.getObjects()
-    while not topTwoCardsAreMonster(monsterDeck) do
-        monsterDeck.shuffle()
+    local allMonsterCards = BUILT_DECKS.MONSTER.getObjects()
+    while not topTwoCardsAreMonster(BUILT_DECKS.MONSTER) do
+        BUILT_DECKS.MONSTER.shuffle()
     end
 
     local monsterZoneGUIDs = Global.getTable("ZONE_GUID_MONSTER")
@@ -55,17 +61,197 @@ local function setupPlayingArea()
     getObjectFromGUID(shopZoneGUIDs.SIX).call("deactivateZone")
     getObjectFromGUID(TREASURE_DECK_ZONE_GUID).call("activateShopButton")
 
+    -- Init Loot Zone and Loot Button
+    getObjectFromGUID(LOOT_DECK_ZONE_GUID).call("activateLootButton")
+
     -- Init Room Zones and Room Buttons
     local roomZoneGUIDs = Global.getTable("ZONE_GUID_ROOM")
     getObjectFromGUID(roomZoneGUIDs.ONE).call("activateZone")
     getObjectFromGUID(roomZoneGUIDs.TWO).call("deactivateZone")
 
     local bonusSoulZones = Global.getTable("ZONE_GUID_BONUSSOUL")
-    if soulDeck ~= nil then
-        soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.ONE).getPosition(), flip=true})
-        soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.TWO).getPosition(), flip=true})
-        soulDeck.takeObject({position=getObjectFromGUID(bonusSoulZones.THREE).getPosition(), flip=true})
+    if BUILT_DECKS.BONUS_SOUL ~= nil then
+        BUILT_DECKS.BONUS_SOUL.takeObject({position=getObjectFromGUID(bonusSoulZones.ONE).getPosition(), flip=true})
+        BUILT_DECKS.BONUS_SOUL.takeObject({position=getObjectFromGUID(bonusSoulZones.TWO).getPosition(), flip=true})
+        BUILT_DECKS.BONUS_SOUL.takeObject({position=getObjectFromGUID(bonusSoulZones.THREE).getPosition(), flip=true})
     end
+end
+
+local function extractDecksToDeckPositions(containerObj)
+    local zoneGUIDs = Global.getTable('ZONE_GUID_DECK')
+    local containerEmpty = true
+    for _, deck in ipairs(containerObj.getObjects()) do
+        if zoneGUIDs[deck.name] ~= nil then
+            local deckInZone = nil
+            local zone = getObjectFromGUID(zoneGUIDs[deck.name])
+            for _, obj in pairs(zone.getObjects()) do
+                if obj.type == "Deck" then
+                    deckInZone = obj
+                    break
+                end
+            end
+            if deckInZone ~= nil then
+                local extractedDeck = containerObj.takeObject({
+                    guid = deck.guid
+                })
+                deckInZone.putObject(extractedDeck)
+            else
+                containerObj.takeObject({
+                    guid = deck.guid,
+                    position = zone.getPosition(),
+                    smooth = false,
+                    rotation = zone.getRotation():setAt(3, 180)
+                })
+            end
+        else
+            containerEmpty = false
+        end
+    end
+    return containerEmpty
+end
+
+local function takeCareOfExpansionLeftovers(bagWithLeftovers, expansionName)
+    bagWithLeftovers.setName(tostring(expansionName))
+    getObjectFromGUID(EXPANSION_LEFTOVERS_BAG_GUID).putObject(bagWithLeftovers)
+end
+
+local function hasExpansionLanguage(expansionBox, language)
+    for _, obj in pairs(expansionBox.getObjects()) do
+        if obj.name == language then
+            return true
+        end
+    end
+    return false
+end
+
+local function extractExpansion(expansionBox, language)
+    local objectsInBox = expansionBox.getObjects()
+    if not hasExpansionLanguage(expansionBox, language) then
+        language = Global.getTable("GAME_LANGUAGE").US
+    end
+    for _, obj in ipairs(objectsInBox) do
+        if obj.name == language then
+            expansionBox.takeObject({
+                index = obj.index,
+                position = expansionBox.getPosition():sub(Vector(0,0, 4)),
+                smooth = false,
+                callback_function =
+                    function(languageBag)
+                        if extractDecksToDeckPositions(languageBag) then
+                            destroyObject(languageBag)
+                        else
+                            takeCareOfExpansionLeftovers(languageBag, expansionBox.getName())
+                        end
+                        destroyObject(expansionBox)
+                    end
+            })
+        end
+    end
+end
+
+local function getPreDecksOnTable()
+    local preDecksOnTable = {}
+    local zoneGUIDs = Global.getTable('ZONE_GUID_DECK')
+    for zoneType, zoneGUID in pairs(zoneGUIDs) do
+        local zone = getObjectFromGUID(zoneGUID)
+        for _, obj in pairs(zone.getObjects()) do
+            if obj.tag == "Deck" then
+                preDecksOnTable[zoneType] = {EMPTY = obj.getGUID()}
+                break
+            end
+        end
+    end
+    return preDecksOnTable
+end
+
+-- deckTableTwo overwrites deckTableOne entries if there a any duplicates
+local function mergePreDecks(deckTableOne, deckTableTwo)
+    if deckTableOne == nil then
+        if deckTableTwo == nil then
+            return {}
+        else
+            return deckTableTwo
+        end
+    elseif deckTableTwo == nil then
+        return deckTableOne
+    end
+
+    local resultingDeckTable = deckTableOne
+    for deckType, guidTable in pairs(deckTableTwo) do
+        local preDeckTableEntry = resultingDeckTable[deckType]
+        if preDeckTableEntry == nil then
+            preDeckTableEntry = {}
+        end
+        for cardType, GUID in pairs(guidTable) do
+            preDeckTableEntry[cardType] = GUID
+        end
+        resultingDeckTable[deckType] = preDeckTableEntry
+    end
+    return resultingDeckTable
+end
+
+local function setupExpansions(gameLanguage)
+    local expansions = Global.call("detectExpansions")
+    for i, expansion in ipairs(expansions) do
+        Wait.frames(function()
+            extractExpansion(expansion, gameLanguage)
+        end, i)
+    end
+    return #expansions
+end
+
+local function setupOfficialContent(gameLanguage)
+    if not ready_for_setup then
+        local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
+
+        local preDeckGUIDs = tableBase.call("getPreDeckGUIDs", {language = gameLanguage})
+        local preExpansionDeckGUIDs = getPreDecksOnTable()
+        preDeckGUIDs = mergePreDecks(preDeckGUIDs, preExpansionDeckGUIDs)
+
+        tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
+        Wait.frames(
+            function()
+                getObjectFromGUID(DECK_BUILDER_GUID).call("buildAllDecks", {preDecks = preDeckGUIDs})
+            end)
+    end
+
+    Wait.condition(
+        function()
+            checkAndShuffleDecks()
+            if BUILT_DECKS.LOOT ~= nil then
+                BUILT_DECKS.LOOT.deal(3)
+            end
+            setupPlayingArea()
+
+            for _, color in pairs(getSeatedPlayers()) do
+                Global.call("deactivateCharacter", {playerColor = color})
+            end
+
+            -- INSERT other setup steps
+
+            self.editButton({
+                index = 0,
+                click_function = "dummy",
+                label = "",
+                tooltip = "",
+                width = 0,
+                height = 0,
+                font_size = 0
+            })
+
+            local startPlayerColor = Global.getVar("startPlayerColor")
+
+            -- !!! Order matters !!!
+            Turns.type = 2
+            Turns.order = {"Red", "Blue", "Green", "Yellow"}
+            Turns.turn_color = startPlayerColor
+            Turns.enable = true
+
+            self.destroy()
+        end,
+        function()
+            return ready_for_setup
+        end)
 end
 
 function onLoad()
@@ -76,6 +262,7 @@ function onLoad()
     function_owner = self,
     position = {0, 0.11, -1},
     rotation = {0, 0, 0},
+    color = {1, 1, 1},
     width = 1100,
     height = 500,
     font_size = 400
@@ -105,83 +292,77 @@ function shuffleOptions(array)
 end
 
 function decksBuilt(createdDecks)
-    treasureDeck = createdDecks.TREASURE
-    lootDeck = createdDecks.LOOT
-    monsterDeck = createdDecks.MONSTER
-    roomDeck = createdDecks.ROOM
-    soulDeck = createdDecks.BONUS_SOUL
+    for type, deck in pairs(createdDecks) do
+        BUILT_DECKS[type] = deck
+    end
     ready_for_setup = true
 end
 
+function fadeOutButton(timeToFade)
+    local timeSlices = timeToFade * 30
+    local sliceLength = timeToFade / timeSlices
+    local startColor = self.getButtons()[START_BUTTON_INDEX].color
+    local colorSub = {sliceLength * startColor[1], sliceLength * startColor[2], sliceLength * startColor[3]}
+    for slice = 0, timeSlices do
+        Wait.time(function ()
+            local preColor = self.getButtons()[START_BUTTON_INDEX].color
+            local newColor = {preColor[1] - colorSub[1], preColor[2] - colorSub[2], preColor[3] - colorSub[3]}
+            self.editButton({index = START_BUTTON_INDEX - 1, color = newColor})
+        end, slice * sliceLength)
+    end
+end
+
 function onStart()
-    local isAllReady = isAllPlayersSelectCharacter()
-    if isAllReady == false or isAllReady == nil then
-        printToAll("[fdd835][WARNING][-] Each player must take a character before start.")
+    if Global.call("hasGameStarted") then
         return
     end
 
-    if not ready_for_setup then
-        local gameLanguage = Global.getVar("gameLanguage")
-        local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
-        local preDeckGUIDs = tableBase.call("getDeckGUIDs", {language = gameLanguage})
-        tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
-        Wait.frames(
-            function()
-                getObjectFromGUID(DECK_BUILDER_GUID).call("buildDecks", {preDecks = preDeckGUIDs})
-            end)
+    local isAllReady = isAllPlayersSelectCharacter()
+    if isAllReady == false or isAllReady == nil then
+        Global.call("printWarning", {text = "Each player must take a character before start."})
+        return
     end
 
-    Wait.condition(
+    local startPlayerColor = Global.getVar("startPlayerColor")
+    if startPlayerColor == "None" then
+        for _, color in pairs(getSeatedPlayers()) do
+            if (color == "Red") or (color == "Blue") or (color == "Green") or (color == "Yellow") then
+                startPlayerColor = color
+                break
+            end
+        end
+
+        if startPlayerColor == "None" then
+            Global.call("printWarning", {text = "At least 1 player must select a player color: Red, Blue, Green or Yellow."})
+            return
+        end
+        Global.call("setNewStartPlayer", {playerColor = startPlayerColor})
+    end
+
+    if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
+        settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
+        destroyObject(settingUpNote)
+    end
+
+    local gameLanguage = Global.getVar("gameLanguage")
+
+    broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Expansions")
+    local amountOfExpansionsInPlay = setupExpansions(gameLanguage)
+    if amountOfExpansionsInPlay > 0 then
+        local elBag = getObjectFromGUID(EXPANSION_LEFTOVERS_BAG_GUID)
+        elBag.setPosition(EXPANSION_LEFTOVERS_POSITION)
+        elBag.setScale({1.5, 1.5, 1.5})
+        Wait.condition(function()
+            elBag.setLock(true)
+            elBag.interactable = true
+        end, function() return elBag.resting end)
+    end
+
+    Wait.time(
         function()
-            checkAndShuffleDecks()
-            if lootDeck ~= nil then
-                lootDeck.deal(3)
-            end
-            setupPlayingArea()
-
-            for _, color in pairs(getSeatedPlayers()) do
-                Global.call("deactivateCharacter", {playerColor = color})
-            end
-
-            -- INSERT other setup steps
-
-            self.editButton({
-                index = 0,
-                click_function = "dummy",
-                label = "",
-                tooltip = "",
-                width = 0,
-                height = 0,
-                font_size = 0
-            })
-
-            local startPlayerColor = Global.getVar("startPlayerColor")
-            if startPlayerColor == "None" then
-                startPlayerColor = "Red"
-                for _, color in pairs(getSeatedPlayers()) do
-                    if (color == "Red") or (color == "Blue") or (color == "Green") or (color == "Yellow") then
-                        startPlayerColor = color
-                        break
-                    end
-                end
-                Global.call("setNewStartPlayer", {playerColor = startPlayerColor})
-            end
-
-            -- !!! Order matters !!!
-            Turns.type = 1
-            Turns.turn_color = startPlayerColor
-            Turns.enable = true
-
-            if getObjectFromGUID(SETTING_UP_NOTE_GUID) ~= nil then
-                settingUpNote = getObjectFromGUID(SETTING_UP_NOTE_GUID)
-                destroyObject(settingUpNote)
-            end
-
-            self.destroy()
-        end,
-            function()
-                return getObjectFromGUID("195d79").getVar("ready_for_setup")
-        end)
+            broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Official Content")
+            setupOfficialContent(gameLanguage)
+        end, amountOfExpansionsInPlay)
 end
 
 function isAllPlayersSelectCharacter()
@@ -211,30 +392,12 @@ end
 
 function checkAndShuffleDecks()
     local decksToShuffle = {}
-    if monsterDeck ~= nil then
-      table.insert(decksToShuffle, monsterDeck)
-    else
-      printToAll("[fdd835][WARNING][-] Can't find the Monster Deck!!!")
-    end
-    if soulDeck ~= nil then
-      table.insert(decksToShuffle, soulDeck)
-    else
-      printToAll("[fdd835][WARNING][-] Can't find the Bonus Soul Deck!!!")
-    end
-    if treasureDeck ~= nil then
-      table.insert(decksToShuffle, treasureDeck)
-    else
-      printToAll("[fdd835][WARNING][-] Can't find the Treasure Deck!!!")
-    end
-    if lootDeck ~= nil then
-      table.insert(decksToShuffle, lootDeck)
-    else
-      printToAll("[fdd835][WARNING][-] Can't find the Loot Deck!!!")
-    end
-    if roomDeck ~= nil then
-      table.insert(decksToShuffle, roomDeck)
-    else
-      printToAll("[fdd835][WARNING][-] Can't find the Room Deck!!!")
+    for type, _ in pairs(BUILT_DECKS) do
+        if (BUILT_DECKS[type] ~= nil) and (BUILT_DECKS[type].tag == "Deck") then
+          table.insert(decksToShuffle, BUILT_DECKS[type])
+        else
+          Global.call("printWarning", {text = "Can't find the " .. tostring(type) .. " Deck!!!"})
+        end
     end
 
     for i = 1, #decksToShuffle, 1 do

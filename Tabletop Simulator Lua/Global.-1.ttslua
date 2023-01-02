@@ -5,7 +5,7 @@
 local function getDeckOrCard(zoneGUID)
     local zone = getObjectFromGUID(zoneGUID)
     if zone == nil then
-        printToAll("[fdd835][WARNING][-] Wrong Zone. Zone with GUID '" .. zoneGUID .. "' doesn't exist.")
+        printWarning({text = "Wrong Zone. Zone with GUID '" .. zoneGUID .. "' doesn't exist."})
         return nil
     end
 
@@ -24,7 +24,7 @@ local function getDeckOrCard(zoneGUID)
     end
     zoneName = "'Zone is not a Deck-Zone'"
     ::printError::
-    printToAll("[fdd835][WARNING][-] Can't find the deck or card in zone: " .. zoneName .. ".")
+    printWarning({text = "Can't find the deck or card in zone: " .. zoneName .. "."})
     return nil
 end
 
@@ -38,7 +38,10 @@ local function setPositionTables()
     DECK_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DECK.LOOT).getPosition():setAt('y', 5)
     DECK_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DECK.MONSTER).getPosition():setAt('y', 5)
     DECK_POSITION.BONUS_SOUL = getObjectFromGUID(ZONE_GUID_DECK.BONUS_SOUL).getPosition():setAt('y', 5)
-    DECK_POSITION.MONSTER_SEP = {41.73, 5, -11.51}
+    DECK_POSITION.MONSTER_SEP = Vector(41.73, 5, -11.51)
+    DECK_POSITION.LO_TREASURE = Vector(41.73, 5, 15.06)
+    DECK_POSITION.LO_LOOT = Vector(41.73, 5, 11.73)
+    DECK_POSITION.LO_MONSTER = Vector(41.73, 5, -14.84)
 end
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -132,6 +135,26 @@ end
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+TABLE_BOUNDARIES = {x = 45, y = 0, z = 18}
+
+function detectExpansions()
+    local expansions = {}
+    local allObjects = Global.getObjects()
+    for _, obj in ipairs(allObjects) do
+        local objPosition = obj.getPosition()
+        if objPosition.y > TABLE_BOUNDARIES.y then
+            if math.abs(objPosition.x) < TABLE_BOUNDARIES.x then
+                if math.abs(objPosition.z) < TABLE_BOUNDARIES.z then
+                    if obj.hasTag('EXPANSION') then
+                        table.insert(expansions, obj)
+                    end
+                end
+            end
+        end
+    end
+    return expansions
+end
+
 function getRandomPlayerColor()
     local allPlayerColors = {"Red", "Blue", "Green", "Yellow"}
     local allActivePlayerColors = {}
@@ -211,7 +234,7 @@ end
 
 activePlayerColor   = "None"
 startPlayerColor    = "None"
-gameLanguage        = "US"
+gameLanguage        = "None"
 
 automaticRewarding = {
     Yellow = true,
@@ -229,6 +252,13 @@ function table.copy(t)
     end
     return tableCopy
 end
+
+GAME_LANGUAGE = {
+  US = "US",
+  RU = "RU",
+  FR = "FR",
+  ES = "ES"
+}
 
 REAL_PLAYER_COLOR = {
     Yellow = "[D0E431]",
@@ -264,6 +294,7 @@ PRINT_COLOR_SPECIAL = {
     HP = "[951312]",
     BLACK = "[010100]",
     GRAY = "[3B4449]",
+    GRAY_LIGHT = "[7E8990]",
     RED = "[CE3522]",
     GOLD = "[E4BC2F]"
 }
@@ -273,7 +304,6 @@ ZONE_GUID_DECK = {
     ROOM = "096e94",
     LOOT = "c413a5",
     MONSTER = "52e22c",
-    HAPPEN = "61e7b7",
     BONUS_SOUL = "979776",
     SOUL_TOKEN = "560abc"
 }
@@ -342,13 +372,6 @@ COIN_COUNTER_GUID = {
     Red = "965140"
 }
 
-HEART_TOKENS_GUID = {
-    Yellow = {"c02908", "3f81b7", "f8e991", "f825c2", "2a9dfc", "443adb"},
-    Green = {"12326f", "c326f1", "f5d095", "7e882b", "66804c", "e24915"},
-    Blue = {"78f8e7", "c9f7b2", "4b26ea", "098303", "9e8aa0", "dbcc87"},
-    Red = {"bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
-}
-
 MONSTER_HP_COUNTER_GUID = {
     ONE = "9bb226",
     TWO = "a75691",
@@ -379,20 +402,42 @@ DECK_POSITION = {
     BONUS_SOULS = {},
     LOOT = {},
     MONSTER = {},
-    MONSTER_SEP = {}
+    MONSTER_SEP = {},
+    LO_TREASURE = {},
+    LO_LOOT = {},
+    LO_MONSTER = {}
 }
+
+function printWarning(params)
+    if params.text == nil then
+        return
+    end
+    printToAll(PRINT_COLOR_SPECIAL.GRAY_LIGHT .. PRINT_COLOR_SPECIAL.WARNING .. "[WARNING][-] " .. tostring(params.text) .. "[-]")
+end
+
+function printWarningTP(params)
+    if params.text == nil then
+        return
+    end
+    if params.color == nil then
+        printWarning(params)
+    else
+        printToColor(PRINT_COLOR_SPECIAL.GRAY_LIGHT .. PRINT_COLOR_SPECIAL.WARNING .. "[WARNING][-] "
+            .. tostring(params.text) .. "[-]", params.color)
+    end
+end
 
 function setGameLanguage(params)
     if params.language == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameter in Global function 'setGameLanguage()'.")
+        printWarning({text = "Wrong parameter in Global function 'setGameLanguage()"})
         return
     end
     gameLanguage = params.language
 end
 
 function hasGameStarted()
-    local startButtonGUID = "56a44e"
-    if getObjectFromGUID(startButtonGUID) then
+    local setupNoteGUID = "56a44e"
+    if getObjectFromGUID(setupNoteGUID) then
         return false
     end
     return true
@@ -400,14 +445,14 @@ end
 
 function setNewStartPlayer(params)
     if params.playerColor == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'setNewStartPlayer()'.")
+        printWarning({text = "Wrong parameters in global function 'setNewStartPlayer()'."})
         return false
     end
     if hasGameStarted() or (params.playerColor == startPlayerColor) then
         return false
     end
     if not Player[params.playerColor].seated then
-        printToAll("[fdd835][WARNING][-] " .. getPlayerString(params) .. " is not an active Player.")
+        printWarning({text = "" .. getPlayerString(params) .. " is not an active Player."})
         return false
     end
 
@@ -445,7 +490,7 @@ function isPlayerAuthorized(params)
     elseif params.player ~= nil then
         player = params.player
     else
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'isPlayerAuthorized()'.")
+        printWarning({text = "Wrong parameters in global function 'isPlayerAuthorized()'."})
         return false
     end
     return player == params.ownerPlayer or player.admin
@@ -453,7 +498,7 @@ end
 
 function deactivateCharacter(params)
     if params.playerColor == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'deactivateCharacter()'.")
+        printWarning({text = "Wrong parameters in global function 'deactivateCharacter()'."})
         return
     end
     getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("deactivateCharacter")
@@ -463,7 +508,7 @@ function switchRewardingMode(params)
     local color = ""
     if params.playerColor == nil then
         if params.player == nil then
-            printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'deactivateRewarding()'.")
+            printWarning({text = "Wrong parameters in global function 'deactivateRewarding()'."})
             return
         else
             color = params.player.color
@@ -478,7 +523,7 @@ end
 
 function getCounterInZone(params)
     if params.zone == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'getCounterInZone()'.")
+        printWarning({text = "Wrong parameters in global function 'getCounterInZone()'."})
     else
         for _ , object in pairs(params.zone.getObjects()) do
             if object.getName() == "Counter\n" or object.getName() == "Counter" then
@@ -491,7 +536,7 @@ end
 --Thank you Bone White in discord for this <3       --Edited by Ediforce44
 function findIntInScript(params)
     if params.scriptString == nil or params.varName == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'findIntInScript()'.")
+        printWarning({text = "Wrong parameters in global function 'findIntInScript()'."})
         return nil
     end
     for line in string.gmatch(params.scriptString,"[^\r\n]+") do -- for each line in the script
@@ -505,7 +550,7 @@ end
 
 function findBoolInScript(params)
     if params.scriptString == nil or params.varName == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'findBoolInScript()'.")
+        printWarning({text = "Wrong parameters in global function 'findBoolInScript()'."})
         return nil
     end
     for line in string.gmatch(params.scriptString,"[^\r\n]+") do -- for each line in the script
@@ -523,7 +568,7 @@ end
 
 function getDeckFromZone(params)
     if params.zoneGUID == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'getDeckFromZone()'.")
+        printWarning({text = "Wrong parameters in global function 'getDeckFromZone()'."})
         return nil
     end
     return getDeckOrCard(params.zoneGUID)
@@ -563,7 +608,7 @@ end
 
 function getCardFromDeck(params)
     if params.deck == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'getCardFromDeck()'.")
+        printWarning({text = "Wrong parameters in global function 'getCardFromDeck()'."})
         return nil
     end
     local obj = params.deck
@@ -578,21 +623,21 @@ end
 
 function placeSoulToken(params)
     if params.playerColor == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeSoulToken()'.")
+        printWarning({text = "Wrong parameters in global function 'placeSoulToken()'."})
         return
     end
     local soulToken = getCardFromDeck({deck = getSoulTokenDeck()})
     if soulToken ~= nil then
         placeObjectInSoulZone({playerColor = params.playerColor, object = soulToken})
     else
-        printToAll("[fdd835][WARNING][-] Can't find the Soul Token deck: Maybe the soul tokens are empty. " ..
-                    "Place the soul tokens on its starting position.")
+        printWarning({text = "Can't find the Soul Token deck: Maybe the soul tokens are empty. " ..
+                    "Place the soul tokens on its starting position."})
     end
 end
 
 function placeObjectInSoulZone(params)
     if (params.playerColor == nil) or (params.object == nil) then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeObjectInSoulZone()'.")
+        printWarning({text = "Wrong parameters in global function 'placeObjectInSoulZone()'."})
     else
         local index = nil
         if params.index ~= nil then
@@ -605,7 +650,7 @@ end
 
 function placeObjectInPillZone(params)
     if (params.playerColor == nil) or (params.object == nil) then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeObjectInPillZone()'.")
+        printWarning({text = "Wrong parameters in global function 'placeObjectInPillZone()'."})
     else
         local index = nil
         if params.index ~= nil then
@@ -618,7 +663,7 @@ end
 
 function placeObjectsInPlayerZone(params)
     if (params.playerColor == nil) or (params.objects == nil) then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'placeObjectsInPlayerZone()'.")
+        printWarning({text = "Wrong parameters in global function 'placeObjectsInPlayerZone()'."})
     else
         local objects = params.objects
         if #objects > 1 then

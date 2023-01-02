@@ -1,170 +1,205 @@
-CHARACTER_PLACER_GUID = "d2c68a"
-CHARACTER_RANDOMIZER_GUID = "bc6e13"
-PLAYER_COLORS = {Red = 'Red', Blue = 'Blue', Yellow = 'Yellow', Green = 'Green'}
+    CHARACTER_PLACER_GUID = "d2c68a"
+    CHARACTER_RANDOMIZER_GUID = "bc6e13"
+    PLAYER_COLORS = {Red = 'Red', Blue = 'Blue', Yellow = 'Yellow', Green = 'Green'}
 
-function onLoad()
-  initButtons()
-end
-
-function initButtons()
-  self.clearButtons()
-  self.interactable = false
-
-  self.createButton({
-    click_function = "selectCharacter",
-    function_owner = self,
-    label          = "Select",
-    position       = {0, 0.3, 1.7},
-    width          = 760,
-    height         = 260,
-    font_size      = 180,
-    font_color     = {1, 1, 1},
-    color          = {84/225, 110/255, 122/255}
-  })
-  self.createButton({
-    click_function = "unlock",
-    function_owner = self,
-    label          = "Unlock",
-    position       = {0.4, 0.3, -1.7},
-    width          = 400,
-    height         = 110,
-    font_size      = 80,
-    color          = {102/225, 187/255, 106/255}
-  })
-  self.createButton({
-    click_function = "lock",
-    function_owner = self,
-    label          = "Lock",
-    position       = {-0.4, 0.3, -1.7},
-    width          = 400,
-    height         = 110,
-    font_size      = 80,
-    color          = {239/225, 83/255, 80/255}
-  })
-end
-
-function selectCharacter(_, playerClickerColor)
-  if PLAYER_COLORS[playerClickerColor] == nil then
-    printToColor("[fdd835][WARNING][-] Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", playerClickerColor)
-    return
-  end
-
-  local characterRandomizer = getObjectFromGUID(CHARACTER_RANDOMIZER_GUID)
-  local waitForSelectCharacters = characterRandomizer.getTable("waitForSelectCharacters")
-  if #waitForSelectCharacters[playerClickerColor] > 0 and not isCharacterInPullToSelect(waitForSelectCharacters) then
-    printToColor("[fdd835][WARNING][-] You can't select character from global pull while you select from random.", playerClickerColor)
-    return
-  end
-
-  if isCharacterInAnotherPlayerPullToSelect(playerClickerColor, waitForSelectCharacters) then
-    printToColor("[fdd835][WARNING][-] You can't select character from another player pull.", playerClickerColor)
-    return
-  end
-
-  cleanupSpawnedObj(playerClickerColor)
-
-  local spawnedObj = {}
-  local cardsInPackCount = self.getQuantity()
-  for i = 1, cardsInPackCount do
-    local obj = self.takeObject({ index = 0 })
-    local objClone = obj.clone()
-    Wait.frames(function() self.putObject(obj) end, 5)
-    local objDescription = objClone.getDescription()
-
-    if objDescription == "character" then
-      Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
-    elseif objDescription == "character-item" or objDescription == "character-item-counter" then
-      Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
-    elseif objDescription == "character-soul" then
-      Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
-    else
-      printToColor("[ef5350][ERROR][-] Unknown " .. objDescription .. " card description matadata. Maybe you changed description of card?" , playerClickerColor)
-      return
+    function onLoad()
+      initButtons()
     end
 
-    if objClone.getStateId() != -1 then
-      for _, state in pairs(objClone.getStates()) do
-        table.insert(spawnedObj, state.guid)
-      end
+    function initButtons()
+      self.clearButtons()
+      self.interactable = false
+
+      self.createButton({
+        click_function = "selectCharacter",
+        function_owner = self,
+        label          = "Select",
+        position       = {0, 0.3, 1.7},
+        width          = 760,
+        height         = 260,
+        font_size      = 180,
+        font_color     = {1, 1, 1},
+        color          = {84/225, 110/255, 122/255}
+      })
+      self.createButton({
+        click_function = "unlock",
+        function_owner = self,
+        label          = "Unlock",
+        position       = {0.4, 0.3, -1.7},
+        width          = 400,
+        height         = 110,
+        font_size      = 80,
+        color          = {102/225, 187/255, 106/255}
+      })
+      self.createButton({
+        click_function = "lock",
+        function_owner = self,
+        label          = "Lock",
+        position       = {-0.4, 0.3, -1.7},
+        width          = 400,
+        height         = 110,
+        font_size      = 80,
+        color          = {239/225, 83/255, 80/255}
+      })
     end
 
-    table.insert(spawnedObj, objClone.guid)
-  end
-
-  updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
-end
-
-function isCharacterInPullToSelect(waitForSelectCharacters)
-  local isInPull = false
-  for _, pull in pairs(waitForSelectCharacters) do
-    for _, obj in pairs(pull) do
-      if obj.guid == self.guid then
-        isInPull = true
-      end
+    local function cloneByGUID(cloneGUID)
+        local obj = self.takeObject({guid = cloneGUID})
+        local objClone = obj.clone()
+        Wait.frames(function() self.putObject(obj) end, 5)
+        return objClone
     end
-  end
-  return isInPull
-end
 
-function isCharacterInAnotherPlayerPullToSelect(clickedPlayerColor, waitForSelectCharacters)
-    local inAnotherPull = false
-    for _, color in pairs(PLAYER_COLORS) do
-        if (color != clickedPlayerColor) then
-            inAnotherPull = isCharacterInPlayerPullToSelect(color, waitForSelectCharacters)
-            if (inAnotherPull == true) then break end
+    local function cloneCharacterCards(playerClickerColor, languagePrefix)
+        local spawnedObj = {}
+        local characterPlaced = false
+        local content = self.getObjects()
+        local characterItemCounter = 0
+        for index = 1, self.getQuantity() do
+            local nextObj = content[index]
+            local nextObjDescription = nextObj.description
+            local objClone = nil
+
+            if nextObjDescription == languagePrefix .. "_character" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
+                characterPlaced = true
+            elseif nextObjDescription == languagePrefix .. "_character-item" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}
+                    , index = 2 + characterItemCounter})
+                characterItemCounter = characterItemCounter + 1
+            elseif nextObjDescription == "character-item-counter" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
+            elseif nextObjDescription == languagePrefix .. "_character-soul" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
+            else
+                goto continue
+            end
+
+            if objClone.getStateId() != -1 then
+                for _, state in pairs(objClone.getStates()) do
+                    table.insert(spawnedObj, state.guid)
+                end
+            end
+
+            table.insert(spawnedObj, objClone.guid)
+            ::continue::
+        end
+        if characterPlaced then
+            updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
+            return true
+        else
+            return false
         end
     end
-    return inAnotherPull
-end
 
-function isCharacterInPlayerPullToSelect(playerColor, waitForSelectCharacters)
-  local isInPull = false
-  for _, obj in pairs(waitForSelectCharacters[playerColor]) do
-    if obj.guid == self.guid then
-      isInPull = true
-    end
-  end
-  return isInPull
-end
+    function selectCharacter(_, playerClickerColor)
+      if PLAYER_COLORS[playerClickerColor] == nil then
+        Global.call("printWarningTP", {text = "Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", color =  playerClickerColor})
+        return
+      end
 
-function cleanupSpawnedObj(playerColor)
-  local playerCharacterObj = getPlayerSpanedObj(playerColor)
-  if playerCharacterObj ~= nil then
-    for _, guid in pairs(playerCharacterObj) do
-      local obj = getObjectFromGUID(guid)
-      if obj ~= nil then
-        obj.destruct()
+      local characterRandomizer = getObjectFromGUID(CHARACTER_RANDOMIZER_GUID)
+      local waitForSelectCharacters = characterRandomizer.getTable("waitForSelectCharacters")
+      if #waitForSelectCharacters[playerClickerColor] > 0 and not isCharacterInPullToSelect(waitForSelectCharacters) then
+        Global.call("printWarningTP", {text = "You can't select character from global pull while you select from random.", color =  playerClickerColor})
+        return
+      end
+
+      if isCharacterInAnotherPlayerPullToSelect(playerClickerColor, waitForSelectCharacters) then
+        Global.call("printWarningTP", {text = "You can't select character from another player pull.", color =  playerClickerColor})
+        return
+      end
+
+      cleanupSpawnedObj(playerClickerColor)
+
+      local language = Global.getVar('gameLanguage')
+      local characterFound = cloneCharacterCards(playerClickerColor, language)
+
+      if not characterFound then
+        Global.call("printWarning", {text = "No character cards for the selected language found in this pack: " .. self.getName()})
+        if not cloneCharacterCards(playerClickerColor, Global.getTable('GAME_LANGUAGE').US) then
+            Global.call("printWarning", {text = "No standard (English) character cards found in this pack: " .. self.getName()})
+            return
+        end
       end
     end
-    updatePlayerSpawnedObj(playerColor, {})
-  end
-end
 
-function getPlayerSpanedObj(playercolor)
-  characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
-  return characterPlacer.getTable("playersSpawnedCharacterObj")[playercolor]
-end
+    function isCharacterInPullToSelect(waitForSelectCharacters)
+      local isInPull = false
+      for _, pull in pairs(waitForSelectCharacters) do
+        for _, obj in pairs(pull) do
+          if obj.guid == self.guid then
+            isInPull = true
+          end
+        end
+      end
+      return isInPull
+    end
 
-function updatePlayerSpawnedObj(playerColor, spawnedObj)
-  characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
-  local playersSpawnedCharacterObj = characterPlacer.getTable("playersSpawnedCharacterObj")
-  playersSpawnedCharacterObj[playerColor] = spawnedObj
-  characterPlacer.setTable("playersSpawnedCharacterObj", playersSpawnedCharacterObj)
-end
+    function isCharacterInAnotherPlayerPullToSelect(clickedPlayerColor, waitForSelectCharacters)
+        local inAnotherPull = false
+        for _, color in pairs(PLAYER_COLORS) do
+            if (color != clickedPlayerColor) then
+                inAnotherPull = isCharacterInPlayerPullToSelect(color, waitForSelectCharacters)
+                if (inAnotherPull == true) then break end
+            end
+        end
+        return inAnotherPull
+    end
 
-function unlock(obj)
-  obj.interactable = true
-end
+    function isCharacterInPlayerPullToSelect(playerColor, waitForSelectCharacters)
+      local isInPull = false
+      for _, obj in pairs(waitForSelectCharacters[playerColor]) do
+        if obj.guid == self.guid then
+          isInPull = true
+        end
+      end
+      return isInPull
+    end
 
-function lock(obj)
-    obj.interactable = false
-end
+    function cleanupSpawnedObj(playerColor)
+      local playerCharacterObj = getPlayerSpanedObj(playerColor)
+      if playerCharacterObj ~= nil then
+        for _, guid in pairs(playerCharacterObj) do
+          local obj = getObjectFromGUID(guid)
+          if obj ~= nil then
+            obj.destruct()
+          end
+        end
+        updatePlayerSpawnedObj(playerColor, {})
+      end
+    end
 
--- For extended calls
-function selectCharacterByCall(params)
-  selectCharacter(nil, params.playerColor)
-end
+    function getPlayerSpanedObj(playercolor)
+      characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
+      return characterPlacer.getTable("playersSpawnedCharacterObj")[playercolor]
+    end
 
-function isCharacterInPullToSelectByCall(params)
-  return isCharacterInPullToSelect(params.waitForSelectCharacters)
-end
+    function updatePlayerSpawnedObj(playerColor, spawnedObj)
+      characterPlacer = getObjectFromGUID(CHARACTER_PLACER_GUID)
+      local playersSpawnedCharacterObj = characterPlacer.getTable("playersSpawnedCharacterObj")
+      playersSpawnedCharacterObj[playerColor] = spawnedObj
+      characterPlacer.setTable("playersSpawnedCharacterObj", playersSpawnedCharacterObj)
+    end
+
+    function unlock(obj)
+      obj.interactable = true
+    end
+
+    function lock(obj)
+        obj.interactable = false
+    end
+
+    -- For extended calls
+    function selectCharacterByCall(params)
+      selectCharacter(nil, params.playerColor)
+    end
+
+    function isCharacterInPullToSelectByCall(params)
+      return isCharacterInPullToSelect(params.waitForSelectCharacters)
+    end
+  

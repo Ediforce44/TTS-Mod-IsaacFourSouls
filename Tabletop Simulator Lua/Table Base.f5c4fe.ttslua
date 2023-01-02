@@ -1,7 +1,75 @@
 -- The Baseplate of the table
 ----- Manages the decks and cards under the table
 
+DEBUG = true    -- Only activate if you want to make changes to the card repository under the table
+
+local function createDebugButton()
+    self.createButton({
+      click_function = "prepareDebug",
+      function_owner = self,
+      label          = "",
+      position       = {5, 0.2, 0},
+      rotation       = {180, 270, 180},
+      width          = 300,
+      height         = 300 * 17,
+      color          = {1, 1, 1}
+    })
+end
+
+LANGUAGE_OBJECT_POSITIONS = {
+    LOOT = {
+        L_BATTERY = {x = -20.95, y = -3.46,z = 5},
+        L_BOMB = {x = -31.86, y = -3.45, z = 5},
+        L_BUTTER_BEAN = {x = -24.57, y = -3.47, z = 0},
+        L_DICE_SHARD = {x = -42.75, y = -3.47, z = 0},
+        L_FOUR_CENT = {x = -42.75, y = -3.42, z = 5},
+        L_LOST_SOUL = {x = -39.11, y = -3.5, z = 0},
+        L_NICKEL = {x = -28.21, y = -3.46, z = 5},
+        L_ONE_CENT = {x = -31.86, y = -3.44, z = 0},
+        L_PILL = {x = -35.50, y = -3.46, z = 0},
+        L_RUNE = {x = -39.11, y = -3.45, z = 5},
+        L_SOUL_HEART = {x = -35.50, y = -3.47, z = 5},
+        L_TAROT_MISC = {x = -17.27, y = -3.31, z = 5},
+        L_THREE_CENT = {x = -20.95, y = -3.36, z = 0},
+        L_TRINKET = {x = -24.57, y = -3.38, z = 5},
+        L_TWO_CENT = {x = -28.21, y = -3.4, z = 0}
+    },
+    MONSTER = {
+        M_BAD = {x = 0.87, y = -3.43, z = 5},
+        M_BASIC = {x = -9.88, y = -3.17, z = 5},
+        M_BOSS = {x = -6.26, y = -3.21, z = 5},
+        M_CURSE = {x = -2.7, y = -3.44, z = 0},
+        M_CURSED = {x = -6.26, y = -3.44, z = 0},
+        M_EPIC = {x = -2.7, y = -3.44, z = 5},
+        M_GOOD = {x = 0.86, y = -3.4,z = 0},
+        M_HOLY_CHARMED = {x = -9.88, y = -3.41, z = 0}
+    },
+    TREASURE = {
+        T_ACTIVE = {x = 8.13, y = -3.14, z = 5},
+        T_ONE_USE = {x = 19., y = -3.44, z = 5},
+        T_PAID = {x = 15.39, y = -3.41, z = 5},
+        T_PASSIVE = {x = 11.75, y = -2.92, z = 5},
+        T_SOUL = {x = 22.64, y = -3.48, z = 5}
+    },
+    ROOM = {
+        R_ALL = {x = 29.5, y = -3.21, z = 5}
+    },
+    BONUS_SOUL = {
+        BS_ALL = {x = 36, y = -3.46, z = 5}
+    },
+    MONSTER_SEP = {
+        MS_ALL = {x = 42, y = -3.5, z = 5}
+    }
+}
+
 OBJECTS_UNDER_TABLE = {
+    US = "7f7406",
+    RU = "ac9ceb",
+    ES = "5a30af",
+    EL_BAG = "3316b6"
+}
+
+LANGUAGE_OBJECTS = {
     US = {
         TREASURE = {
             T_ACTIVE  = "b706e2",
@@ -46,20 +114,188 @@ OBJECTS_UNDER_TABLE = {
         MONSTER_SEP = {
             MS_ALL = "2f818b"
         }
+    },
+    RU = {
+        TREASURE = {
+            T_ACTIVE  = "c2b313",
+            T_PASSIVE = "bee8da",
+            T_PAID    = "ea08ae",
+            T_ONE_USE = "5aa37f",
+            T_SOUL    = "0c7644"
+        },
+        LOOT = {
+            L_TAROT_MISC    = "c98157",
+            L_TRINKET       = "1f497c",
+            L_PILL          = "2ea6fe",
+            L_RUNE          = "127198",
+            L_BUTTER_BEAN   = "9dafb1",
+            L_BOMB          = "ffe4df",
+            L_BATTERY       = "b621b8",
+            L_DICE_SHARD    = "939d60",
+            L_SOUL_HEART    = "7393d0",
+            L_LOST_SOUL     = "751079",
+            L_NICKEL        = "5a8229",
+            L_FOUR_CENT     = "43a2db",
+            L_THREE_CENT    = "5de503",
+            L_TWO_CENT      = "41164a",
+            L_ONE_CENT      = "571f03"
+        },
+        MONSTER = {
+            M_EPIC        = "6ebe2d",
+            M_BOSS        = "cbdd46",
+            M_BASIC       = "bc5d83",
+            M_CURSED      = "fec70e",
+            M_HOLY_CHARMED= "48ee37",
+            M_GOOD        = "60b972",
+            M_BAD         = "135197",
+            M_CURSE       = "e74578"
+        },
+        ROOM = {
+            R_ALL   = "e2f488"
+        },
+        BONUS_SOUL = {
+            BS_ALL  = "77a365"
+        },
+        MONSTER_SEP = {
+            MS_ALL = "2a3272"
+        }
+    },
+    ES = {
+        TREASURE = {
+            T_ACTIVE  = "3a39c0",
+            T_PASSIVE = "c245e4",
+            T_PAID    = "b4f6d2",
+            T_ONE_USE = "054560",
+            T_SOUL    = "c97e30"
+        },
+        LOOT = {
+            L_TAROT_MISC    = "090e03",
+            L_TRINKET       = "e1f3c5",
+            L_PILL          = "2f9e5b",
+            L_RUNE          = "1de45f",
+            L_BUTTER_BEAN   = "7901e8",
+            L_BOMB          = "3dfc41",
+            L_BATTERY       = "f4edad",
+            L_DICE_SHARD    = "b6004b",
+            L_SOUL_HEART    = "a66cce",
+            L_LOST_SOUL     = "03e1af",
+            L_NICKEL        = "77d2b2",
+            L_FOUR_CENT     = "c7a49f",
+            L_THREE_CENT    = "0686ae",
+            L_TWO_CENT      = "7066e1",
+            L_ONE_CENT      = "ec2c81"
+        },
+        MONSTER = {
+            M_EPIC        = "969a9c",
+            M_BOSS        = "88586b",
+            M_BASIC       = "79615e",
+            M_CURSED      = "33433f",
+            M_HOLY_CHARMED= "8ae1a7",
+            M_GOOD        = "1dd9cc",
+            M_BAD         = "8bcdb7",
+            M_CURSE       = "cdcb48"
+        },
+        ROOM = {
+            R_ALL   = "5447fb"
+        },
+        BONUS_SOUL = {
+            BS_ALL  = "8fcabc"
+        },
+        MONSTER_SEP = {
+            MS_ALL = "11585a"
+        }
     }
 }
 
-function onLoad()
-    self.interactable = false
+local function isBaseRaised()
+    return self.getPosition().y > 0
+end
 
-    for _, languageTable in pairs(OBJECTS_UNDER_TABLE) do
-        for _, objGUIDs in pairs(languageTable) do
-            for _, guid in pairs(objGUIDs) do
-                local obj = getObjectFromGUID(guid)
-                if obj then
-                    obj.interactable = false
+function prepareDebug()
+    local basePosition = self.getPosition()
+    if isBaseRaised() then
+        self.interactable = false
+        for _, guid in pairs(OBJECTS_UNDER_TABLE) do
+            local obj = getObjectFromGUID(guid)
+            if obj then
+                obj.interactable = false
+                local newObjPosition = obj.getPosition():setAt('y', obj.getPosition().y - 15)
+                obj.setPosition(newObjPosition)
+            end
+        end
+        local newPosition = basePosition:setAt('y', basePosition.y - 15)
+        self.setPosition(newPosition)
+    else
+        self.interactable = false
+        for _, guid in pairs(OBJECTS_UNDER_TABLE) do
+            local obj = getObjectFromGUID(guid)
+            if obj then
+                obj.interactable = true
+                local newObjPosition = obj.getPosition():setAt('y', self.getPosition().y + 16)
+                obj.setPosition(newObjPosition)
+            end
+        end
+        local newPosition = basePosition:setAt('y', basePosition.y + 15)
+        self.setPosition(newPosition)
+    end
+end
+
+function onLoad()
+    if DEBUG then
+        for language, objTable in pairs(LANGUAGE_OBJECTS) do
+            for _, objGUIDs in pairs(objTable) do
+                for objName, guid in pairs(objGUIDs) do
+                    OBJECTS_UNDER_TABLE[language .. "_" .. objName] = guid
                 end
             end
+        end
+        createDebugButton()
+    end
+    self.interactable = false
+
+    for _, guid in pairs(OBJECTS_UNDER_TABLE) do
+        local obj = getObjectFromGUID(guid)
+        if obj then
+            obj.interactable = false
+            obj.setLock(false)
+        end
+    end
+end
+
+function returnLanguageObjects()
+    for language, objTable in pairs(LANGUAGE_OBJECTS) do
+        local languageBag = getObjectFromGUID(OBJECTS_UNDER_TABLE[language])
+        for _, objGUIDs in pairs(objTable) do
+            for _, guid in pairs(objGUIDs) do
+                local object = getObjectFromGUID(guid)
+                if object then
+                    languageBag.putObject(object)
+                end
+            end
+        end
+    end
+end
+
+function extractLanguageObjects(params)
+    if params.language == nil then
+        Global.call("printWarning", {text = "Wrong parameter in Table Base function extractLanguageObjects()."})
+        return
+    end
+
+    local language = params.language
+    local languageBag = getObjectFromGUID(OBJECTS_UNDER_TABLE[language])
+    if languageBag.getQuantity() == 0 then
+        return
+    end
+    for category, objGUIDs in pairs(LANGUAGE_OBJECTS[language]) do
+        for type, guid in pairs(objGUIDs) do
+            languageBag.takeObject({
+                position    = Vector(LANGUAGE_OBJECT_POSITIONS[category][type]):setAt('y', self.getPosition().y + 0.5),
+                smooth      = false,
+                rotation    = {0, 180, 180},
+                guid        = guid,
+                callback_function = function(object) object.interactable = isBaseRaised() end
+            })
         end
     end
 end
@@ -69,13 +305,13 @@ function shufflePreDecks(params)
 
     if params.language == nil then
         if params.preDecks == nil then
-            printToAll("[fdd835][WARNING][-] Wrong parameters in Table Base function 'shufflePreDecks()'.")
+            Global.call("printWarning", {text = "Wrong parameters in Table Base function 'shufflePreDecks()'."})
             return
         else
             preDecks = params.preDecks
         end
     else
-        preDecks = OBJECTS_UNDER_TABLE[params.language]
+        preDecks = LANGUAGE_OBJECTS[params.language]
     end
 
     for _, preDeck in pairs(preDecks) do
@@ -88,10 +324,10 @@ function shufflePreDecks(params)
     end
 end
 
-function getDeckGUIDs(params)
+function getPreDeckGUIDs(params)
     local language = params.language
     if language == nil then
-        language = "US"
+        language = Global.getTable("GAME_LANGUAGE").US
     end
-    return OBJECTS_UNDER_TABLE[language]
+    return LANGUAGE_OBJECTS[language]
 end

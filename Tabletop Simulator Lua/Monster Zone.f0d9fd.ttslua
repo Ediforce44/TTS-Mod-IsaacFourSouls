@@ -63,8 +63,8 @@ end
 local function payOutLoot(playerColor, amount)
     local lootDeck = Global.call("getLootDeck")
     if lootDeck == nil then
-        printToAll("[fdd835][WARNING][-] Can't find the Loot deck."
-            .. " Place the Loot deck on its starting position.")
+        Global.call("printWarning", {text = "Can't find the Loot deck."
+            .. " Place the Loot deck on its starting position."})
     end
     lootDeck.deal(amount, playerColor)
 end
@@ -72,8 +72,8 @@ end
 local function payOutTreasures(playerColor, amount)
     local treasureDeck = Global.call("getTreasureDeck")
     if treasureDeck == nil then
-        printToAll("[fdd835][WARNING][-] Can't find the Treasure deck."
-            .. " Place the Treasure deck on its starting position.")
+        Global.call("printWarning", {text = "Can't find the Treasure deck."
+            .. " Place the Treasure deck on its starting position."})
     end
     if amount > 1 then
         local cards = {}
@@ -301,8 +301,8 @@ end
 
 function updateAttributes(params)
     if params.HP == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in monster zone function 'updateAttributes()'."
-            .. " The parameter table should always contain a value for the key 'HP'")
+        Global.call("printWarning", {text = "Wrong parameters in monster zone function 'updateAttributes()'."
+            .. " The parameter table should always contain a value for the key 'HP'"})
     else
         active_monster_attrs.GUID = params.GUID or active_monster_attrs.GUID
         active_monster_attrs.NAME = params.NAME or "Unkown"
@@ -323,7 +323,7 @@ end
 
 function activateZone(params)
     if active then
-        printToAll("[fdd835][WARNING][-] Can't activate Zone: " .. self.guid .. ". This Zone is already active.")
+        Global.call("printWarning", {text = "Can't activate Zone: " .. self.guid .. ". This Zone is already active."})
     else
         if containsDeckOrCard() then
             local firstObjectInZone = self.getObjects()[2]
@@ -374,7 +374,7 @@ function changeButtonState(params)
     end
 
     if params.newState == nil then
-        printToAll("[fdd835][WARNING][-] Wrong parameters in global function 'changeButtonState()'.")
+        Global.call("printWarning", {text = "Wrong parameters in global function 'changeButtonState()'."})
     else
         for _ , state in pairs(ATTACK_BUTTON_STATES) do
             if params.newState == state then

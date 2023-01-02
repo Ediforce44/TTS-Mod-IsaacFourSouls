@@ -73,6 +73,8 @@ We will talk about INFO-MSGs. This are Messages which will be printed for one or
 > - `getCardFromDeck({deck}) : object` takes a card from the **deck** and return a reference on this card. If **deck** is a card it will return **deck**.
  
 > ### <u><b>Technical Functions</b></u>
+> - `printWarning({text})` prints the **text** as a warning message to all players.
+> - `printWarningTP({text, color})` prints the **text** as a warning message to the player, who has this **color**. If **color** is *nil*, the warning message will be printed to all players.
 > - `hasGameStarted() : bool` returns *true* if the game has already been started (The Setting UP Note was deleted). Otherwise it returns *false*
 > - `findIntInScript({scriptString, varName}) : int` searches in the **scriptString** for a variable with the name **varName** and returns the value of it.
 > - `findBoolInScript({scriptString, varName}) : bool` searches in the **scriptString** for a variable with the name **varName** and returns *true* if the value of the variable is *true*. Otherwise it returns *false*.

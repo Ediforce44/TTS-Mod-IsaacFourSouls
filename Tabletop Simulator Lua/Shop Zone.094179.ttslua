@@ -78,7 +78,7 @@ function activateZone()
         activatePurchaseButton()
     end
     if active then
-        printToAll("[fdd835][WARNING][-] Can't activate Shop Zone: " .. self.guid .. ". This Zone is already active.")
+        Global.call("printWarning", {text = "Can't activate Shop Zone: " .. self.guid .. ". This Zone is already active."})
     else
         if not containsDeckOrCard() then
             if TREASURE_DECK_ZONE.call("placeNewTreasureCard", {zone = self}) == false then

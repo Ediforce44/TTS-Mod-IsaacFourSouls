@@ -78,7 +78,7 @@ function activateZone()
         activateRoomButton()
     end
     if active then
-        printToAll("[fdd835][WARNING][-] Can't activate Room Zone: " .. self.guid .. ". This Zone is already active.")
+        Global.call("printWarning", {text = "Can't activate Room Zone: " .. self.guid .. ". This Zone is already active."})
     else
         for _ , obj in pairs(self.getObjects()) do
             if obj.tag == "Deck" or obj.tag == "Card" then

@@ -236,7 +236,7 @@ def inheritTags(card):
                 card["States"][stateClass]["Tags"] = tags
 
 def handleCharacterTag(card):
-    if card["Description"] == "character":
+    if re.fullmatch("[A-Z]*_character", card["Description"], re.I | re.DOTALL):
         if remove:
             removeTag("Character", card)
         elif not tagExist("Character", card):

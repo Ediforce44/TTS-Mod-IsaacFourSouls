@@ -1,4 +1,5 @@
-START_POS = {41.40, 1.02, 14.24}
+START_POS = {50.38, 1.02, 14.24}
+
 X_MARGIN = 3.21
 Z_MARGIN = 4.91
 MAX_ROW_SIZE = 11
@@ -17,6 +18,74 @@ curRowSize = nil
 
 charObjs = {}
 
+characterBagJSON = [[{
+    "Name": "Custom_Model_Bag",
+    "Transform": {
+            "posX": 0,
+            "posY": 0,
+            "posZ": 0,
+            "rotX": 0,
+            "rotY": 180,
+            "rotZ": 0,
+            "scaleX": 0.85,
+            "scaleY": 0.85,
+            "scaleZ": 0.85
+        },
+    "Nickname": "",
+    "Description": "character-pack",
+    "GMNotes": "",
+    "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "ColorDiffuse": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+    },
+    "LayoutGroupSortIndex": 1,
+    "Value": 0,
+    "Locked": false,
+    "Grid": true,
+    "Snap": true,
+    "IgnoreFoW": false,
+    "MeasureMovement": false,
+    "DragSelectable": true,
+    "Autoraise": true,
+    "Sticky": true,
+    "Tooltip": true,
+    "GridProjection": false,
+    "HideWhenFaceDown": false,
+    "Hands": false,
+    "MaterialIndex": -1,
+    "MeshIndex": -1,
+    "CustomMesh": {
+        "MeshURL": "http://pastebin.com/raw/PqfGKtKR",
+        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/1686018145360846214/B3E843F10E2B4E8203FD8AB038574832C643DB65/",
+        "NormalURL": "http://cloud-3.steamusercontent.com/ugc/861734852198391028/D75480247FA058266F0D423501D867407458666D/",
+        "ColliderURL": "",
+        "Convex": true,
+        "MaterialIndex": 0,
+        "TypeIndex": 6,
+        "CustomShader": {
+          "SpecularColor": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0
+          },
+          "SpecularIntensity": 0.5,
+          "SpecularSharpness": 5.000001,
+          "FresnelStrength": 0.4
+        },
+        "CastShadows": true
+    },
+    "Bag": {
+        "Order": 0
+    },
+    "LuaScript": ""
+}]]
+
 -- Dirty stuff
 function table.clone(org)
   return {table.unpack(org)}
@@ -30,11 +99,12 @@ end
 
 function initButton()
   self.createButton({
-    click_function = "placeCharactersCallback",
+    click_function = "placeChestCharactersCallback",
     function_owner = self,
-    label          = "Place characters",
+    label          = "Place characters (Chest)",
+    tooltip        = "Places every character put inside this chest.",
     position       = {0, 0.2, 2},
-    width          = 1500,
+    width          = 2200,
     height         = 300,
     font_size      = 200,
     font_color     = {1, 1, 1},
@@ -51,10 +121,26 @@ function initButton()
     font_color     = {1, 1, 1},
     color          = {0.78, 0.25, 0.25}
   })
+  self.createButton({
+    click_function = "placePlayingAreaCharactersCallback",
+    function_owner = self,
+    label          = "Place characters (Playing area)",
+    tooltip        = "Places every character from every expansions you draged and dropped into the playing area.",
+    position       = {0, 0.2, 2.8},
+    width          = 2700,
+    height         = 300,
+    font_size      = 200,
+    font_color     = {1, 1, 1},
+    color          = {0.25, 0.78, 0.25}
+  })
 end
 
-function placeCharactersCallback()
+function placeChestCharactersCallback()
   placeCharactersFromBag(self, false)
+end
+
+function placePlayingAreaCharactersCallback()
+    placeCharactersFromPlayingArea()
 end
 
 function loadCharactersFromWorld()
@@ -68,6 +154,48 @@ function loadCharactersFromWorld()
       table.insert(charObjs, obj)
     end
   end
+end
+
+function placeCharactersFromPlayingArea()
+    local expansions = Global.call("detectExpansions")
+    for i, expansion in ipairs(expansions) do
+        Wait.frames(function()
+            local objectsInExpansion = expansion.getObjects()
+            for _, obj in ipairs(objectsInExpansion) do
+                if obj.name == "Characters" then
+                    expansion.takeObject({
+                        index = obj.index,
+                        position = expansion.getPosition():sub(Vector(0,0, 4)),
+                        smooth = false,
+                        callback_function =
+                            function(characterBag)
+                                placeCharactersFromBag(characterBag, false)
+                                destroyObject(characterBag)
+                            end
+                    })
+                end
+            end
+        end, i)
+    end
+end
+
+local function placeCardsInNewCharBag(newCharacterBag, cards)
+    if cards.tag == "Deck" then
+        for _ = 1, cards.getQuantity() - 1 do
+            if cards.getQuantity() == 2 then
+                local lastCardGUID = cards.getObjects()[1].guid
+                placeCardsInNewCharBag(newCharacterBag, cards.takeObject())
+                placeCardsInNewCharBag(newCharacterBag, getObjectFromGUID(lastCardGUID))
+                break
+            else
+                placeCardsInNewCharBag(newCharacterBag, cards.takeObject())
+            end
+        end
+    elseif cards.tag == "Card" then
+        newCharacterBag.putObject(cards)
+        setCharacterPackScript(newCharacterBag)
+        reloadWorldCharacterPacksInExternalObj()
+    end
 end
 
 function placeCharactersFromBag(bagObj, deleteBag)
@@ -84,10 +212,19 @@ function placeCharactersFromBag(bagObj, deleteBag)
       calcNextPackPosition()
 
       table.insert(charObjs, obj)
-    else
-      if obj.tag == "Bag" then
+    elseif (obj.tag == "Deck") or (obj.tag == "Card") then
+        spawnObjectJSON({
+            json = characterBagJSON,
+            position = nextPosition,
+            rotation = {0, 180, 0},
+            scale = {0.85, 0.85, 0.85},
+            callback_function = function(newCharBag)
+                placeCardsInNewCharBag(newCharBag, obj)
+            end
+        })
+        calcNextPackPosition()
+    elseif obj.tag == "Bag" then
         placeCharactersFromBag(obj, true)
-      end
     end
   end
 
@@ -176,55 +313,89 @@ function setCharacterPackScript(obj)
       })
     end
 
+    local function cloneByGUID(cloneGUID)
+        local obj = self.takeObject({guid = cloneGUID})
+        local objClone = obj.clone()
+        Wait.frames(function() self.putObject(obj) end, 5)
+        return objClone
+    end
+
+    local function cloneCharacterCards(playerClickerColor, languagePrefix)
+        local spawnedObj = {}
+        local characterPlaced = false
+        local content = self.getObjects()
+        local characterItemCounter = 0
+        for index = 1, self.getQuantity() do
+            local nextObj = content[index]
+            local nextObjDescription = nextObj.description
+            local objClone = nil
+
+            if nextObjDescription == languagePrefix .. "_character" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
+                characterPlaced = true
+            elseif nextObjDescription == languagePrefix .. "_character-item" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}
+                    , index = 2 + characterItemCounter})
+                characterItemCounter = characterItemCounter + 1
+            elseif nextObjDescription == "character-item-counter" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
+            elseif nextObjDescription == languagePrefix .. "_character-soul" then
+                objClone = cloneByGUID(nextObj.guid)
+                Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
+            else
+                goto continue
+            end
+
+            if objClone.getStateId() != -1 then
+                for _, state in pairs(objClone.getStates()) do
+                    table.insert(spawnedObj, state.guid)
+                end
+            end
+
+            table.insert(spawnedObj, objClone.guid)
+            ::continue::
+        end
+        if characterPlaced then
+            updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
+            return true
+        else
+            return false
+        end
+    end
+
     function selectCharacter(_, playerClickerColor)
       if PLAYER_COLORS[playerClickerColor] == nil then
-        printToColor("[fdd835][WARNING][-] Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", playerClickerColor)
+        Global.call("printWarningTP", {text = "Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", color =  playerClickerColor})
         return
       end
 
       local characterRandomizer = getObjectFromGUID(CHARACTER_RANDOMIZER_GUID)
       local waitForSelectCharacters = characterRandomizer.getTable("waitForSelectCharacters")
       if #waitForSelectCharacters[playerClickerColor] > 0 and not isCharacterInPullToSelect(waitForSelectCharacters) then
-        printToColor("[fdd835][WARNING][-] You can't select character from global pull while you select from random.", playerClickerColor)
+        Global.call("printWarningTP", {text = "You can't select character from global pull while you select from random.", color =  playerClickerColor})
         return
       end
 
       if isCharacterInAnotherPlayerPullToSelect(playerClickerColor, waitForSelectCharacters) then
-        printToColor("[fdd835][WARNING][-] You can't select character from another player pull.", playerClickerColor)
+        Global.call("printWarningTP", {text = "You can't select character from another player pull.", color =  playerClickerColor})
         return
       end
 
       cleanupSpawnedObj(playerClickerColor)
 
-      local spawnedObj = {}
-      local cardsInPackCount = self.getQuantity()
-      for i = 1, cardsInPackCount do
-        local obj = self.takeObject({ index = 0 })
-        local objClone = obj.clone()
-        Wait.frames(function() self.putObject(obj) end, 5)
-        local objDescription = objClone.getDescription()
+      local language = Global.getVar('gameLanguage')
+      local characterFound = cloneCharacterCards(playerClickerColor, language)
 
-        if objDescription == "character" then
-          Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 1})
-        elseif objDescription == "character-item" or objDescription == "character-item-counter" then
-          Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}, index = 2})
-        elseif objDescription == "character-soul" then
-          Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
-        else
-          printToColor("[ef5350][ERROR][-] Unknown " .. objDescription .. " card description matadata. Maybe you changed description of card?" , playerClickerColor)
-          return
+      if not characterFound then
+        Global.call("printWarning", {text = "No character cards for the selected language found in this pack: " .. self.getName()})
+        if not cloneCharacterCards(playerClickerColor, Global.getTable('GAME_LANGUAGE').US) then
+            Global.call("printWarning", {text = "No standard (English) character cards found in this pack: " .. self.getName()})
+            return
         end
-
-        if objClone.getStateId() != -1 then
-          for _, state in pairs(objClone.getStates()) do
-            table.insert(spawnedObj, state.guid)
-          end
-        end
-
-        table.insert(spawnedObj, objClone.guid)
       end
-
-      updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
     end
 
     function isCharacterInPullToSelect(waitForSelectCharacters)

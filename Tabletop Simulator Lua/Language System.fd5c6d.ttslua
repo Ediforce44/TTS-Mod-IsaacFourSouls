@@ -1,9 +1,15 @@
+local LANGUAGE = Global.getTable('GAME_LANGUAGE')
 
-LANGUAGES = {
-  "English",
-  "Russian",
-  "France"
+local LANGUAGE_FLAGS = {
+    US = "5dd543",
+    RU = "90e651",
+    FR = "974d05",
+    ES = "a796d3"
 }
+
+local GUID_TABLE_BASE = "f5c4fe"
+local GUID_DECK_BUILDER = "69a80e"
+
 LANGUAGES_GUIDS = {
   ["English"] = {
     -- Rulebook
@@ -63,71 +69,54 @@ LANGUAGES_GUIDS = {
 curLanguage = "English"
 langChanging = false
 
-function onLoad(saved_data)
-  if saved_data ~= "" then
-      local loaded_data = JSON.decode(saved_data)
-      curLanguage = loaded_data.curLanguage
-  end
+local function switchLanguage(newLanguage)
+    if newLanguage == nil then
+        return
+    end
+    if (Global.getVar("gameLanguage") == newLanguage) or Global.call("hasGameStarted")
+        or getObjectFromGUID(GUID_DECK_BUILDER).call("isDeckBuilderBlocked") then
+        return
+    end
 
-  initButtons()
+    for lang, flagGUID in pairs(LANGUAGE_FLAGS) do
+        if lang ~= "FR" then                                                --TODO DELETE
+            getObjectFromGUID(flagGUID).editButton({index=0, label=""})
+        end
+    end
+    getObjectFromGUID(LANGUAGE_FLAGS[newLanguage]).editButton({index=0, label="✓", font_color={0, 0, 0}, font_size=450})
+    getObjectFromGUID(GUID_TABLE_BASE).call("returnLanguageObjects", {language = newLanguage})
+    getObjectFromGUID(GUID_TABLE_BASE).call("extractLanguageObjects", {language = newLanguage})
+    Global.call("setGameLanguage", {language = newLanguage})
 end
 
-function onSave()
-    local data_to_save = {curLanguage=curLanguage}
-    saved_data = JSON.encode(data_to_save)
-    --saved_data = "" --Remove -- at start & save to clear save data
-    return saved_data
+local function getLanguageFromObject(obj)
+    for language, guid in pairs(LANGUAGE_FLAGS) do
+        if obj.getGUID() == guid then
+            return language
+        end
+    end
+    return nil
 end
 
-function initButtons()
-  self.createButton({
-    click_function = 'switchToFrance',
-    function_owner = self,
-    label = 'Française',
-    position = {-13.2, 1.5, 2.5},
-    width = 1400,
-    height = 400,
-    font_size = 300,
-  })
-  self.createButton({
-    click_function = 'switchToRussian',
-    function_owner = self,
-    label = 'Русский',
-    position = {-9, 1.5, 2.5},
-    width = 1400,
-    height = 400,
-    font_size = 300,
-  })
-  self.createButton({
-    click_function = 'switchToEnglish',
-    function_owner = self,
-    label = 'English',
-    position = {-4.3, 1.5, 2.5},
-    width = 1400,
-    height = 400,
-    font_size = 300,
-  })
+function switchLanguageByObject(obj)
+    local newLanguage = getLanguageFromObject(obj)
+    switchLanguage(newLanguage)
 end
 
-function switchToEnglish()
-  selectLang("English")
+--Only exist to set the game language at the beginning
+function setLanguage(params)
+    local language = nil
+    if params.obj then
+        language = getLanguageFromObject(params.obj)
+    else
+        return
+    end
+    getObjectFromGUID(GUID_TABLE_BASE).call("extractLanguageObjects", {language = language})
+    Global.call("setGameLanguage", {language = language})
 end
 
-function switchToRussian()
-  selectLang("Russian")
-end
 
-function switchToFrance()
-  selectLang("France")
-end
 
-function selectLang(exLang)
-  if curLanguage == exLang or langChanging then return end
-  langChanging = true
-  changeLangObjsVisibility(curLanguage, true)
-  delayedCall("selectLangDelayed", 0.3, { exLang = exLang })
-  curLanguage = exLang
-end
 
 function selectLangDelayed(params)
   changeLangObjsVisibility(params.exLang, false)
