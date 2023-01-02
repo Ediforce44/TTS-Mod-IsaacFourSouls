@@ -26,7 +26,7 @@ SWAP_I_TEXT = {
 3) When everyone has selected a character, press the 'Start' button."]],
 
     OPTIONAL =
-[[- Drag & drop all expansions (red bags) in the playing area, which you want to use.
+[[- Select an expansions by dropping it (red bag) in the playing area.
 
 - To place the characters from the selected expansions press the "Place Characters (Playing area)" button beneath the Character Placer.
     - OR: Take out the brown character bags from the expansions and use the Character Placer manually.
