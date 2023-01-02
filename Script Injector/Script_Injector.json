@@ -1,8 +1,8 @@
 {
   "SaveName": "Script Injector",
-  "EpochTime": 1656687596,
-  "Date": "7/1/2022 4:59:56 PM",
-  "VersionNumber": "v13.1.1",
+  "EpochTime": 1663706078,
+  "Date": "9/20/2022 10:34:38 PM",
+  "VersionNumber": "v13.2.1",
   "GameMode": "Script Injector",
   "GameType": "",
   "GameComplexity": "",
@@ -576,6 +576,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -618,6 +623,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -637,7 +647,7 @@
       "GridProjection": false,
       "HideWhenFaceDown": false,
       "Hands": false,
-      "LuaScript": "ALL_MODES = {\r\n    ONE_TO_MANY = 1,\r\n    INDIVIDUAL = 2\r\n}\r\n\r\nMODE_BUTTON_INDICES = {\r\n    ONE_TO_MANY = 2,\r\n    INDIVIDUAL = 3\r\n}\r\n\r\nMODE_SPECIFIC_INPUT_INDICES = {\r\n    {Var = 8},      --ONE_TO_MANY\r\n    {}              --INDIVIDUAL\r\n}\r\n\r\nSTART_BUTTON_INDEX = 1\r\nDELET_BUTTON_INDEX = 4\r\n\r\nZONE_GUIDS = {\r\n    \"a32c17\",\r\n    \"f67c8c\",\r\n    \"fac88e\",\r\n    \"7aafb1\",\r\n    \"25360d\",\r\n    \"ff5f1d\",\r\n    \"cd0a31\"\r\n}\r\n\r\nactive_mode = ALL_MODES.ONE_TO_MANY\r\n\r\nlocal function createModeButtons()\r\n    self.createButton({\r\n      click_function = \"activateOneToMany\",\r\n      function_owner = self,\r\n      label          = \"\",\r\n      position       = {2, 1, -23},\r\n      width          = 600,\r\n      height         = 600,\r\n      color          = {1, 1, 1},\r\n      tooltip        = \"One to Many:\\n Each zone will write the same variable in each script in this zone. The value of the variable can be set individual for each zone.\"\r\n    })\r\n    self.createButton({\r\n      click_function = \"activateIndividual\",\r\n      function_owner = self,\r\n      label          = \"\",\r\n      position       = {2, 1, -21},\r\n      width          = 600,\r\n      height         = 600,\r\n      color          = {1, 1, 1},\r\n      tooltip        = \"Individual:\\n Each zone will write a individual line of code into each script in this zone.\"\r\n    })\r\nend\r\n\r\nlocal function createDeleteButton()\r\n    self.createButton({\r\n      click_function = \"refreshAllInputs\",\r\n      function_owner = self,\r\n      label          = \"Refresh\",\r\n      position       = {25.5, 1, -6.5},\r\n      width          = 2000,\r\n      height         = 550,\r\n      font_size      = 500,\r\n      font_color     = {0, 0, 0},\r\n      color          = {1, 1, 1},\r\n      tooltip        = \"Deletes all user written stuff in each text box.\"\r\n    })\r\nend\r\n\r\nlocal function createStartButton()\r\n    self.createButton({\r\n      click_function = \"startFunction\",\r\n      function_owner = self,\r\n      font_size      = 800,\r\n      label          = \"INJECT\",\r\n      position       = {0, 1, 2},\r\n      width          = 4000,\r\n      height         = 1000,\r\n      color          = {1, 1, 1},\r\n      tooltip        = \"Press the button to inject the Lua Code into the scripts of the cards\"\r\n    })\r\nend\r\n\r\nlocal function createVarInputs()\r\n    if active_mode == ALL_MODES.ONE_TO_MANY then\r\n        for i = 0, 6 do\r\n            self.createInput({\r\n                input_function = \"dummy\",\r\n                label       = \"Value\",\r\n                position    = {-21 + (7 * i), 1, -12},\r\n                scale       = {1, 1, 1},\r\n                height      = 550,\r\n                width       = 2000,\r\n                font_size   = 500,\r\n                font_color  = {0, 0, 0},\r\n                color       = {1, 1, 1},\r\n                alignment   = 3,    --Centered\r\n                tab         = 2,    --Select next Input while pressing tab\r\n                tooltip     = \"Type in the value of the variable. If the value is a STRING, type in also the quotes!!!\"\r\n            })\r\n        end\r\n        self.createInput({\r\n            input_function = \"dummy\",\r\n            label       = \"Name of Variable\",\r\n            position    = {0, 1, -15},\r\n            scale       = {1, 1, 1},\r\n            height      = 650,\r\n            width       = 6000,\r\n            font_size   = 600,\r\n            font_color  = {0, 0, 0},\r\n            color       = {1, 1, 1},\r\n            alignment   = 3,    --Centered\r\n            tab         = 2,    --Select next Input while pressing tab\r\n            tooltip     = \"Type in the name of the variable you want to create in the scripts of the cards.\"\r\n        })\r\n    elseif active_mode == ALL_MODES.INDIVIDUAL then\r\n        for i = 0, 6 do\r\n            self.createInput({\r\n                input_function = \"dummy\",\r\n                label       = \"Line\",\r\n                position    = {-21 + (7 * i), 1, -20},\r\n                scale       = {1, 1, 1},\r\n                height      = 350,\r\n                width       = 3000,\r\n                font_size   = 300,\r\n                font_color  = {0, 0, 0},\r\n                color       = {1, 1, 1},\r\n                alignment   = 3,    --Centered\r\n                tab         = 2,    --Select next Input while pressing tab\r\n                tooltip     = \"Type in the line you want to past into the scripts of the cards.\"\r\n            })\r\n        end\r\n    end\r\nend\r\n\r\nlocal function switchMode(newMode)\r\n    for modeName, mode in pairs(ALL_MODES) do\r\n        if mode == newMode then\r\n            for mName, m in pairs(ALL_MODES) do\r\n                self.editButton({index=MODE_BUTTON_INDICES[mName]-1, label=\"\", font_color={0, 0, 0}, font_size=400})\r\n            end\r\n            self.editButton({index=MODE_BUTTON_INDICES[modeName]-1, label=\"✓\", font_color={0, 0, 0}, font_size=400})\r\n            active_mode = mode\r\n            break\r\n        end\r\n    end\r\nend\r\n\r\nlocal function removeExtraInputs()\r\n    if (active_mode == nil) or (MODE_SPECIFIC_INPUT_INDICES[active_mode] == nil) then\r\n        return\r\n    end\r\n\r\n    for _, inputIndex in pairs(MODE_SPECIFIC_INPUT_INDICES[active_mode]) do\r\n        self.removeInput(inputIndex - 1)\r\n    end\r\nend\r\n\r\nfunction onLoad(saved_data)\r\n    createStartButton()\r\n    createModeButtons()\r\n    createDeleteButton()\r\n    createVarInputs()\r\n\r\n    if saved_data ~= \"\" then\r\n        local loaded_data = JSON.decode(saved_data)\r\n        if loaded_data[1] then\r\n            for modeName , mode in pairs(ALL_MODES) do\r\n                if loaded_data[1] == mode then\r\n                    self.editButton({index=MODE_BUTTON_INDICES[modeName]-1, label=\"✓\", font_color={0, 0, 0}, font_size=400})\r\n                    active_mode = mode\r\n                    break\r\n                end\r\n            end\r\n        end\r\n    end\r\n    if active_mode == nil then\r\n        activateOneToMany()\r\n    end\r\nend\r\n\r\nfunction onSave()\r\n    return JSON.encode({active_mode})\r\nend\r\n\r\nfunction activateOneToMany()\r\n    if active_mode == ALL_MODES.ONE_TO_MANY then\r\n        return\r\n    end\r\n\r\n    removeExtraInputs()\r\n    local inputs = self.getInputs()\r\n    for i = 1, 7 do\r\n        self.editInput({\r\n            index       = i-1,\r\n            label       = \"Value\",\r\n            value       = inputs[i].value,\r\n            scale       = {1, 1, 1},\r\n            height      = 550,\r\n            width       = 2000,\r\n            font_size   = 500,\r\n            font_color  = {0, 0, 0},\r\n            color       = {1, 1, 1},\r\n            alignment   = 3,    --Centered\r\n            tab         = 2,    --Select next Input while pressing tab\r\n            tooltip     = \"Type in the value of the variable. If the value is a STRING, type in also the quotes!!!\"\r\n        })\r\n    end\r\n    self.createInput({\r\n        input_function = \"dummy\",\r\n        label       = \"Name of Variable\",\r\n        position    = {0, 1, -15},\r\n        scale       = {1, 1, 1},\r\n        height      = 650,\r\n        width       = 6000,\r\n        font_size   = 600,\r\n        font_color  = {0, 0, 0},\r\n        color       = {1, 1, 1},\r\n        alignment   = 3,    --Centered\r\n        tab         = 2,    --Select next Input while pressing tab\r\n        tooltip     = \"Type in the name of the variable you want to create in the scripts of the cards.\"\r\n    })\r\n\r\n    switchMode(ALL_MODES.ONE_TO_MANY)\r\nend\r\n\r\nfunction activateIndividual()\r\n    if active_mode == ALL_MODES.INDIVIDUAL then\r\n        return\r\n    end\r\n\r\n    removeExtraInputs()\r\n    local inputs = self.getInputs()\r\n    for i = 1, 7 do\r\n        self.editInput({\r\n            index       = i-1,\r\n            label       = \"Line\",\r\n            value       = inputs[i].value,\r\n            scale       = {1, 1, 1},\r\n            height      = 350,\r\n            width       = 3000,\r\n            font_size   = 300,\r\n            font_color  = {0, 0, 0},\r\n            color       = {1, 1, 1},\r\n            alignment   = 3,    --Centered\r\n            tab         = 2,    --Select next Input while pressing tab\r\n            tooltip     = \"Type in the line you want to past into the scripts of the cards.\"\r\n        })\r\n    end\r\n\r\n    switchMode(ALL_MODES.INDIVIDUAL)\r\nend\r\n\r\nfunction refreshAllInputs()\r\n    local inputs = self.getInputs()\r\n    for _, input in ipairs(inputs) do\r\n        self.editInput({index = input.index, value = \"\"})\r\n    end\r\nend\r\n\r\nlocal function injectCode(object, zone, zoneIndex)\r\n    local newScript = object.getLuaScript()\r\n    local newLine = \"\"\r\n    local inputs = self.getInputs()\r\n    if active_mode == ALL_MODES.ONE_TO_MANY then\r\n        local varInput = inputs[MODE_SPECIFIC_INPUT_INDICES[active_mode].Var]\r\n        if varInput.value == \"\" then\r\n            newLine = newLine .. \"newVar\"\r\n        else\r\n            newLine = newLine .. varInput.value\r\n        end\r\n        newLine = newLine .. \" = \"\r\n        print(inputs[zoneIndex].value)\r\n        if inputs[zoneIndex].value == \"\" then\r\n            return false\r\n        else\r\n            newLine = newLine .. inputs[zoneIndex].value\r\n        end\r\n    elseif active_mode == ALL_MODES.INDIVIDUAL then\r\n        if inputs[zoneIndex] == \"\" then\r\n            return false\r\n        end\r\n        newLine = newLine .. inputs[zoneIndex].value\r\n    else\r\n        printToAll(\"[fdd835][WARNING][-] No valid injection mode is selected.\")\r\n        return false\r\n    end\r\n    newScript = newScript .. [[\r\n\r\n    ]] .. newLine .. [[\r\n    ]]\r\n    object.setLuaScript(newScript)\r\n    return true\r\nend\r\n\r\nfunction startFunction()\r\n    local inputs = self.getInputs()\r\n    for zoneIndex, guid in ipairs(ZONE_GUIDS) do\r\n        local zone = getObjectFromGUID(guid)\r\n        local objectsInZone = zone.getObjects()\r\n        for _, zoneObject in pairs(objectsInZone) do\r\n            if inputs[zoneIndex].value ~= \"\" then\r\n                if zoneObject.getQuantity() > 0 then\r\n                    if zoneObject.name == \"Deck\" then\r\n                        for _ = 1, zoneObject.getQuantity() do\r\n                            local object = zoneObject.takeObject({position = zoneObject.getPosition():setAt('z', zoneObject.getPosition().z - 5)})\r\n                            injectCode(object, zone, zoneIndex)\r\n                        end\r\n                    else\r\n                        local bagPosition = zoneObject.getPosition():setAt('z', zoneObject.getPosition().z - 5)\r\n                        local bag = spawnObjectJSON({\r\n                            json = [[{\r\n                                    \"Name\": \"Bag\",\r\n                                    \"Transform\": {\r\n                                        \"posX\": ]] .. bagPosition.x .. [[,\r\n                                        \"posY\": ]] .. bagPosition.y .. [[,\r\n                                        \"posZ\": ]] .. bagPosition.z .. [[,\r\n                                        \"rotX\": 0,\r\n                                        \"rotY\": 180,\r\n                                        \"rotZ\": 0,\r\n                                        \"scaleX\": 1,\r\n                                        \"scaleY\": 1,\r\n                                        \"scaleZ\": 1\r\n                                    }\r\n                                }]]})\r\n                        for _ = 1, zoneObject.getQuantity() do\r\n                            local object = zoneObject.takeObject()\r\n                            injectCode(object, zone, zoneIndex)\r\n                            bag.putObject(object)\r\n                        end\r\n                    end\r\n                else\r\n                    injectCode(zoneObject, zone, zoneIndex)\r\n                    zoneObject.setPosition(zoneObject.getPosition():setAt('z', zoneObject.getPosition().z - 5))\r\n                end\r\n            end\r\n        end\r\n    end\r\nend\r\n",
+      "LuaScript": "ALL_MODES = {\r\n    ONE_TO_MANY = 1,\r\n    INDIVIDUAL = 2,\r\n    TAGS = 3\r\n}\r\n\r\nMODE_BUTTON_INDICES = {\r\n    ONE_TO_MANY = 2,\r\n    INDIVIDUAL = 3,\r\n    TAGS = 4\r\n}\r\n\r\nMODE_SPECIFIC_INPUT_INDICES = {\r\n    {Var = 8},      --ONE_TO_MANY\r\n    {},             --INDIVIDUAL\r\n    {}              --TAGS\r\n}\r\n\r\nSTART_BUTTON_INDEX = 1\r\nDELET_BUTTON_INDEX = 5\r\n\r\nZONE_GUIDS = {\r\n    \"a32c17\",\r\n    \"f67c8c\",\r\n    \"fac88e\",\r\n    \"7aafb1\",\r\n    \"25360d\",\r\n    \"ff5f1d\",\r\n    \"cd0a31\"\r\n}\r\n\r\nactive_mode = ALL_MODES.ONE_TO_MANY\r\n\r\nlocal function createModeButtons()\r\n    self.createButton({\r\n      click_function = \"activateOneToMany\",\r\n      function_owner = self,\r\n      label          = \"\",\r\n      position       = {2, 1, -23},\r\n      width          = 600,\r\n      height         = 600,\r\n      color          = {1, 1, 1},\r\n      tooltip        = \"One to Many:\\n Each zone will write the same variable in each script in this zone. The value of the variable can be set individual for each zone.\"\r\n    })\r\n    self.createButton({\r\n      click_function = \"activateIndividual\",\r\n      function_owner = self,\r\n      label          = \"\",\r\n      position       = {2, 1, -21},\r\n      width          = 600,\r\n      height         = 600,\r\n      color          = {1, 1, 1},\r\n      tooltip        = \"Individual:\\n Each zone will write a individual line of code into each script in this zone.\"\r\n    })\r\n    self.createButton({\r\n      click_function = \"activateTags\",\r\n      function_owner = self,\r\n      label          = \"\",\r\n      position       = {2, 1, -19},\r\n      width          = 600,\r\n      height         = 600,\r\n      color          = {1, 1, 1},\r\n      tooltip        = \"Tags:\\n Each zone will add a individual tag to every object from a container inside this zone.\\n If the object has this tag already it will be removed.\"\r\n    })\r\nend\r\n\r\nlocal function createDeleteButton()\r\n    self.createButton({\r\n      click_function = \"refreshAllInputs\",\r\n      function_owner = self,\r\n      label          = \"Refresh\",\r\n      position       = {25.5, 1, -6.5},\r\n      width          = 2000,\r\n      height         = 550,\r\n      font_size      = 500,\r\n      font_color     = {0, 0, 0},\r\n      color          = {1, 1, 1},\r\n      tooltip        = \"Deletes all user written stuff in each text box.\"\r\n    })\r\nend\r\n\r\nlocal function createStartButton()\r\n    self.createButton({\r\n      click_function = \"startFunction\",\r\n      function_owner = self,\r\n      font_size      = 800,\r\n      label          = \"INJECT\",\r\n      position       = {0, 1, 2},\r\n      width          = 4000,\r\n      height         = 1000,\r\n      color          = {1, 1, 1},\r\n      tooltip        = \"Press the button to inject the Lua Code into the scripts of the cards or add tags to them\"\r\n    })\r\nend\r\n\r\nlocal function createVarInputs()\r\n    if active_mode == ALL_MODES.ONE_TO_MANY then\r\n        for i = 0, 6 do\r\n            self.createInput({\r\n                input_function = \"dummy\",\r\n                label       = \"Value\",\r\n                position    = {-21 + (7 * i), 1, -12},\r\n                scale       = {1, 1, 1},\r\n                height      = 550,\r\n                width       = 2000,\r\n                font_size   = 500,\r\n                font_color  = {0, 0, 0},\r\n                color       = {1, 1, 1},\r\n                alignment   = 3,    --Centered\r\n                tab         = 2,    --Select next Input while pressing tab\r\n                tooltip     = \"Type in the value of the variable. If the value is a STRING, type in also the quotes!!!\"\r\n            })\r\n        end\r\n        self.createInput({\r\n            input_function = \"dummy\",\r\n            label       = \"Name of Variable\",\r\n            position    = {0, 1, -15},\r\n            scale       = {1, 1, 1},\r\n            height      = 650,\r\n            width       = 6000,\r\n            font_size   = 600,\r\n            font_color  = {0, 0, 0},\r\n            color       = {1, 1, 1},\r\n            alignment   = 3,    --Centered\r\n            tab         = 2,    --Select next Input while pressing tab\r\n            tooltip     = \"Type in the name of the variable you want to create in the scripts of the cards.\"\r\n        })\r\n    elseif active_mode == ALL_MODES.INDIVIDUAL then\r\n        for i = 0, 6 do\r\n            self.createInput({\r\n                input_function = \"dummy\",\r\n                label       = \"Line\",\r\n                position    = {-21 + (7 * i), 1, -20},\r\n                scale       = {1, 1, 1},\r\n                height      = 350,\r\n                width       = 3000,\r\n                font_size   = 300,\r\n                font_color  = {0, 0, 0},\r\n                color       = {1, 1, 1},\r\n                alignment   = 3,    --Centered\r\n                tab         = 2,    --Select next Input while pressing tab\r\n                tooltip     = \"Type in the line you want to past into the scripts of the cards.\"\r\n            })\r\n        end\r\n    elseif active_mode == ALL_MODES.TAGS then\r\n        for i = 0, 6 do\r\n            self.createInput({\r\n                input_function = \"dummy\",\r\n                label       = \"Tag\",\r\n                position    = {-21 + (7 * i), 1, -12},\r\n                scale       = {1, 1, 1},\r\n                height      = 550,\r\n                width       = 2000,\r\n                font_size   = 500,\r\n                font_color  = {0, 0, 0},\r\n                color       = {1, 1, 1},\r\n                alignment   = 3,    --Centered\r\n                tab         = 2,    --Select next Input while pressing tab\r\n                tooltip     = \"Type in the tag you want to add to the cards.\"\r\n            })\r\n        end\r\n    end\r\nend\r\n\r\nlocal function switchMode(newMode)\r\n    for modeName, mode in pairs(ALL_MODES) do\r\n        if mode == newMode then\r\n            for mName, m in pairs(ALL_MODES) do\r\n                self.editButton({index=MODE_BUTTON_INDICES[mName]-1, label=\"\", font_color={0, 0, 0}, font_size=400})\r\n            end\r\n            self.editButton({index=MODE_BUTTON_INDICES[modeName]-1, label=\"✓\", font_color={0, 0, 0}, font_size=400})\r\n            active_mode = mode\r\n            break\r\n        end\r\n    end\r\nend\r\n\r\nlocal function removeExtraInputs()\r\n    if (active_mode == nil) or (MODE_SPECIFIC_INPUT_INDICES[active_mode] == nil) then\r\n        return\r\n    end\r\n\r\n    for _, inputIndex in pairs(MODE_SPECIFIC_INPUT_INDICES[active_mode]) do\r\n        self.removeInput(inputIndex - 1)\r\n    end\r\nend\r\n\r\nfunction onLoad(saved_data)\r\n    createStartButton()\r\n    createModeButtons()\r\n    createDeleteButton()\r\n    createVarInputs()\r\n\r\n    if saved_data ~= \"\" then\r\n        local loaded_data = JSON.decode(saved_data)\r\n        if loaded_data[1] then\r\n            for modeName , mode in pairs(ALL_MODES) do\r\n                if loaded_data[1] == mode then\r\n                    self.editButton({index=MODE_BUTTON_INDICES[modeName]-1, label=\"✓\", font_color={0, 0, 0}, font_size=400})\r\n                    active_mode = mode\r\n                    break\r\n                end\r\n            end\r\n        end\r\n    end\r\n    if active_mode == nil then\r\n        activateOneToMany()\r\n    end\r\nend\r\n\r\nfunction onSave()\r\n    return JSON.encode({active_mode})\r\nend\r\n\r\nfunction activateOneToMany()\r\n    if active_mode == ALL_MODES.ONE_TO_MANY then\r\n        return\r\n    end\r\n\r\n    removeExtraInputs()\r\n    local inputs = self.getInputs()\r\n    for i = 1, 7 do\r\n        self.editInput({\r\n            index       = i-1,\r\n            label       = \"Value\",\r\n            value       = inputs[i].value,\r\n            scale       = {1, 1, 1},\r\n            height      = 550,\r\n            width       = 2000,\r\n            font_size   = 500,\r\n            font_color  = {0, 0, 0},\r\n            color       = {1, 1, 1},\r\n            alignment   = 3,    --Centered\r\n            tab         = 2,    --Select next Input while pressing tab\r\n            tooltip     = \"Type in the value of the variable. If the value is a STRING, type in also the quotes!!!\"\r\n        })\r\n    end\r\n    self.createInput({\r\n        input_function = \"dummy\",\r\n        label       = \"Name of Variable\",\r\n        position    = {0, 1, -15},\r\n        scale       = {1, 1, 1},\r\n        height      = 650,\r\n        width       = 6000,\r\n        font_size   = 600,\r\n        font_color  = {0, 0, 0},\r\n        color       = {1, 1, 1},\r\n        alignment   = 3,    --Centered\r\n        tab         = 2,    --Select next Input while pressing tab\r\n        tooltip     = \"Type in the name of the variable you want to create in the scripts of the cards.\"\r\n    })\r\n\r\n    switchMode(ALL_MODES.ONE_TO_MANY)\r\nend\r\n\r\nfunction activateIndividual()\r\n    if active_mode == ALL_MODES.INDIVIDUAL then\r\n        return\r\n    end\r\n\r\n    removeExtraInputs()\r\n    local inputs = self.getInputs()\r\n    for i = 1, 7 do\r\n        self.editInput({\r\n            index       = i-1,\r\n            label       = \"Line\",\r\n            value       = inputs[i].value,\r\n            scale       = {1, 1, 1},\r\n            height      = 350,\r\n            width       = 3000,\r\n            font_size   = 300,\r\n            font_color  = {0, 0, 0},\r\n            color       = {1, 1, 1},\r\n            alignment   = 3,    --Centered\r\n            tab         = 2,    --Select next Input while pressing tab\r\n            tooltip     = \"Type in the line you want to past into the scripts of the cards.\"\r\n        })\r\n    end\r\n\r\n    switchMode(ALL_MODES.INDIVIDUAL)\r\nend\r\n\r\nfunction activateTags()\r\n    if active_mode == ALL_MODES.TAGS then\r\n        return\r\n    end\r\n\r\n    removeExtraInputs()\r\n    local inputs = self.getInputs()\r\n    for i = 1, 7 do\r\n        self.editInput({\r\n            index       = i-1,\r\n            label       = \"Tag\",\r\n            value       = inputs[i].value,\r\n            scale       = {1, 1, 1},\r\n            height      = 550,\r\n            width       = 2000,\r\n            font_size   = 500,\r\n            font_color  = {0, 0, 0},\r\n            color       = {1, 1, 1},\r\n            alignment   = 3,    --Centered\r\n            tab         = 2,    --Select next Input while pressing tab\r\n            tooltip     = \"Type in the tag you want to add to the cards.\"\r\n        })\r\n    end\r\n\r\n    switchMode(ALL_MODES.TAGS)\r\nend\r\n\r\nfunction refreshAllInputs()\r\n    local inputs = self.getInputs()\r\n    for _, input in ipairs(inputs) do\r\n        self.editInput({index = input.index, value = \"\"})\r\n    end\r\nend\r\n\r\nlocal function injectCode(object, codeLine)\r\n    local newScript = object.getLuaScript()\r\n    newScript = newScript .. [[\r\n\r\n]] .. codeLine .. [[\r\n]]\r\n    object.setLuaScript(newScript)\r\nend\r\n\r\nlocal function addTag(object, tag)\r\n    if object.hasTag(tag) then\r\n        object.removeTag(tag)\r\n    else\r\n        object.addTag(tag)\r\n    end\r\nend\r\n\r\nlocal function inject(object, zone, zoneIndex)\r\n    local inputs = self.getInputs()\r\n    if active_mode == ALL_MODES.ONE_TO_MANY then\r\n        local newLine = \"\"\r\n        local varInput = inputs[MODE_SPECIFIC_INPUT_INDICES[active_mode].Var]\r\n        if varInput.value == \"\" then\r\n            newLine = newLine .. \"newVar\"\r\n        else\r\n            newLine = newLine .. varInput.value\r\n        end\r\n        newLine = newLine .. \" = \"\r\n        if inputs[zoneIndex].value == \"\" then\r\n            return false\r\n        else\r\n            newLine = newLine .. inputs[zoneIndex].value\r\n        end\r\n        injectCode(object, newLine)\r\n    elseif active_mode == ALL_MODES.INDIVIDUAL then\r\n        local newLine = \"\"\r\n        if inputs[zoneIndex] == \"\" then\r\n            return false\r\n        end\r\n        local newLine = newLine .. inputs[zoneIndex].value\r\n        injectCode(object, newLine)\r\n    elseif active_mode == ALL_MODES.TAGS then\r\n        if inputs[zoneIndex] == \"\" then\r\n            return false\r\n        end\r\n        local tag = inputs[zoneIndex].value\r\n        addTag(object, tag)\r\n    else\r\n        printToAll(\"[fdd835][WARNING][-] No valid injection mode is selected.\")\r\n        return false\r\n    end\r\n    return true\r\nend\r\n\r\nfunction startFunction()\r\n    local inputs = self.getInputs()\r\n    for zoneIndex, guid in ipairs(ZONE_GUIDS) do\r\n        local zone = getObjectFromGUID(guid)\r\n        local objectsInZone = zone.getObjects()\r\n        for _, zoneObject in pairs(objectsInZone) do\r\n            if inputs[zoneIndex].value ~= \"\" then\r\n                if zoneObject.getQuantity() > 0 then\r\n                    if zoneObject.name == \"Deck\" then\r\n                        for _ = 1, zoneObject.getQuantity() do\r\n                            local object = zoneObject.takeObject({position = zoneObject.getPosition():setAt('z', zoneObject.getPosition().z - 5)})\r\n                            inject(object, zone, zoneIndex)\r\n                        end\r\n                    else\r\n                        local bagPosition = zoneObject.getPosition():setAt('z', zoneObject.getPosition().z - 5)\r\n                        local bag = spawnObjectJSON({\r\n                            json = [[{\r\n                                    \"Name\": \"Bag\",\r\n                                    \"Transform\": {\r\n                                        \"posX\": ]] .. bagPosition.x .. [[,\r\n                                        \"posY\": ]] .. bagPosition.y .. [[,\r\n                                        \"posZ\": ]] .. bagPosition.z .. [[,\r\n                                        \"rotX\": 0,\r\n                                        \"rotY\": 180,\r\n                                        \"rotZ\": 0,\r\n                                        \"scaleX\": 1,\r\n                                        \"scaleY\": 1,\r\n                                        \"scaleZ\": 1\r\n                                    }\r\n                                }]]})\r\n                        for _ = 1, zoneObject.getQuantity() do\r\n                            local object = zoneObject.takeObject()\r\n                            inject(object, zone, zoneIndex)\r\n                            bag.putObject(object)\r\n                        end\r\n                    end\r\n                else\r\n                    inject(zoneObject, zone, zoneIndex)\r\n                    zoneObject.setPosition(zoneObject.getPosition():setAt('z', zoneObject.getPosition().z - 5))\r\n                end\r\n            end\r\n        end\r\n    end\r\nend",
       "LuaScriptState": "[1]",
       "XmlUI": ""
     },
@@ -658,6 +668,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -699,6 +714,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -740,6 +760,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -781,6 +806,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -822,6 +852,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -863,6 +898,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -904,6 +944,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -945,6 +990,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -994,6 +1044,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1043,6 +1098,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1092,6 +1152,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1141,6 +1206,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1179,7 +1249,7 @@
       "Transform": {
         "posX": -21.9312859,
         "posY": 0.9611351,
-        "posZ": -9.377792,
+        "posZ": -9.377798,
         "rotX": 90.0,
         "rotY": 0.0,
         "rotZ": 0.0,
@@ -1190,6 +1260,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1228,7 +1303,7 @@
       "Transform": {
         "posX": -17.9510345,
         "posY": 0.9611351,
-        "posZ": -10.5513353,
+        "posZ": -10.5513411,
         "rotX": 90.0,
         "rotY": 0.0,
         "rotZ": 0.0,
@@ -1239,6 +1314,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1277,7 +1357,7 @@
       "Transform": {
         "posX": -16.3184643,
         "posY": 0.9611343,
-        "posZ": -11.8562174,
+        "posZ": -11.8562212,
         "rotX": 90.0,
         "rotY": 0.0,
         "rotZ": 0.0,
@@ -1288,6 +1368,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1337,6 +1422,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1375,7 +1465,7 @@
       "Transform": {
         "posX": -24.29926,
         "posY": 0.961133957,
-        "posZ": -15.1410837,
+        "posZ": -15.1410856,
         "rotX": 90.0,
         "rotY": 0.0,
         "rotZ": 0.0,
@@ -1386,6 +1476,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1435,6 +1530,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1484,6 +1584,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1520,9 +1625,9 @@
       "GUID": "7c7104",
       "Name": "3DText",
       "Transform": {
-        "posX": 0.0180635564,
+        "posX": 0.0180635676,
         "posY": 0.9611366,
-        "posZ": -5.64513063,
+        "posZ": -5.64513254,
         "rotX": 90.0,
         "rotY": 0.0,
         "rotZ": 0.0,
@@ -1533,6 +1638,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1569,7 +1679,7 @@
       "GUID": "d0812e",
       "Name": "3DText",
       "Transform": {
-        "posX": -0.7709254,
+        "posX": -0.77092576,
         "posY": 3.621524,
         "posZ": 20.9421577,
         "rotX": 90.0,
@@ -1582,6 +1692,11 @@
       "Nickname": "",
       "Description": "",
       "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "ColorDiffuse": {
         "r": 1.0,
         "g": 1.0,
@@ -1609,6 +1724,60 @@
           "b": 1.0
         },
         "fontSize": 150
+      },
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "cb0567",
+      "Name": "3DText",
+      "Transform": {
+        "posX": -6.13954,
+        "posY": 0.96,
+        "posZ": 9.591047,
+        "rotX": 90.0,
+        "rotY": 1.0,
+        "rotZ": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "scaleZ": 1.0
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      },
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "Text": {
+        "Text": "TAGS",
+        "colorstate": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0
+        },
+        "fontSize": 80
       },
       "LuaScript": "",
       "LuaScriptState": "",
