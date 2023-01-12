@@ -21,8 +21,13 @@ ATTACK_BUTTON_COLORS = {
 }
 
 MONSTER_TAGS = {
+    --The onReveal() function of this object will be called if it enters a Monster Zone.
+    --  (Used to call onReveal() only the first time an object enters the same Monster Zone)
     NEW         = "New",
+    --Every Monster Zone will ignore this object (This Tag has the highest priority out of all Monster tags)
     DEAD        = "Dead",
+    --The Monster Zone with this object will be made indomitable.
+    --  (No other Monster can be placed in this zone until this object leaves the zone)
     INDOMITABLE = "Indomitable"
 }
 
@@ -360,6 +365,7 @@ function placeNewMonsterCard(params)
     local placingZone = params.zone
     if newMonsterCard ~= nil then
         newMonsterCard.flip()
+        newMonsterCard.addTag(MONSTER_TAGS.DEAD)
         if newMonsterCard.hasTag("Indomitable") then
             local nextInactiveZone = getNextInactiveZone()
             if nextInactiveZone ~= nil then
@@ -388,9 +394,7 @@ function placeNewMonsterCard(params)
                     printAttackPhrase(newMonsterCard.getName())
                 end
             end)
-        --Add NEW tag after card is moved above the proper zone
-        --- This avoids that other zones detect the card
-        Wait.condition(function() newMonsterCard.addTag(MONSTER_TAGS.NEW) end
+        Wait.condition(function() newMonsterCard.addTag(MONSTER_TAGS.NEW); newMonsterCard.removeTag(MONSTER_TAGS.DEAD) end
             , function() return not newMonsterCard.isSmoothMoving() end)
         return placingZone
     end
@@ -589,8 +593,6 @@ function onObjectLeaveScriptingZone(zone, object)
 
                     zone.call("updateAttributes", newAttributes)
                     zone.call("updateRewards", rewards)
-                    -- On Reveal
-                    onNewMonsterReveal(topObjectInZone, zone)
                 else
                     return
                 end
