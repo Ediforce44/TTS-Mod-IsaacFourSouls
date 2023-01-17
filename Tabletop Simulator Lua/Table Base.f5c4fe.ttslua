@@ -1,8 +1,6 @@
 -- The Baseplate of the table
 ----- Manages the decks and cards under the table
 
-DEBUG = true    -- Only activate if you want to make changes to the card repository under the table
-
 local function createDebugButton()
     self.createButton({
       click_function = "prepareDebug",
@@ -88,7 +86,7 @@ LANGUAGE_OBJECTS = {
             L_BATTERY       = "a2ce3b",
             L_DICE_SHARD    = "a10518",
             L_SOUL_HEART    = "e36afb",
-            L_LOST_SOUL     = "5531a8",
+            L_LOST_SOUL     = "31400e",
             L_NICKEL        = "be9b22",
             L_FOUR_CENT     = "7066cd",
             L_THREE_CENT    = "3f64ec",
@@ -133,7 +131,7 @@ LANGUAGE_OBJECTS = {
             L_BATTERY       = "b621b8",
             L_DICE_SHARD    = "939d60",
             L_SOUL_HEART    = "7393d0",
-            L_LOST_SOUL     = "751079",
+            L_LOST_SOUL     = "7f0cb1",
             L_NICKEL        = "5a8229",
             L_FOUR_CENT     = "43a2db",
             L_THREE_CENT    = "5de503",
@@ -178,7 +176,7 @@ LANGUAGE_OBJECTS = {
             L_BATTERY       = "f4edad",
             L_DICE_SHARD    = "b6004b",
             L_SOUL_HEART    = "a66cce",
-            L_LOST_SOUL     = "03e1af",
+            L_LOST_SOUL     = "7db0d7",
             L_NICKEL        = "77d2b2",
             L_FOUR_CENT     = "c7a49f",
             L_THREE_CENT    = "0686ae",
@@ -231,6 +229,7 @@ function prepareDebug()
             local obj = getObjectFromGUID(guid)
             if obj then
                 obj.interactable = true
+                obj.setInvisibleTo({"Red", "Blue", "Yellow", "Green", "Grey", "White"})
                 local newObjPosition = obj.getPosition():setAt('y', self.getPosition().y + 16)
                 obj.setPosition(newObjPosition)
             end
@@ -241,7 +240,7 @@ function prepareDebug()
 end
 
 function onLoad()
-    if DEBUG then
+    if not Global.call("hasGameStarted") then
         for language, objTable in pairs(LANGUAGE_OBJECTS) do
             for _, objGUIDs in pairs(objTable) do
                 for objName, guid in pairs(objGUIDs) do

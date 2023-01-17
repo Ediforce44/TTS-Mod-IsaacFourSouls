@@ -327,7 +327,7 @@ local DECK_INFOS = {
         DECK_ROTATION       = Vector(0, 270, 180),
         DECK_NAME           = "Bonus Soul Deck",
         LEFTOVERS_POSITION  = nil,
-        LEFTOVERS_ROTATION  = Vector(0, 270, 180),
+        LEFTOVERS_ROTATION  = Vector(180, 0, 0),
         LEFTOVERS_NAME      = "Leftover Bonus Soul Cards"
     },
     MONSTER_SEP = {
@@ -703,11 +703,11 @@ function buildDeckFilter(preDeckGUIDs, tagTable)
                                             table.insert(selectedDecks, preDeck)
                                         else
                                             -- More than one needless card left => cut()
-                                            local splitDecks = preDeck.cut(goodAndBad.GOOD_AMOUNT)
+                                            local splitDecks = preDeck.cut(preDeck.getQuantity() - goodAndBad.GOOD_AMOUNT)
                                             if splitDecks ~= nil then
-                                                table.insert(selectedDecks, splitDecks[2])
+                                                table.insert(leftoverDecks, splitDecks[2])
                                             end
-                                            table.insert(leftoverDecks, preDeck)
+                                            table.insert(selectedDecks, preDeck)
                                         end
                                     else
                                         -- Whole deck is split into good and bad cards
