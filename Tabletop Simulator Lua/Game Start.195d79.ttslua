@@ -153,10 +153,11 @@ local function extractExpansion(expansionBox, language)
                             takeCareOfExpansionLeftovers(languageBag, expansionBox.getName())
                         end
                         destroyObject(expansionBox)
-                    end
-            })
+                    end})
+            return
         end
     end
+    destroyObject(expansionBox)
 end
 
 local function getPreDecksOnTable()

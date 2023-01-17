@@ -1,7 +1,7 @@
 
 local DECK_BUILDER_ON = true
 
-local BLOCKED_GAMEMODE_CHANGE = false
+local GAMEMODE_CHANGE_BLOCKED = false
 
 local SELECTED_BUILD_MODE = nil
 
@@ -45,7 +45,7 @@ function disableDeckBuilder()
 end
 
 function gmNormal()
-    if Global.call("hasGameStarted") or BLOCK_GAMEMODE_CHANGE then
+    if Global.call("hasGameStarted") or GAMEMODE_CHANGE_BLOCKED then
         return
     end
     changeBuildMode(BUILD_MODE.NORMAL)
@@ -53,7 +53,7 @@ function gmNormal()
 end
 
 function gmDraft()
-    if Global.call("hasGameStarted") or BLOCK_GAMEMODE_CHANGE then
+    if Global.call("hasGameStarted") or GAMEMODE_CHANGE_BLOCKED then
         return
     end
     changeBuildMode(BUILD_MODE.DRAFT)
@@ -61,12 +61,12 @@ function gmDraft()
 end
 
 function prepareForManualDeckBuilding()
-    if Global.call("hasGameStarted") or BLOCK_GAMEMODE_CHANGE then
+    if Global.call("hasGameStarted") or GAMEMODE_CHANGE_BLOCKED then
         return
     end
 
     disableDeckBuilder()
-    BLOCKED_GAMEMODE_CHANGE = true
+    GAMEMODE_CHANGE_BLOCKED = true
 
     local gameLanguage = Global.getVar("gameLanguage")
     local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
@@ -82,7 +82,7 @@ end
 
 -- returns true, if decks were put ontop of the table due to manual deck-building
 function isDeckBuilderBlocked()
-    return BLOCKED_GAMEMODE_CHANGE
+    return GAMEMODE_CHANGE_BLOCKED
 end
 
 function switchBuildMode(params)
