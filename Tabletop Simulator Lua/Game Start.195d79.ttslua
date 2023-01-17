@@ -204,7 +204,7 @@ end
 local function setupExpansions(gameLanguage)
     local expansions = Global.call("detectExpansions")
     for i, expansion in ipairs(expansions) do
-        Wait.time(function() extractExpansion(expansion, gameLanguage) end, i)
+        Wait.time(function() extractExpansion(expansion, gameLanguage) end, i - 1)
     end
     return #expansions
 end
@@ -357,6 +357,7 @@ function onStart()
 
     broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Expansions")
     local amountOfExpansionsInPlay = setupExpansions(gameLanguage)
+    local officialSetupDelay = 0
     if amountOfExpansionsInPlay > 0 then
         local elBag = getObjectFromGUID(EXPANSION_LEFTOVERS_BAG_GUID)
         elBag.setPosition(EXPANSION_LEFTOVERS_POSITION)
@@ -365,13 +366,14 @@ function onStart()
             elBag.setLock(true)
             elBag.interactable = true
         end, function() return elBag.resting end)
+        officialSetupDelay = amountOfExpansionsInPlay + 1
     end
 
     Wait.time(
         function()
             broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Official Content")
             setupOfficialContent(gameLanguage)
-        end, amountOfExpansionsInPlay)
+        end, officialSetupDelay)
 end
 
 function isAllPlayersSelectCharacter()

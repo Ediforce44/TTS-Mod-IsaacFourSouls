@@ -71,7 +71,6 @@ function prepareForManualDeckBuilding()
     local gameLanguage = Global.getVar("gameLanguage")
     local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
     local preDeckGUIDs = tableBase.call("getPreDeckGUIDs", {language = gameLanguage})
-    tableBase.call("shufflePreDecks", {preDecks = preDeckGUIDs})
 
     buildAllDecks({preDecks = preDeckGUIDs})
 end
