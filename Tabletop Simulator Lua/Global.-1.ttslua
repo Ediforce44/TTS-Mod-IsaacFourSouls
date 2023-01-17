@@ -42,6 +42,8 @@ local function setPositionTables()
     DECK_POSITION.LO_TREASURE = Vector(41.73, 5, 15.06)
     DECK_POSITION.LO_LOOT = Vector(41.73, 5, 11.73)
     DECK_POSITION.LO_MONSTER = Vector(41.73, 5, -14.84)
+    DECK_POSITION.LO_ROOM = Vector(47, 5, 6)
+    DECK_POSITION.LO_BONUS_SOUL = Vector(47, 5, 12)
 end
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -64,6 +66,9 @@ function onLoad(saved_data)         --EbyE44
             automaticRewarding.Blue = loaded_data[3].Blue and true
             automaticRewarding.Red = loaded_data[3].Red and true
         end
+    end
+    if not hasGameStarted() then
+        UI.show("config")
     end
     broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
 end
@@ -132,6 +137,229 @@ function onPlayerTurn(player, previous_player)
 end
 
 ------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------- Seed algorithm functions --------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+local SEEDARGS_TO_WEBARGS = {
+    WARP_ZONE = "",
+    ALT_ART = "",
+    TARGET = "",
+    GISH = "",
+    TAPEWORM = "",
+    DICK_KNOTS = "",
+    UNBOXING_OF_ISAAC = "",
+    PROMO = "",
+    BASE_GAME = "",
+    FOUR_SOULS_PLUS = "",
+    REQUIEM = "",
+    GOLD_BOX = "",
+    CHARACTERS = ""
+
+}
+
+local function startSeedAlgorithm(seed, seedArgs)
+    --TODO
+end
+
+------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------- UI config functions -----------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+confTable = {
+    EXPANSION_ACTIVE    = false,
+    SEED_ACTIVE         = false,
+    ROOMS_ACTIVE        = true,
+    BONUS_SOULS_ACTIVE  = true,
+    CHALLENGES_ACTIVE   = false,
+    CHARACTERS_ACTIVE   = false,
+    EXPANSIONS  = {},
+    BUILDING_MODE = "BM_NORMAL",
+    CHALLENGE   = nil,
+    SEED        = nil,
+    SEED_ARGS   = {},
+    SPECIAL_DECKS     = {}
+}
+
+local BUILDING_MODE_FUNCTIONS = {
+    BM_NO       = "disableDeckBuilder",
+    BM_NORMAL   = "gmNormal",
+    BM_DRAFT    = "gmDraft"
+}
+
+function UI_toggleExpansion(_, toggle, expansionID)
+    if toggle == "True" then
+        confTable.EXPANSIONS[expansionID] = true
+    else
+        confTable.EXPANSIONS[expansionID] = false
+    end
+end
+
+function UI_selectChallenge(_, selected, challengeID)
+    if selected == "True" then
+        confTable.CHALLENGE = challengeID
+    end
+end
+
+function UI_selectBuildingMode(_, selected, buildingModeID)
+    if selected == "True" then
+        confTable.BUILDING_MODE = buildingModeID
+    end
+end
+
+function UI_toggleSpecialDeck(_, toggle, specialDeckID)
+    if toggle == "True" then
+        confTable.SPECIAL_DECKS[specialDeckID] = true
+    else
+        confTable.SPECIAL_DECKS[specialDeckID] = false
+    end
+end
+
+function UI_setSeed(_, seed)
+    confTable.SEED = seed
+end
+
+function UI_setSeededChars(_, playerCount)
+    if playerCount and tonumber(playerCount)then
+        if tonumber(playerCount) > 4 then
+            confTable.SEED_ARGS["CHARACTERS"] = 4
+        else
+            confTable.SEED_ARGS["CHARACTERS"] = tonumber(playerCount)
+        end
+    else
+        confTable.SEED_ARGS["CHARACTERS"] = nil
+    end
+end
+
+function UI_toggleRooms(_, checked)
+    if checked == "True" then
+        confTable.ROOMS_ACTIVE = true
+    else
+        confTable.ROOMS_ACTIVE = false
+    end
+end
+
+function UI_toggleBonusSouls(_, checked)
+    if checked == "True" then
+        confTable.BONUS_SOULS_ACTIVE = true
+    else
+        confTable.BONUS_SOULS_ACTIVE = false
+    end
+end
+
+function UI_toggleChallenges(_, checked)
+    if checked == "True" then
+        UI.show("challenges")
+        confTable.CHALLENGES_ACTIVE = true
+    else
+        UI.hide("challenges")
+        confTable.CHALLENGES_ACTIVE = false
+    end
+end
+
+function UI_toggleExpansionModule()
+    if not confTable.EXPANSION_ACTIVE then
+        UI.show("confExpansions")
+        confTable.EXPANSION_ACTIVE = true
+    else
+        UI.hide("confExpansions")
+        confTable.EXPANSION_ACTIVE = false
+    end
+end
+
+function UI_toggleSeedModule()
+    if not confTable.SEED_ACTIVE then
+        UI.show("confSeed")
+        confTable.SEED_ACTIVE = true
+    else
+        UI.hide("confSeed")
+        confTable.SEED_ACTIVE = false
+    end
+end
+
+function UI_toggleSeededChars(_, checked)
+    if checked == "True" then
+        UI.setAttribute("confSeedPlayer", "interactable", "true")
+        confTable.SEED_ARGS["CHARACTERS_ACTIVE"] = true
+    else
+        UI.setAttribute("confSeedPlayer", "interactable", "false")
+        confTable.SEED_ARGS["CHARACTERS_ACTIVE"] = false
+    end
+end
+
+function UI_toggleSeedDeck(_, checked, seedDeckID)
+    if checked == "True" then
+        confTable.SEED_ARGS[seedDeckID] = true
+    else
+        confTable.SEED_ARGS[seedDeckID] = false
+    end
+end
+
+function UI_configurationDone()
+    local deckBuilder = getObjectFromGUID("69a80e")
+
+    if not confTable.ROOMS_ACTIVE then
+        deckBuilder.call("disableRooms")
+    end
+    if not confTable.BONUS_SOULS_ACTIVE then
+        deckBuilder.call("disableBonusSouls")
+    end
+    if confTable.CHALLENGES_ACTIVE then
+        local tempChallengeBag = getObjectFromGUID("e5a404").takeObject()
+        Wait.frames(function()
+            for _, challenge in pairs(tempChallengeBag.getObjects()) do
+                if challenge.name == confTable.CHALLENGE then
+                    tempChallengeBag.takeObject({guid = challenge.guid, position = DISCARD_PILE_POSITION.LOOT})
+                    break
+                end
+            end
+            destroyObject(tempChallengeBag)
+        end)
+    end
+    deckBuilder.call(BUILDING_MODE_FUNCTIONS[confTable.BUILDING_MODE])
+
+
+    if confTable.EXPANSION_ACTIVE then
+        local nextPosition = Vector(-42, 3, 4.5)
+        local allObjects = Global.getObjects()
+        for expansionName, selected in pairs(confTable.EXPANSIONS) do
+            if selected then
+                for _, obj in ipairs(allObjects) do
+                    if obj.getName() == expansionName then
+                        obj.takeObject({position = nextPosition})
+                        nextPosition:setAt('x', nextPosition.x + 3)
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    UI.hide("config")
+
+    if confTable.SEED_ACTIVE then
+        if confTable.SEED then
+            if #confTable.SEED ~= 8 then
+                printWarning({text="If you want to use a seed, make sure it is 8 characters long."})
+                confTable.SEED = nil
+            end
+        end
+        if confTable.SEED == nil then
+            for specialDeckID, selected in pairs(confTable.SPECIAL_DECKS) do
+                if not selected then
+                    deckBuilder.call("setNoGo", {nogo = specialDeckID})
+                end
+            end
+        else
+            for specialDeckID, selected in pairs(confTable.SPECIAL_DECKS) do
+                confTable.SEED_ARGS[specialDeckID] = selected
+            end
+            if not confTable.CHARACTERS_ACTIVE then
+                confTable.SEED_ARGS["CHARACTERS"] = nil
+            end
+            startSeedAlgorithm(confTable.SEED, confTable.SEED_ARGS)
+        end
+    end
+end
+
+------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
@@ -168,6 +396,21 @@ end
 
 local colorPickerAttachment = {}
 
+function pickColor(falseInput)
+    if #colorPickerAttachment == 0 then
+        return
+    end
+
+    local nextEntry = colorPickerAttachment[1]
+    UI.setAttribute("colorPicker", "visibility", nextEntry.picker)
+    UI.show("colorPicker")
+    if (not falseInput) then
+        broadcastToAll(getPlayerString({playerColor = nextEntry.picker}) .. " picks a Player Color for "
+            .. nextEntry.reason .. ".")
+        broadcastToColor("Please pick a Player Color for " .. nextEntry.reason .. ".", nextEntry.picker)
+    end
+end
+
 function colorPicker_attach(params)
     if params.afterPickFunction and params.functionOwner then
         table.insert(colorPickerAttachment, {picker = params.picker or activePlayerColor
@@ -181,22 +424,7 @@ function colorPicker_attach(params)
     return false
 end
 
-function pickColor(falseInput)
-    if #colorPickerAttachment == 0 then
-        return
-    end
-
-    local nextEntry = colorPickerAttachment[1]
-    UI.setAttribute("colorPicker", "visibility", nextEntry.picker)
-    UI.setAttribute("colorPicker", "active", true)
-    if (not falseInput) then
-        broadcastToAll(getPlayerString({playerColor = nextEntry.picker}) .. " picks a Player Color for "
-            .. nextEntry.reason .. ".")
-        broadcastToColor("Please pick a Player Color for " .. nextEntry.reason .. ".", nextEntry.picker)
-    end
-end
-
-function colorPicked(player, _, idValue)
+function UI_colorPicked(player, _, idValue)
     local picker = getPlayerString({playerColor = player.color})
     local pickedColor = nil
     if idValue == "random" then
@@ -217,7 +445,7 @@ function colorPicked(player, _, idValue)
     functionParams.pickedColor = pickedColor
     nextEntry.functionOwner.call(nextEntry.afterPickFunction, functionParams)
     table.remove(colorPickerAttachment, 1)
-    UI.setAttribute("colorPicker", "active", false)
+    UI.hide("colorPicker")
     if #colorPickerAttachment > 0 then
         pickColor(false)
     end
@@ -226,7 +454,7 @@ end
 function cancelPick(player, _, idValue)
     broadcastToAll(getPlayerString({playerColor = player.color}) .. " canceled the Color-Pick!", Table)
     table.remove(colorPickerAttachment, 1)
-    UI.setAttribute("colorPicker", "active", false)
+    UI.hide("colorPicker")
     if #colorPickerAttachment > 0 then
         pickColor(false)
     end
@@ -405,7 +633,9 @@ DECK_POSITION = {
     MONSTER_SEP = {},
     LO_TREASURE = {},
     LO_LOOT = {},
-    LO_MONSTER = {}
+    LO_MONSTER = {},
+    LO_ROOM = {},
+    LO_BONUS_SOUL = {}
 }
 
 function printWarning(params)

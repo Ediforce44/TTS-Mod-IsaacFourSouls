@@ -1,11 +1,13 @@
 
-local ACTIVE_BUTTON_INDEX = 1
+local DECK_BUILDER_ON = true
 
-local BUTTONS_LOCKED = false
+local BLOCKED_GAMEMODE_CHANGE = false
 
 local SELECTED_BUILD_MODE = nil
 
 local TABLE_BASE_GUID = "f5c4fe"
+
+local MAX_EMPTY_CARDS = 1500
 
 BUILD_MODE = {
     NORMAL  = 1,
@@ -15,11 +17,6 @@ BUILD_MODE = {
 BUILD_MODE_NAME = {
     "Normal",
     "Draft"
-}
-
-BUILDMODE_BUTTON_INDICES = {
-    NORMAL  = nil,
-    DRAFT   = nil
 }
 
 -- Table base
@@ -36,54 +33,41 @@ local function changeBuildMode(newBuildMode)
     -- check if newBuildMode exists
     for modeName, buildMode in pairs(BUILD_MODE) do
         if buildMode == newBuildMode then
-            local modeButtonIndex = BUILDMODE_BUTTON_INDICES[modeName]
-
-            for buildMode, index in pairs(BUILDMODE_BUTTON_INDICES) do
-                if BUILD_MODE[buildMode] ~= newBuildMode then
-                    self.editButton({index=index-1, label=""})
-                end
-            end
-
-            local newBuildModeName = BUILD_MODE_NAME[newBuildMode] or "Name Unkown"
-            broadcastToAll("New Game Mode selected: " .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT
-                .. newBuildModeName .. "[-]")
             SELECTED_BUILD_MODE = newBuildMode
-
-            self.editButton({index=modeButtonIndex-1, label="✓", font_color={0, 0, 0}, font_size=250})
             return true
         end
     end
     return false
 end
 
+function disableDeckBuilder()
+    DECK_BUILDER_ON = false
+end
+
 function gmNormal()
-    if Global.call("hasGameStarted") or BUTTONS_LOCKED then
+    if Global.call("hasGameStarted") or BLOCK_GAMEMODE_CHANGE then
         return
     end
-    if (self.getButtons()[BUILDMODE_BUTTON_INDICES.NORMAL].label == "") then
-        changeBuildMode(BUILD_MODE.NORMAL)
-    end
+    changeBuildMode(BUILD_MODE.NORMAL)
+    unsetNoGo({nogo = NO_GO_TYPES.ONLY_MULTIPLAYER})
 end
 
 function gmDraft()
-    if Global.call("hasGameStarted") or BUTTONS_LOCKED then
+    if Global.call("hasGameStarted") or BLOCK_GAMEMODE_CHANGE then
         return
     end
-    if (self.getButtons()[BUILDMODE_BUTTON_INDICES.DRAFT].label == "") then
-        changeBuildMode(BUILD_MODE.DRAFT)
-    end
+    changeBuildMode(BUILD_MODE.DRAFT)
+    setNoGo({nogo = NO_GO_TYPES.ONLY_MULTIPLAYER})
 end
 
 function prepareForManualDeckBuilding()
-    if Global.call("hasGameStarted") or BUTTONS_LOCKED then
+    if Global.call("hasGameStarted") or BLOCK_GAMEMODE_CHANGE then
         return
     end
 
-    if isDeckBuilderON() then
-        toggleDeckBuilderActivation()
-    end
-    BUTTONS_LOCKED = true
-    
+    disableDeckBuilder()
+    BLOCKED_GAMEMODE_CHANGE = true
+
     local gameLanguage = Global.getVar("gameLanguage")
     local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
     local preDeckGUIDs = tableBase.call("getPreDeckGUIDs", {language = gameLanguage})
@@ -92,31 +76,13 @@ function prepareForManualDeckBuilding()
     buildAllDecks({preDecks = preDeckGUIDs})
 end
 
-function toggleDeckBuilderActivation()
-    if Global.call("hasGameStarted") or BUTTONS_LOCKED then
-        return
-    end
-    local newLabel = ""
-    local newTooltip = ""
-    if not isDeckBuilderON() then
-        newLabel = "✓"
-        newTooltip = "ACTIVE:\nIf you start the game the Deck-Builder will build decks dependent on the selected game mode."
-        broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").WARNING .. "Activated Deck-Builder")
-    else
-        newTooltip = "DEACTIVE:\nThe game will start with all playable cards."
-        broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").WARNING .. "Deactivated Deck-Builder")
-    end
-    self.editButton({index=ACTIVE_BUTTON_INDEX-1, label=newLabel, font_color={0, 0, 0}, font_size=250, tooltip = newTooltip})
-end
-
 function isDeckBuilderON()
-    local activeButton = self.getButtons()[ACTIVE_BUTTON_INDEX]
-    return (activeButton.label ~= "")
+    return DECK_BUILDER_ON
 end
 
 -- returns true, if decks were put ontop of the table due to manual deck-building
 function isDeckBuilderBlocked()
-    return BUTTONS_LOCKED
+    return BLOCKED_GAMEMODE_CHANGE
 end
 
 function switchBuildMode(params)
@@ -158,18 +124,28 @@ end
 
 NO_GO_TYPES = {
     ONLY_MULTIPLAYER    = "ONLY_MULTIPLAYER",
+    WARP_ZONE           = "WARP_ZONE",
     ALT_ART             = "ALT_ART",
+    TARGET              = "TARGET",
+    GISH                = "GISH",
+    TAPEWORM            = "TAPEWORM",
+    DICK_KNOTS          = "DICK_KNOTS",
+    UNBOXING_OF_ISAAC   = "UNBOXING_OF_ISAAC",
     PROMO               = "PROMO"
 }
 
 -- objTable needs the following fields:       name,  lua_script,  tags
-NO_GO_FILTERS = {       --conf
+NO_GO_FILTERS = {
     ONLY_MULTIPLAYER = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.ONLY_MULTIPLAYER) end,
-
-    Unkown = function(_)
-        nogo_failure_counter = nogo_failure_counter + 1
-        return false
-    end
+    WARP_ZONE = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.WARP_ZONE) end,
+    ALT_ART = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.ALT_ART) end,
+    TARGET = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.TRAGET) end,
+    GISH = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.GISH) end,
+    TAPEWORM = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.TAPEWORM) end,
+    DICK_KNOTS = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.DICK_KNOTS) end,
+    UNBOXING_OF_ISAAC = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.UNBOXING_OF_ISAAC) end,
+    PROMO = function(objTable) return isInTable(objTable.tags, NO_GO_TYPES.PROMO) end,
+    Unkown = function(_) nogo_failure_counter = nogo_failure_counter + 1; return false end
 }
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -359,53 +335,43 @@ local function buildDeck(preDeckGUIDs, tagTable)
     return deckAndLeftover
 end
 
+function disableRooms()
+    for gameMode, ratioTable in pairs(DECK_INFOS.ROOM.RATIOS) do
+        for ratio, _ in pairs(ratioTable) do
+            DECK_INFOS.ROOM.RATIOS[gameMode][ratio] = 0
+        end
+    end
+end
+
+function enableRooms()
+    DECK_INFOS.ROOM.RATIOS = DECK_ROOM_RATIOS
+end
+
+function disableBonusSouls()
+    for gameMode, ratioTable in pairs(DECK_INFOS.BONUS_SOUL.RATIOS) do
+        for ratio, _ in pairs(ratioTable) do
+            DECK_INFOS.BONUS_SOUL.RATIOS[gameMode][ratio] = 0
+        end
+    end
+end
+
+function enableBonusSouls()
+    DECK_INFOS.BONUS_SOUL.RATIOS = DECK_BONUS_SOUL_RATIOS
+end
+
 -------------------------------------------------- Load and Save -------------------------------------------------------
 local function createButtons()
     self.createButton({
-        click_function = "toggleDeckBuilderActivation",
-        function_owner = self,
-        label          = "",
-        position       = {5, 1, -0.29},
-        width          = 300,
-        height         = 300,
-        color          = {1, 1, 1},
-        tooltip        = ""
-    })
-    self.createButton({
         click_function = "prepareForManualDeckBuilding",
         function_owner = self,
-        label          = "Manual",
-        font_size      = 250,
-        position       = {6, 1, 0.58},
-        width          = 1000,
-        height         = 300,
+        label          = "Manual\nDeckbuilding",
+        font_size      = 300,
+        position       = {6, 1, 0},
+        width          = 2000,
+        height         = 700,
         color          = {1, 1, 1},
         tooltip        = "If you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks."
     })
-
-    self.createButton({
-        click_function = "gmNormal",
-        function_owner = self,
-        label          = "",
-        position       = {-6.5, 1, -0.29},
-        width          = 300,
-        height         = 300,
-        color          = {1, 1, 1},
-        tooltip        = "Here you can change the game mode. The game mode will influence the Deck-Builder."
-    })
-    BUILDMODE_BUTTON_INDICES.NORMAL = 3
-
-    self.createButton({
-        click_function = "gmDraft",
-        function_owner = self,
-        label          = "",
-        position       = {-6.5, 1, 0.58},
-        width          = 300,
-        height         = 300,
-        color          = {1, 1, 1},
-        tooltip        = "Here you can change the game mode. The game mode will influence the Deck-Builder."
-    })
-    BUILDMODE_BUTTON_INDICES.DRAFT = 4
 end
 
 function onLoad(saved_data)
@@ -423,8 +389,8 @@ function onLoad(saved_data)
 
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
-        if loaded_data[1] == true then
-            toggleDeckBuilderActivation()
+        if loaded_data[1] == false then
+            disableDeckBuilder()
         end
         if loaded_data[2] ~= nil then
             changeBuildMode(loaded_data[2])
@@ -451,6 +417,19 @@ function setNoGo(params)
     table.insert(ACTIVE_NO_GOES, tostring(params.nogo))
 end
 
+function unsetNoGo(params)
+    if params.nogo == nil then
+        return
+    end
+    local newNoGoTable = {}
+    for _, nogo in ipairs(ACTIVE_NO_GOES) do
+        if nogo ~= tostring(params.nogo) then
+            table.insert(newNoGoTable, nogo)
+        end
+    end
+    ACTIVE_NO_GOES = newNoGoTable
+end
+
 function setNoGoForDeck(params)
     if params.nogo == nil or params.deckName == nil then
         return
@@ -468,16 +447,30 @@ function setNoGoForDeck(params)
     DECK_INFOS[params.deckName].NO_GOES = nogoList
 end
 
+function unsetNoGoForDeck(params)
+    if params.nogo == nil or params.deckName == nil then
+        return
+    end
+    if DECK_INFOS[params.deckName] == nil then
+        return
+    end
+    local newNoGoTable = {}
+    for _, nogo in ipairs(DECK_INFOS[params.deckName].NO_GOES) do
+        if nogo ~= tostring(params.nogo) then
+            table.insert(newNoGoTable, nogo)
+        end
+    end
+    DECK_INFOS[params.deckName].NO_GOES = newNoGoTable
+end
+
 ---------------------------------------------------- Deck builder ------------------------------------------------------
 local B_waitingDecks = {}
+local B_waitingDecksCount = 0
 
 local function deckBuildBarrier(deckType, deck)
     B_waitingDecks[deckType] = deck
-    local waitCount = 0
-    for _, _ in pairs(B_waitingDecks) do
-        waitCount = waitCount + 1
-    end
-    if waitCount >= TOTAL_DECK_COUNT then
+    B_waitingDecksCount = B_waitingDecksCount + 1
+    if B_waitingDecksCount >= TOTAL_DECK_COUNT then
         getObjectFromGUID(ENTRY_POINT.GUID).call(ENTRY_POINT.CALL_FUNCTION, B_waitingDecks)
         B_waitingDecks = {}
     end
@@ -502,14 +495,15 @@ local function setupDeck(buildMode, preDeckGUIDs, deckInfoTable)
     local buildDeck = createdDecks[1]
     local leftoverDeck = createdDecks[2]
 
-    if buildDeck == nil then
-        Global.call("printWarning", {text = "Can't build deck " .. deckInfoTable.DECK_NAME or "Unkown"
-            .. ". [C30000][Please restart this map.][-]"})
-        return
-    end
     placeDeck(buildDeck, deckInfoTable.DECK_POSITION, deckInfoTable.DECK_ROTATION, deckInfoTable.DECK_NAME)
     placeDeck(leftoverDeck, deckInfoTable.LEFTOVERS_POSITION, deckInfoTable.LEFTOVERS_ROTATION
         , deckInfoTable.LEFTOVERS_NAME)
+
+    if buildDeck == nil then
+        log("Can't build deck " .. tostring(deckInfoTable.DECK_NAME) .. ".")
+        deckBuildBarrier(deckInfoTable.ID, nil)
+        return
+    end
 
     Wait.condition(function() deckBuildBarrier(deckInfoTable.ID, buildDeck) end, function() return buildDeck.resting end)
 end
@@ -585,7 +579,7 @@ function buildDeckSpeed(preDeckGUIDs, tagTable)
     local selectedDecks = {}
     local leftoverDecks = {}
     if isDeckBuilderON() then
-        tagTable["EMPTY"] = 500
+        tagTable["EMPTY"] = MAX_EMPTY_CARDS
         for type, amountToTake in pairs(tagTable) do
             if preDeckGUIDs[type] ~= nil then
                 local preDeck = getObjectFromGUID(preDeckGUIDs[type])
@@ -674,7 +668,7 @@ function buildDeckFilter(preDeckGUIDs, tagTable)
     local selectedDecks = {}
     local leftoverDecks = {}
     if isDeckBuilderON() then
-        tagTable["EMPTY"] = 500
+        tagTable["EMPTY"] = MAX_EMPTY_CARDS
         for type, amountToTake in pairs(tagTable) do
             if preDeckGUIDs[type] ~= nil then
                 local preDeck = getObjectFromGUID(preDeckGUIDs[type])

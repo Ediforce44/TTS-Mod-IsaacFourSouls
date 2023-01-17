@@ -1,35 +1,280 @@
 <Defaults>
-    <Button/>
-    <Button class="colorButton" onClick="colorPicked" />
+    <Button class="colorButton" onClick="UI_colorPicked" />
+
+    <Panel class="isaacBackground" image="background" color="rgba(1,1,1,0.98)" />
+    <VerticalLayout class="isaacBackground" image="background" color="rgba(1,1,1,0.98)" />
+    <HorizontalLayout class="isaacBackground" image="background" color="rgba(1,1,1,0.98)" />
+
+    <Toggle class="isaacColor" colors="#EAE5DE|#F6F2ED|#C8C3BD|#8E8A86" textColor="#EAE5DE" />
+    <Text class="isaacColor" color="#EAE5DE" />
+    <InputField class="isaacColor" colors="#EAE5DE|#F6F2ED|#F6F2ED|#8E8A86" textColor="black" />
+    <Button class="isaacColor" colors="#EAE5DE|#F6F2ED|#C8C3BD|#8E8A86" textColor="black" />
+
+    <Toggle class="isaacColorTooltip" tooltipBackgroundColor="rgba(0, 0, 0, 1)" tooltipTextColor="#EAE5DE" tooltipBorderColor="#EAE5DE"/>
+    <Button class="isaacColorTooltip" tooltipBackgroundColor="rgba(0, 0, 0, 1)" tooltipTextColor="#EAE5DE" tooltipBorderColor="#EAE5DE"/>
+
+    <Toggle class="isaacColorAlt" colors="#D6C5B2|#F1DFC8|#A09485|#615A51" textColor="#D6C5B2" />
+    <Text class="isaacColorAlt" color="#D6C5B2" />
+    <InputField class="isaacColorAlt" colors="#D6C5B2|#F1DFC8|#F1DFC8|#615A51" textColor="black" />
+    <Button class="isaacColorAlt" colors="#D6C5B2|#F1DFC8|#A09485|#615A51" textColor="black" />
+
+    <Toggle class="isaacColorAltTooltip" tooltipBackgroundColor="rgba(0, 0, 0, 1)" tooltipTextColor="#D6C5B2" tooltipBorderColor="#D6C5B2"/>
+    <Button class="isaacColorAltTooltip" tooltipBackgroundColor="rgba(0, 0, 0, 1)" tooltipTextColor="#D6C5B2" tooltipBorderColor="#D6C5B2"/>
+
+    <Toggle class="confExpToggle" onValueChanged="UI_toggleExpansion" />
+    <Toggle class="confChalToggle" onValueChanged="UI_selectChallenge" />
+    <Toggle class="confBuildingMode" onValueChanged="UI_selectBuildingMode" />
+    <Toggle class="confSpecialDeck" onValueChanged="UI_toggleSpecialDeck" />
+    <Toggle class="confSeedDecks" onValueChanged="UI_toggleSeedDeck" />
 </Defaults>
 
-<VerticalLayout
+<Panel
     id="colorPicker"
-    height="200"
+    active="false"
+    class="isaacBackground"
+    height="180"
     width="210"
-    allowDragging="true"
-    returnToOriginalPositionWhenReleased="false"
     rectAlignment="UpperCenter"
     offsetXY="450 -50"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false">
+    <VerticalLayout childAlignment="UpperCenter" offsetXY="0 5" padding="10 10 10 10" spacing="5" childForceExpandWidth="false" childForceExpandHeight="false">
+        <Text class="isaacColor" fontSize="30" fontStyle="bold" alignment="UpperCenter">Pick Player:</Text>
+        <HorizontalLayout
+            id="colorButtons"
+            minHeight="35"
+            spacing="5">
+            <Button color="#C60A00"  id="Red"  class="colorButton"></Button>
+            <Button color="#1C79F8"  id="Blue"  class="colorButton"></Button>
+            <Button color="#2BB837"  id="Green"  class="colorButton"></Button>
+            <Button color="#D0E431" id="Yellow" class="colorButton"></Button>
+        </HorizontalLayout>
+        <Button class="isaacColor colorButton" id="random" preferredWidth="150" minHeight="35" text="Random" fontSize="20" fontStyle="bold"></Button>
+        <Button class="isaacColor" id="cancel" preferredWidth="150" minHeight="35" text="Cancel" fontSize="20" fontStyle="bold" onClick="cancelPick"></Button>
+    </VerticalLayout>
+</Panel>
+
+<Panel
+    id="config"
     active="false"
-    >
-    <Text color="white" id="1" text="Pick Player:" fontSize="25" fontStyle="Bold" alignment="LowerLeft"> </Text>
-    <HorizontalLayout
-        id="colorButtons"
-        height="50"
-        width="210"
-        rectAlignment="UpperCenter"
-        offsetXY="0 30"
-        >
-        <Button color="#C60A00"  id="Red"  class="colorButton"></Button>
-        <Button color="#1C79F8"  id="Blue"  class="colorButton"></Button>
-        <Button color="#2BB837"  id="Green"  class="colorButton"></Button>
-        <Button color="#D0E431" id="Yellow" class="colorButton"></Button>
-    </HorizontalLayout>
-    <Button color="white" id="random" text="Random" textColor="black" fontSize="20" fontStyle="Bold" class="colorButton"
-        >
-    </Button>
-    <Button color="white" id="cancel" text="Cancel" textColor="black" fontSize="20" fontStyle="Bold" onClick="cancelPick"
-            >
-    </Button>
-</VerticalLayout>
+    height="600"
+    width="1100"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    hideAnimation="FadeOut"
+    animationDuration="0.5"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="Host">
+<TableLayout
+    cellBackgroundColor="rgba(0, 0, 0, 0)"
+    columnWidths="330 500 300">
+    <Row preferredHeight="200">
+        <Cell></Cell>
+        <Cell><Panel class="isaacBackground" rectAlignment="UpperCenter">
+            <Image minHeight="50%" image="logo" preserveAspect="true" offsetXY="0 5"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="50%" offsetXY="0 -105">
+                <Text class="isaacColor">Build your own configuration for the game, then press 'Done'!</Text>
+                <Text class="isaacColor">For advanced settings click the arrow buttons.</Text>
+            </VerticalLayout>
+        </Panel></Cell>
+    </Row>
+    <Row preferredHeight="400">
+        <Cell><Panel>
+            <VerticalLayout
+                id="confExpansions"
+                active="false"
+                class="isaacBackground"
+                rectAlignment="UpperCenter"
+                showAnimation="FadeIn"
+                hideAnimation="FadeOut"
+                childForceExpandWidth="false"
+                childAlignment="UpperCenter"
+                spacing="10"
+                padding="10 10 20 20">
+                <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Expansions</Text>
+                <GridLayout constraint="FixedColumnCount" constraintCount="2" cellSize="150 25">
+                    <Toggle class="isaacColor confExpToggle" id="Four Souls: Ad Rapture">Ad Rapture</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="The Lost Cards Encore">The Lost Cards Encore</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="The Verture">The Verture</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="HADE">HADE</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="The Hag Pack by Ogskive">The Hag Pack</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="MitPack">MitPack</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Strange Friends">Strange Friends</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Four Souls: Unbirth">Four Souls: Unbirth</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Four Souls: ALT">Four Souls: ALT</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="The Lab Pack by Ogskive, Jaxxon, and Mollybee.">The Lab Pack</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Sirc City Mod">Sirc City Mod</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Box Nintenella">Box Nintenella</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Community Remix">Community Remix</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Minecraft Four Souls Box">Minecraft</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Four Voices (In Your Head)!">Four Voices</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Blood Knight">Blood Knight</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="SEWER COLLECTION">SEWER COLLECTION</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Meme Expansion">Meme Expansion</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Shamil0's Expansion Pack 1-5">Shamil0's Expansion</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="The Fox Box!">The Fox Box!</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Little Nightmares">Little Nightmares</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="The Nuclear Throne">The Nuclear Throne</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="More Vanilla Items">More Vanilla Items</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Undertale">Undertale</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Linttop and Poddlesli">Linttop &#38; Poddlesli</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Planetarium Expansion">Planetarium Expansion</Toggle>
+                </GridLayout>
+            </VerticalLayout>
+        </Panel></Cell>
+        <Cell><Panel class="isaacBackground" rectAlignment="UpperCenter">
+            <HorizontalLayout childForceExpandWidth="false">
+                <Button
+                    class="isaacColorTooltip"
+                    minWidth="50"
+                    preferredHeight="300"
+                    fontSize="80"
+                    text="&#60;&#10;"
+                    onClick="UI_toggleExpansionModule"
+                    colors="rgba(0 0 0 0)"
+                    textColor="#EAE5DE"
+                    fontStyle="Bold"
+                    tooltip="Expansions"
+                    tooltipPosition="Below"
+                    tooltipOffset="-200">
+                </Button>
+                <VerticalLayout childForceExpandHeight="false" childAlignment="UpperCenter" padding="10 10 20 20">
+                    <HorizontalLayout childForceExpandHeight="false" preferredHeight="100">
+                        <ToggleGroup minWidth="150">
+                            <VerticalLayout spacing="10">
+                                <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Deck Building</Text>
+                                <GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="130 25">
+                                    <Toggle class="isaacColor isaacColorTooltip confBuildingMode" id="BM_NO"
+                                        tooltip="No Deckbuilding will disable the Advanced Deck Builder stuff."
+                                        tooltipPosition="Right" tooltipOffset="8">No Deckbuilding</Toggle>
+                                    <Toggle isOn="true" class="isaacColor isaacColorTooltip confBuildingMode" id="BM_NORMAL"
+                                        tooltip="Normal Deckbuilding will create decks based on the official ratios."
+                                        tooltipPosition="Right" tooltipOffset="8">Normal</Toggle>
+                                    <Toggle class="isaacColor isaacColorTooltip confBuildingMode" id="BM_DRAFT"
+                                        tooltip="Draft Deckbuilding is optimized for 2 Player parties and will also exclude cards for 3+ Players."
+                                        tooltipPosition="Right" tooltipOffset="8">Draft (2 Player)</Toggle>
+                                </GridLayout>
+                            </VerticalLayout>
+                        </ToggleGroup>
+                        <VerticalLayout spacing="10">
+                            <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Game Options</Text>
+                            <GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="130 25">
+                                <Toggle id="bonusSouls" isOn="true" class="isaacColor" onValueChanged="UI_toggleBonusSouls">Bonus Souls</Toggle>
+                                <Toggle id="rooms" isOn="true" class="isaacColor" onValueChanged="UI_toggleRooms">Rooms</Toggle>
+                                <Toggle id="challenges" class="isaacColor" onValueChanged="UI_toggleChallenges">Challenges</Toggle>
+                            </GridLayout>
+                        </VerticalLayout>
+                    </HorizontalLayout>
+                    <Panel preferredHeight="220" preferredWidth="300" padding="0 0 40 40">
+                        <VerticalLayout id="challenges" active="false" showAnimation="FadeIn" hideAnimation="FadeOut" animationDuration="0.3" childForceExpandHeight="false" spacing="10">
+                            <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Challenges</Text>
+                            <ToggleGroup>
+                                <GridLayout constraint="FixedColumnCount" constraintCount="3" cellSize="125 25">
+                                        <Toggle class="isaacColor confChalToggle" id="Resurrection Day">Resurrection Day</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="Delirious">Delirious</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="Masquerade">Masquerade</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="Lord of the Flies">Lord of the Flies</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="Trick or Treat">Trick or Treat</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="Greed's Gamble">Greed's Gamble</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="Fatty's Feast">Fatty's Feast</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="Motherly Love">Motherly Love</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="How the Krampus Stole Christmas">Krampus</Toggle>
+                                </GridLayout>
+                            </ToggleGroup>
+                        </VerticalLayout>
+                    </Panel>
+                    <Button
+                        minHeight="40"
+                        minWidth="200"
+                        alignment="LowerCenter"
+                        text="Done" fontSize="30"
+                        onClick="UI_configurationDone"
+                        class="isaacColor"
+                        textColor="black"
+                        fontStyle="Bold">
+                    </Button>
+                </VerticalLayout>
+                <Button
+                    class="isaacColorTooltip"
+                    minWidth="50"
+                    text="&#62;&#10;"
+                    fontSize="80"
+                    onClick="UI_toggleSeedModule"
+                    colors="rgba(0 0 0 0)"
+                    textColor="#EAE5DE"
+                    fontStyle="Bold"
+                    tooltip="  Advanced&#10;Deck Builder"
+                    tooltipPosition="Below"
+                    tooltipOffset="-200">
+                </Button>
+            </HorizontalLayout>
+        </Panel></Cell>
+        <Cell><Panel>
+            <VerticalLayout
+                id="confSeed"
+                active="false"
+                class="isaacBackground"
+                showAnimation="FadeIn"
+                hideAnimation="FadeOut"
+                padding="10 10 20 20"
+                childForceExpandHeight="false"
+                spacing="10">
+                <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Deck Builder</Text>
+                <GridLayout constraint="FixedColumnCount" constraintCount="2" cellSize="150 25">
+                    <Toggle isOn="true" class="isaacColor confSpecialDeck" id="WARP_ZONE">Warp Zone</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSpecialDeck" id="ALT_ART">Alt Art</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSpecialDeck" id="TARGET">Target</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSpecialDeck" id="GISH">Gish</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSpecialDeck" id="TAPEWORM">Tapeworm</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSpecialDeck" id="DICK_KNOTS">Dick Knots</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSpecialDeck" id="UNBOXING_OF_ISAAC">Unboxing of Isaac</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSpecialDeck" id="PROMO">Promo</Toggle>
+                </GridLayout>
+                <Text color="red" fontSize="20">COMMING SOON!</Text>
+                <!--<Text color="red">The Seed function will use the officil algorithm, but freeze the Game for a few seconds after you hit the Start button!</Text>-->
+                <HorizontalLayout childForceExpandWidth="false" childForceExpandHeight="false">
+                    <Text class="isaacColor" fontSize="20" minHeight="30" preferredWidth="55">Seed:</Text>
+                    <InputField
+                        id="confSeedSeed"
+                        lineType="SingleLine"
+                        placeholder="Enter seed..."
+                        onEndEdit="UI_setSeed"
+                        characterValidation="Alphanumeric"
+                        characterLimit="8"
+                        class="isaacColor"
+                        fontStyle="bold"
+                        fontSize="15"
+                        preferredWidth="150"
+                        preferredHeight="30">
+                    </InputField>
+                </HorizontalLayout>
+                <HorizontalLayout childForceExpandWidth="false" childForceExpandHeight="false" childAlignment="MiddleCenter" padding="0 0 10 10">
+                    <Toggle class="isaacColor" onValueChanged="UI_toggleSeededChars">Seeded Chars</Toggle>
+                    <Text text="How many:" class="isaacColor" preferredWidth="80"/>
+                    <InputField
+                        id="confSeedPlayer"
+                        lineType="SingleLine"
+                        interactable="false"
+                        placeholder="?"
+                        characterValidation="Integer"
+                        characterLimit="1"
+                        class="isaacColor"
+                        fontStyle="bold"
+                        fontSize="15"
+                        preferredWidth="30"
+                        preferredHeight="30"
+                        onEndEdit="UI_setSeededChars">
+                    </InputField>
+                </HorizontalLayout>
+                <GridLayout constraint="FixedColumnCount" constraintCount="2" cellSize="150 25">
+                    <Toggle isOn="true" class="isaacColor confSeedDecks" id="BASE_GAME">Base Game</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSeedDecks" id="FOUR_SOULS_PLUS">Four Souls+</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSeedDecks" id="REQUIEM">Requiem</Toggle>
+                    <Toggle isOn="true" class="isaacColor confSeedDecks" id="GOLD_BOX">Gold Box</Toggle>
+                </GridLayout>
+            </VerticalLayout>
+        </Panel></Cell>
+    </Row>
+</TableLayout>
+</Panel>
