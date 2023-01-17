@@ -45,6 +45,10 @@ local function setPositionTables()
     DECK_POSITION.LO_ROOM = Vector(47, 5, 6)
     DECK_POSITION.LO_BONUS_SOUL = Vector(47, 5, 12)
 end
+
+local function enterDebugMode()
+    UI.show("debug")
+end
 ------------------------------------------------------------------------------------------------------------------------
 
 function onLoad(saved_data)         --EbyE44
@@ -217,14 +221,19 @@ function UI_setSeed(_, seed)
 end
 
 function UI_setSeededChars(_, playerCount)
-    if playerCount and tonumber(playerCount)then
+    if playerCount and tonumber(playerCount) then
         if tonumber(playerCount) > 4 then
             confTable.SEED_ARGS["CHARACTERS"] = 4
+            UI.setAttribute("confSeedPlayer", "text", "4")
+        elseif tonumber(playerCount) < 2 then
+            confTable.SEED_ARGS["CHARACTERS"] = 2
+            UI.setAttribute("confSeedPlayer", "text", "2")
         else
             confTable.SEED_ARGS["CHARACTERS"] = tonumber(playerCount)
         end
     else
         confTable.SEED_ARGS["CHARACTERS"] = nil
+        UI.setAttribute("confSeedPlayer", "text", "2")
     end
 end
 
@@ -356,6 +365,32 @@ function UI_configurationDone()
             end
             startSeedAlgorithm(confTable.SEED, confTable.SEED_ARGS)
         end
+    end
+end
+
+local clickCounterDebug = 0
+function UI_hiddenButton()
+    if clickCounterDebug < 0 then
+        return
+    end
+    clickCounterDebug = clickCounterDebug + 1
+    if clickCounterDebug >= 3 then
+        enterDebugMode()
+        clickCounterDebug = -100
+    end
+    Wait.time(function() clickCounterDebug = clickCounterDebug - 1 end, 0.5)
+end
+
+function UI_hideDebugPanel()
+    UI.hide("debug")
+end
+
+function UI_debugBase()
+    local newPosition = getObjectFromGUID("f5c4fe").call("prepareDebug")
+    if newPosition.y > 0 then
+        UI.setAttribute("debugBase", "text", "Lower Base")
+    else
+        UI.setAttribute("debugBase", "text", "Raise Base")
     end
 end
 

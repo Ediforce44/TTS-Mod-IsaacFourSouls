@@ -71,8 +71,8 @@
     columnWidths="330 500 300">
     <Row preferredHeight="200">
         <Cell></Cell>
-        <Cell><Panel class="isaacBackground" rectAlignment="UpperCenter">
-            <Image minHeight="50%" image="logo" preserveAspect="true" offsetXY="0 5"></Image>
+        <Cell><Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false">
+            <Image minHeight="50%" image="logo" preserveAspect="true" offsetXY="0 5" onClick="UI_hiddenButton"></Image>
             <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="50%" offsetXY="0 -105">
                 <Text class="isaacColor">Build your own configuration for the game, then press 'Done'!</Text>
                 <Text class="isaacColor">For advanced settings click the arrow buttons.</Text>
@@ -256,6 +256,7 @@
                         id="confSeedPlayer"
                         lineType="SingleLine"
                         interactable="false"
+                        text="2"
                         placeholder="?"
                         characterValidation="Integer"
                         characterLimit="1"
@@ -277,4 +278,21 @@
         </Panel></Cell>
     </Row>
 </TableLayout>
+</Panel>
+
+<Panel
+    id="debug"
+    active="false"
+    class="isaacBackground"
+    height="140"
+    width="250"
+    rectAlignment="UpperCenter"
+    offsetXY="450 -50"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false">
+    <VerticalLayout childAlignment="UpperCenter" padding="10 10 10 10" spacing="5" childForceExpandWidth="false" childForceExpandHeight="false">
+        <Text class="isaacColor" fontSize="30" fontStyle="bold" alignment="UpperCenter" color="red">!Debug Mode!</Text>
+        <Button class="isaacColor" id="debugBase" preferredWidth="150" minHeight="35" fontSize="20" fontStyle="bold" onClick="UI_debugBase">Raise Base</Button>
+        <Button class="isaacColor" preferredWidth="150" minHeight="35" fontSize="20" fontStyle="bold" onClick="UI_hideDebugPanel">Exit</Button>
+    </VerticalLayout>
 </Panel>

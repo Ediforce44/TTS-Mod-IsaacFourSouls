@@ -211,6 +211,7 @@ end
 
 function prepareDebug()
     local basePosition = self.getPosition()
+    local newPosition = nil
     if isBaseRaised() then
         self.interactable = false
         for _, guid in pairs(OBJECTS_UNDER_TABLE) do
@@ -221,7 +222,7 @@ function prepareDebug()
                 obj.setPosition(newObjPosition)
             end
         end
-        local newPosition = basePosition:setAt('y', basePosition.y - 15)
+        newPosition = basePosition:setAt('y', basePosition.y - 15)
         self.setPosition(newPosition)
     else
         self.interactable = false
@@ -229,14 +230,14 @@ function prepareDebug()
             local obj = getObjectFromGUID(guid)
             if obj then
                 obj.interactable = true
-                obj.setInvisibleTo({"Red", "Blue", "Yellow", "Green", "Grey", "White"})
                 local newObjPosition = obj.getPosition():setAt('y', self.getPosition().y + 16)
                 obj.setPosition(newObjPosition)
             end
         end
-        local newPosition = basePosition:setAt('y', basePosition.y + 15)
+        newPosition = basePosition:setAt('y', basePosition.y + 15)
         self.setPosition(newPosition)
     end
+    return newPosition
 end
 
 function onLoad()
