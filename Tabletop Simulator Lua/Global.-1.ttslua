@@ -931,16 +931,12 @@ function placeObjectsInPlayerZone(params)
         printWarning({text = "Wrong parameters in global function 'placeObjectsInPlayerZone()'."})
     else
         local objects = params.objects
+
         if #objects > 1 then
-            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeMultipleObjectsInZone"
-                , {objects = objects})
+            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeMultipleObjectsInZone", params)
         elseif #objects == 1 then
-            local index = nil
-            if params.index ~= nil then
-                index = params.index
-            end
             getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeObjectInZone", {object = objects[1]
-                , index = index})
+                , index = params.index, replacing = params.replacing})
         end
     end
 end

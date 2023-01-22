@@ -37,9 +37,22 @@ local function getTimerParameters(blockedIndex)
     return timerParameters
 end
 
+local function getRowFromIndex(index)
+    return math.floor(index/(INDICES_PER_ROW + 1)) + 1
+end
+
+local function getColumnFromIndex(index)
+    --Start counting at 1 is shit
+    local theoryColumn = index % INDICES_PER_ROW
+    if theoryColumn == 0 then
+        return INDICES_PER_ROW
+    end
+    return theoryColumn
+end
+
 function resetBlockedIndex(params)
-    local row = math.floor((params.index - 1) / INDICES_PER_ROW) + 1
-    local column = params.index - (INDICES_PER_ROW * (row - 1))
+    local row = getRowFromIndex(params.index)
+    local column = getColumnFromIndex(params.index)
     indexTable[row][column].tempBlocked = false
 end
 
@@ -54,6 +67,26 @@ end
 
 local function detachObject(object)
     attachedObjects[object.getGUID()] = nil
+end
+
+local function getRowAndColumnFromPosition(position)
+    local marginOffset = 0.7
+    local row = 0
+    for r = 1, ROW_MAX do
+        if math.abs(position.z - indexTable[r][1].position.z) < marginOffset then
+            row = r
+            break
+        end
+    end
+    if row > 0 then
+        for c = 1, INDICES_PER_ROW do
+            if math.abs(position.x - indexTable[row][c].position.x) < marginOffset then
+                column = c
+                break
+            end
+        end
+    end
+    return {row = row, column = column}
 end
 
 local function insertIndexEntry(newEntry)
@@ -86,7 +119,7 @@ local function initIndexTable()
         position = snapPoint.position
         if position.x < ZONE_EDGES[1].x and position.z > ZONE_EDGES[1].z then
             if position.x > ZONE_EDGES[4].x and position.z < ZONE_EDGES[4].z then
-                insertIndexEntry({free = true, position = position, tempBlocked = false})
+                insertIndexEntry({free = true, position = position:setAt('y', 5), tempBlocked = false})
             end
         end
     end
@@ -102,53 +135,34 @@ end
 
 local function calculateIndexTable()
     resetIndexTable()
-    local marginOffset = 0.7
     for _ , object in pairs(self.getObjects()) do
         if object.tag == "Card" or object.tag == "Deck" then
-            local objectPosition = object.getPosition()
-            local row = 0
-            for r = 1, ROW_MAX do
-                if math.abs(objectPosition.z - indexTable[r][1].position.z) < marginOffset then
-                    row = r
-                    break
-                end
-            end
-
-            if row > 0 then
-                for column = 1, INDICES_PER_ROW do
-                    if math.abs(objectPosition.x - indexTable[row][column].position.x) < marginOffset then
-                        indexTable[row][column].free = false
-                    end
-                end
-            end
+            local rowColumnTable= getRowAndColumnFromPosition(object.getPosition())
+            indexTable[rowColumnTable.row][rowColumnTable.column].free = false
         end
     end
 end
 
-local function getRealPosition(indexPosition)
-    if indexPosition == nil then
-        return nil
-    end
-    return {x = indexPosition.x, y = 5, z = indexPosition.z}
-end
-
 local function getPositionFromIndex(index)
-    local row = math.ceil(index / INDICES_PER_ROW)
-    local column = index - (INDICES_PER_ROW * (row - 1))
+    local row = getRowFromIndex(index)
+    local column = getColumnFromIndex(index)
     if indexTable[row] == nil then
         return nil
     end
-    return getRealPosition(indexTable[row][column].position)
+    return indexTable[row][column].position
 end
 
-local function getNextFreePosition()
+local function getNextFreePosition(startingIndex)
+    startingIndex = startingIndex or 1
+    local startRow = getRowFromIndex(startingIndex)
+    local startColumn = getColumnFromIndex(startingIndex)
     calculateIndexTable()
-    for row = 1, ROW_MAX do
-        for column = 1, INDICES_PER_ROW do
+    for row = startRow, ROW_MAX do
+        for column = startColumn, INDICES_PER_ROW do
             if indexTable[row][column].free and (not indexTable[row][column].tempBlocked) then
                 indexTable[row][column].tempBlocked = true
                 Timer.create(getTimerParameters((INDICES_PER_ROW * (row - 1)) + column))
-                return getRealPosition(indexTable[row][column].position)
+                return indexTable[row][column].position
             end
         end
     end
@@ -219,6 +233,31 @@ function killPlayer()
     playerAlive = false
 end
 
+function getIndex(params)
+    local position = nil
+    if params.object == nil then
+        if params.guid ~= nil then
+            local object = getObjectFromGUID(params.guid)
+            if object then
+                position = object.getPosition()
+            end
+        else
+            if params.position then
+                position = params.position
+            end
+        end
+    else
+        position = params.object.getPosition()
+    end
+    if position == nil then
+        Global.call("printWarning", {text = "Wrong parameters in player zone function 'getIndex()'."})
+        return
+    end
+
+    local rowColumnTable = getRowAndColumnFromPosition(objPosition)
+    return (rowColumnTable.row * INDICES_PER_ROW) + rowColumnTable.column
+end
+
 function placeObjectInZone(params)
     if params.object == nil then
         Global.call("printWarning", {text = "Wrong parameters in player zone function 'placeObjectInPlayerZone()'."})
@@ -226,13 +265,17 @@ function placeObjectInZone(params)
     end
     local position = nil
     if params.index ~= nil and params.index <= INDEX_MAX then
-        position = getPositionFromIndex(params.index)
+        if params.replacing then
+            position = getPositionFromIndex(params.index)
+        else
+            position = getNextFreePosition(params.index)
+        end
     else
         position = getNextFreePosition()
     end
     if position ~= nil then
         placeObject(params.object, position)
-    else
+    elseif not params.object.getQuantity() then
         params.object.deal(1, owner_color)
     end
 end
@@ -244,13 +287,20 @@ function placeMultipleObjectsInZone(params)
         return
     end
 
+    local startRow = 1
+    local startColumn = 1
+    if params.index ~= nil and params.index <= INDEX_MAX then
+        startRow = getRowFromIndex(params.index)
+        startColumn = getColumnFromIndex(params.index)
+    end
+
     calculateIndexTable()
     local maxObjectIndex = #params.objects
     local nextObjectIndex = 1
-    for row = 1, ROW_MAX do
-        for column = 1, INDICES_PER_ROW do
-            if indexTable[row][column].free then
-                placeObject(params.objects[nextObjectIndex], getRealPosition(indexTable[row][column].position))
+    for row = startRow, ROW_MAX do
+        for column = startColumn, INDICES_PER_ROW do
+            if params.replacing or indexTable[row][column].free then
+                placeObject(params.objects[nextObjectIndex], indexTable[row][column].position)
                 nextObjectIndex = nextObjectIndex + 1
                 if nextObjectIndex > maxObjectIndex then
                     return
@@ -260,6 +310,8 @@ function placeMultipleObjectsInZone(params)
     end
     -- Not enough free fields for cards
     for index = nextObjectIndex , maxObjectIndex do
-        params.objects[index].deal(1, owner_color)
+        if not params.objects[index].getQuantity() then
+            params.objects[index].deal(1, owner_color)
+        end
     end
 end
