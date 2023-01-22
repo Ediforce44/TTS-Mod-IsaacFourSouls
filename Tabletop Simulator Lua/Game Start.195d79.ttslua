@@ -1,4 +1,4 @@
-CHARACTER_PLACER_GUID = "d2c68a"
+CHARACTER_MANAGER_GUID = "bc6e13"
 FLOOR_CHANGE_GUID = "69a80d"
 
 PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
@@ -377,7 +377,7 @@ function onStart()
 end
 
 function isAllPlayersSelectCharacter()
-    local characterPlacerObj = getObjectFromGUID(CHARACTER_PLACER_GUID)
+    local characterPlacerObj = getObjectFromGUID(CHARACTER_MANAGER_GUID)
     local playersSpawnedCharacterObj = characterPlacerObj.getTable("playersSpawnedCharacterObj")
     local selectedCharacterCount = 0
     for _, pObjs in pairs(playersSpawnedCharacterObj) do
