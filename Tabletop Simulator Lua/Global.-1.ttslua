@@ -273,13 +273,13 @@ function UI_toggleExpansionModule()
     end
 end
 
-function UI_toggleSeedModule()
-    if not confTable.SEED_ACTIVE then
-        UI.show("confSeed")
-        confTable.SEED_ACTIVE = true
+function UI_toggleAdvancedModule()
+    if not confTable.ADVANCED_MODE_ACTIVE then
+        UI.show("confAdvanced")
+        confTable.ADVANCED_MODE_ACTIVE = true
     else
-        UI.hide("confSeed")
-        confTable.SEED_ACTIVE = false
+        UI.hide("confAdvanced")
+        confTable.ADVANCED_MODE_ACTIVE = false
     end
 end
 
@@ -394,6 +394,14 @@ function UI_debugBase()
     end
 end
 
+function UI_showReminder()
+    UI.show("reminder")
+end
+
+function UI_hideReminder()
+    UI.hide("reminder")
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
@@ -486,7 +494,7 @@ function UI_colorPicked(player, _, idValue)
     end
 end
 
-function cancelPick(player, _, idValue)
+function UI_cancelPick(player, _, idValue)
     broadcastToAll(getPlayerString({playerColor = player.color}) .. " canceled the Color-Pick!", Table)
     table.remove(colorPickerAttachment, 1)
     UI.hide("colorPicker")
