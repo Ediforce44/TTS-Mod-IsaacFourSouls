@@ -64,7 +64,15 @@ OBJECTS_UNDER_TABLE = {
     US = "7f7406",
     RU = "ac9ceb",
     ES = "5a30af",
-    EL_BAG = "3316b6"
+    EL_BAG = "3316b6",
+    R_EDEN = "1adaea",
+    R_EDEN_2 = "44f74a",
+    AA_EDEN = "25f5c0",
+    AA_EDEN_2 = "1d42c4",
+    RET_EDEN = "cebc17",
+    P_EDEN = "34fe47",
+    P_EDEN_2 = "a31f35",
+    P_EDEN_3 = "9a744b"
 }
 
 LANGUAGE_OBJECTS = {
