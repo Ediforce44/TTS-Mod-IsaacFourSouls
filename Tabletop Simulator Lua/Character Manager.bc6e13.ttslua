@@ -9,14 +9,31 @@ waitForSelectCharacters = {
   Yellow = {}
 }
 
+playersSpawnedCharacterObj = {
+  Red = {},
+  Blue = {},
+  Green = {},
+  Yellow = {}
+}
+
 math.randomseed(os.time())
 
-function onLoad()
-  loadCharactersFromWorld()
+function onLoad(saved_data)
+  loadCharPacksFromWorld()
   initButtons()
+  if saved_data ~= "" then
+      local loaded_data = JSON.decode(saved_data)
+      if loaded_data[1] then
+          originalPositionTable = loaded_data[1]
+      end
+  end
 end
 
-function loadCharactersFromWorld()
+function onSave()
+    return JSON.encode({originalPositionTable})
+end
+
+function loadCharPacksFromWorld()
   characterPull = {}
   local allObj = getAllObjects()
   for i, obj in pairs(allObj) do
@@ -36,6 +53,49 @@ function isCharUsedInWaitPull(charGuid)
     end
   end
   return false
+end
+
+function cleanupSpawnedObj(params)
+    if params.playerColor == nil then
+        Global.call("printWarning", {text = "Wrong parameters in character manager function 'cleanupSpawnedObj()'."})
+    end
+    local playerCharacterObj = playersSpawnedCharacterObj[params.playerColor]
+    if playerCharacterObj ~= nil then
+        for _, guid in pairs(playerCharacterObj) do
+            local obj = getObjectFromGUID(guid)
+            if obj ~= nil then
+                obj.destruct()
+            end
+        end
+        playersSpawnedCharacterObj[params.playerColor] = {}
+    end
+end
+
+function dealCharPackToPlayer(params)
+    if (params.charPack == nil) or (params.playerColor == nil) then
+        Global.call("printWarning", {text = "Wrong parameters in character manager function 'dealCharPackToPlayer()'."})
+        return
+    end
+
+    local charPack = params.charPack
+
+    if charPack.resting then
+        --Resting needed to don't set the position while pack is in the air (e.g. Returning and selecting immediately again)
+        originalPositionTable[charPack.getGUID()] = charPack.getPosition()
+    end
+
+    --Just for the eden chars under the table
+    charPack.interactable = true
+
+    for index, waitingPack in ipairs(characterPull) do
+        if waitingPack.getGUID() == charPack.getGUID() then
+            table.remove(characterPull, index)
+        end
+    end
+    table.insert(waitForSelectCharacters[params.playerColor], charPack)
+
+    makeCharPackToSelect(charPack, params.playerColor)
+    Global.call("placeObjectsInPlayerZone", {playerColor = params.playerColor, objects = {charPack}, index = 8, replacing = false})
 end
 
 function initButtons()
@@ -82,25 +142,31 @@ function initButtons()
   })
 end
 
--- TODO: Dont give change value to invalid
 function updateCharactersCount(obj, _, value)
-  if tonumber(value) >= 5 then
-    print("Invalid input value. Set to max: 4")
-    inputCharCount = 4
-    obj.editInput({index=0, value=4})
-    return
-  elseif tonumber(value) <= 0 then
-    print("Invalid input value. Set to min: 1")
-    obj.editInput({index=0, value=1})
-    inputCharCount = 1
-    return
+  local newValue = nil
+  if value ~= "" then
+      if tonumber(value) > 7 then
+          print("Invalid input value. Set to max: 7")
+          newValue = 7
+      elseif tonumber(value) <= 0 then
+          print("Invalid input value. Set to min: 1")
+          newValue = 1
+      else
+          newValue = value
+      end
+      obj.editInput({index=0, value=newValue})
+      inputCharCount = newValue
   end
+end
 
-  inputCharCount = value
+local function returnAllCharPacksFromPlayer(playerColor)
+    for _ = 1,  #waitForSelectCharacters[playerColor] do
+        returnCharPack(waitForSelectCharacters[playerColor][1], playerColor)
+    end
 end
 
 function randomizeToAll(_, playerClickerColor)
-  loadCharactersFromWorld()
+  loadCharPacksFromWorld()
   if #characterPull < 6 then
     Global.call("printWarningTP", {text = "Too few characters (min: 6). Maybe you forget  press \"Place characters\" button?", color =  playerClickerColor})
     return
@@ -113,12 +179,11 @@ function randomizeToAll(_, playerClickerColor)
 end
 
 function randomizeToMe(_, playerClickerColor)
-  loadCharactersFromWorld()
+  loadCharPacksFromWorld()
   if #characterPull < 2 then
     Global.call("printWarningTP", {text = "Too few characters (min: 2). Maybe you forget  press \"Place characters\" button?", color =  playerClickerColor})
     return
   end
-
   randomizeToPlayer(playerClickerColor)
 end
 
@@ -129,29 +194,25 @@ function randomizeToPlayer(playerColor)
   end
 
   if #waitForSelectCharacters[playerColor] ~= 0 then
-    Global.call("printWarningTP", {text = "" .. playerColor .. " already selecting character.", color =  playerColor})
-    return
+    printToColor("Reshuffle Characters", playerColor)
+    returnAllCharPacksFromPlayer(playerColor)
   end
 
+  cleanupSpawnedObj({playerColor = playerColor})
+
   for i = 1, inputCharCount do
-    local randomCharacteracterIndex = math.random(#characterPull)
-    local randomCharacter = characterPull[randomCharacteracterIndex]
-
-    table.remove(characterPull, randomCharacteracterIndex)
-    table.insert(waitForSelectCharacters[playerColor], randomCharacter)
-
-    makeCharacterPackToSelect(randomCharacter, randomCharacter.getPosition(), playerColor)
-    Global.call("placeObjectsInPlayerZone", {playerColor = playerColor, objects = {randomCharacter}, index = 7 + i})
+    local randomCharPackIndex = math.random(#characterPull)
+    local randomCharPack = characterPull[randomCharPackIndex]
+    dealCharPackToPlayer({charPack = randomCharPack, playerColor = playerColor})
   end
 end
 
-function makeCharacterPackToSelect(obj, originalPos, playerColor)
+function makeCharPackToSelect(obj, playerColor)
   obj.clearButtons()
   obj.interactable = false
 
-  _G["v_selectCharacter" .. obj.guid] = function(obj, playerClickerColor) selectCharacter(obj, playerClickerColor) end
   obj.createButton({
-    click_function = "v_selectCharacter" .. obj.guid,
+    click_function = "selectCharacter",
     function_owner = self,
     label = "Select",
     position = {0, 0.3, 1.7},
@@ -161,9 +222,8 @@ function makeCharacterPackToSelect(obj, originalPos, playerColor)
     font_color = {1, 1, 1},
     color = {102/225, 187/255, 106/255}
   })
-  _G["v_returnCharacter" .. obj.guid] = function(obj) returnCharacter(obj, playerColor, originalPos) end
   obj.createButton({
-    click_function = "v_returnCharacter" .. obj.guid,
+    click_function = "returnCharPack",
     function_owner = self,
     label = "Return",
     position = {0, 0.3, -1.7},
@@ -182,15 +242,15 @@ function selectCharacter(obj, playerColor)
   -- obj.setPositionSmooth(originalPos, false)
 end
 
-function returnCharacter(obj, playerColor, originalPos)
-  removeCharacterFromSelecting(obj.guid, playerColor)
+function returnCharPack(obj, playerColor)
+  removeCharPackFromSelecting(obj.guid, playerColor)
   -- getObjectFromGUID(CHARACTER_PLACER_GUID).call("setCharacterPackScriptByCall", {obj=obj})
   obj.call("initButtons")
-  obj.setPositionSmooth(originalPos, false)
+  obj.setPositionSmooth(originalPositionTable[obj.guid], false)
   obj.setRotation({0, 180, 0})
 end
 
-function removeCharacterFromSelecting(charGuid, playerColor)
+function removeCharPackFromSelecting(charGuid, playerColor)
   if not waitForSelectCharacters[playerColor] then
     printToColor("[ef5350][ERROR][-] You do not have characters for select", playerColor, stringColorToRGB("Red"))
     return
