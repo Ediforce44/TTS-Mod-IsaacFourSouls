@@ -14,17 +14,7 @@ local function getDeckOrCard(zoneGUID)
           return obj
       end
     end
-    --Can't find a Deck or Card in the zone
-    local zoneName = ""
-    for name, guid in pairs(ZONE_GUID_DECK) do
-        if guid == zoneGUID then
-            zoneName = tostring(name)
-            goto printError
-        end
-    end
-    zoneName = "'Zone is not a Deck-Zone'"
-    ::printError::
-    printWarning({text = "Can't find the deck or card in zone: " .. zoneName .. "."})
+
     return nil
 end
 
@@ -44,6 +34,8 @@ local function setPositionTables()
     DECK_POSITION.LO_MONSTER = Vector(41.73, 5, -14.84)
     DECK_POSITION.LO_ROOM = Vector(47, 5, 6)
     DECK_POSITION.LO_BONUS_SOUL = Vector(47, 5, 12)
+
+    DEAD_END_POSITION = getObjectFromGUID("ad2a86").getPosition()
 end
 
 local function enterDebugMode()
@@ -144,49 +136,159 @@ end
 -------------------------------------------- Seed algorithm functions --------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 local SEEDARGS_TO_WEBARGS = {
-    WARP_ZONE = "",
-    ALT_ART = "",
-    TARGET = "",
-    GISH = "",
-    TAPEWORM = "",
-    DICK_KNOTS = "",
-    UNBOXING_OF_ISAAC = "",
-    PROMO = "",
-    BASE_GAME = "",
-    FOUR_SOULS_PLUS = "",
-    REQUIEM = "",
-    GOLD_BOX = "",
-    CHARACTERS = ""
-
+    WARP_ZONE = "deck_rwz",
+    ALT_ART = "deck_aa",
+    TARGET = "deck_t",
+    GISH = "deck_gi",
+    TAPEWORM = "deck_tw",
+    DICK_KNOTS = "deck_dk",
+    UNBOXING_OF_ISAAC = "deck_box",
+    PROMO = "deck_p",
+    BASE_GAME = "deck_b2",
+    FOUR_SOULS_PLUS = "deck_fsp2",
+    REQUIEM = "deck_r",
+    GOLD_BOX = "deck_g2",
+    CHARACTERS = "players",
+    CHARACTERS_ACTIVE = "specplayers",
+    RATIOS = "ratios",
+    L_TAROT_MISC = "ld_c", L_TRINKET = "ld_t", L_PILL = "ld_p", L_RUNE = "ld_r", L_BUTTER_BEAN = "ld_bb", L_BOMB = "ld_bo",
+    L_BATTERY = "ld_ba", L_DICE_SHARD = "ld_ds", L_SOUL_HEART = "ld_sh", L_LOST_SOUL = "ld_ls", L_NICKEL = "ld_5c",
+    L_FOUR_CENT = "ld_4c", L_THREE_CENT = "ld_3c", L_TWO_CENT = "ld_2c", L_ONE_CENT = "ld_1c",
+    M_BOSS = "md_bo", M_EPIC = "md_eb", M_BASIC = "md_b", M_CURSED = "md_ce", M_HOLY_CHARMED = "md_hce", M_GOOD = "md_be",
+    M_BAD = "md_ge", M_CURSE = "md_c",
+    T_ACTIVE = "td_a", T_PASSIVE = "td_pas", T_PAID = "td_pai", T_ONE_USE = "td_ou", T_SOUL = "td_s"
 }
 
-local function startSeedAlgorithm(seed, seedArgs)
-    --TODO
+local function seedargsToWebargs(seed, seedArgs)
+    local httpBody = {seed = seed, ratios = "o"}
+    for seedArg, argValue in pairs(seedArgs) do
+        if argValue then
+            if argValue == true then
+                httpBody[SEEDARGS_TO_WEBARGS[seedArg]] = "on"
+            else
+                httpBody[SEEDARGS_TO_WEBARGS[seedArg]] = tostring(argValue)
+            end
+        end
+    end
+    return httpBody
 end
 
 ------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------- UI config functions -----------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-confTable = {
-    EXPANSION_ACTIVE    = false,
-    SEED_ACTIVE         = false,
-    ROOMS_ACTIVE        = true,
-    BONUS_SOULS_ACTIVE  = true,
-    CHALLENGES_ACTIVE   = false,
-    CHARACTERS_ACTIVE   = false,
-    EXPANSIONS  = {},
-    BUILDING_MODE = "BM_NORMAL",
-    CHALLENGE   = nil,
-    SEED        = nil,
-    SEED_ARGS   = {},
-    SPECIAL_DECKS     = {}
+local BUILDING_MODE_TO_RATIOS = {
+    BM_NO = nil,
+    BM_NORMAL = "o",
+    BM_DRAFT = "d",
+    BM_CUSTOM = "c"
 }
 
 local BUILDING_MODE_FUNCTIONS = {
     BM_NO       = "disableDeckBuilder",
     BM_NORMAL   = "gmNormal",
-    BM_DRAFT    = "gmDraft"
+    BM_DRAFT    = "gmDraft",
+    BM_CUSTOM   = "gmCustom"
 }
+
+local STD_RATIOS = {
+    LOOT = {L_TAROT_MISC = 23, L_TRINKET = 11, L_PILL = 3, L_RUNE = 3, L_BUTTER_BEAN = 5, L_BOMB = 6, L_BATTERY = 6,
+        L_DICE_SHARD = 3, L_SOUL_HEART = 2, L_LOST_SOUL = 1, L_NICKEL = 6, L_FOUR_CENT = 12, L_THREE_CENT = 11,
+        L_TWO_CENT = 6, L_ONE_CENT = 2},
+    MONSTER = {M_BOSS = 30, M_EPIC = 1, M_BASIC = 30, M_CURSED = 9, M_HOLY_CHARMED = 9, M_GOOD = 8, M_BAD = 8, M_CURSE = 5},
+    TREASURE = {T_ACTIVE = 40, T_PASSIVE = 44, T_PAID = 10, T_ONE_USE = 5, T_SOUL = 1}
+}
+
+confTable = {
+    EXPANSION_ACTIVE    = false,
+    ADVANCED_MODE_ACTIVE= false,
+    ROOMS_ACTIVE        = true,
+    BONUS_SOULS_ACTIVE  = true,
+    CHALLENGES_ACTIVE   = false,
+    EXPANSIONS  = {},
+    BUILDING_MODE = "BM_NORMAL",
+    CHALLENGE   = nil,
+    RANDOM_SEED = false,
+    SEED        = nil,
+    SEED_ARGS   = {
+        WARP_ZONE = true,
+        ALT_ART = true,
+        TARGET = true,
+        GISH = true,
+        TAPEWORM = true,
+        DICK_KNOTS = true,
+        UNBOXING_OF_ISAAC = true,
+        PROMO = true,
+        BASE_GAME = true,
+        FOUR_SOULS_PLUS = true,
+        REQUIEM = true,
+        GOLD_BOX = true,
+        CHARACTERS_ACTIVE = false,
+        CHARACTERS = 2,
+        RATIOS = BUILDING_MODE_TO_RATIOS["BM_NORMAL"]
+    },
+    SPECIAL_DECKS = {},
+    CUSTOM_RATIOS = STD_RATIOS
+}
+
+customRatiosSet = true
+
+local function getRatioType(ratioID)
+    for type, idTable in pairs(STD_RATIOS) do
+        if idTable[ratioID] then
+            return type
+        end
+    end
+    return nil
+end
+
+local function placeChallenge()
+    local tempChallengeBag = getObjectFromGUID("e5a404").takeObject()
+    Wait.frames(function()
+        for _, challenge in pairs(tempChallengeBag.getObjects()) do
+            if challenge.name == confTable.CHALLENGE then
+                tempChallengeBag.takeObject({guid = challenge.guid, position = DISCARD_PILE_POSITION.LOOT})
+                break
+            end
+        end
+        destroyObject(tempChallengeBag)
+    end)
+end
+
+local function placeExpansions()
+    local nextPosition = Vector(-42, 3, 4.5)
+    local allObjects = Global.getObjects()
+    for expansionName, selected in pairs(confTable.EXPANSIONS) do
+        if selected then
+            for _, obj in ipairs(allObjects) do
+                if obj.getName() == expansionName then
+                    obj.takeObject({position = nextPosition})
+                    nextPosition:setAt('x', nextPosition.x + 3)
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function prepareSeedArgs()
+    confTable.SEED_ARGS["RATIOS"] = BUILDING_MODE_TO_RATIOS[confTable.BUILDING_MODE]
+    for specialDeckID, selected in pairs(confTable.SPECIAL_DECKS) do
+        confTable.SEED_ARGS[specialDeckID] = selected
+    end
+    if confTable.CUSTOM_RATIOS then
+        for _, ratioTable in pairs(confTable.CUSTOM_RATIOS) do
+            for ratioID, ratioValue in pairs(ratioTable) do
+                confTable.SEED_ARGS[ratioID] = ratioValue
+            end
+        end
+    end
+    if not confTable.SEED_ARGS["CHARACTERS_ACTIVE"] then
+        confTable.SEED_ARGS["CHARACTERS"] = nil
+    end
+    if confTable.RANDOM_SEED then
+        confTable.SEED = ""
+    end
+end
 
 function UI_toggleExpansion(_, toggle, expansionID)
     if toggle == "True" then
@@ -283,6 +385,16 @@ function UI_toggleAdvancedModule()
     end
 end
 
+function UI_toggleRandomSeed(_, checked)
+    if checked == "True" then
+        UI.setAttribute("confSeedSeed", "interactable", "false")
+        confTable.RANDOM_SEED = true
+    else
+        UI.setAttribute("confSeedSeed", "interactable", "true")
+        confTable.RANDOM_SEED = false
+    end
+end
+
 function UI_toggleSeededChars(_, checked)
     if checked == "True" then
         UI.setAttribute("confSeedPlayer", "interactable", "true")
@@ -303,69 +415,69 @@ end
 
 function UI_configurationDone()
     local deckBuilder = getObjectFromGUID("69a80e")
-
     if not confTable.ROOMS_ACTIVE then
-        deckBuilder.call("disableRooms")
+        deckBuilder.call("disableDeck", {deckID = "ROOM"})
     end
     if not confTable.BONUS_SOULS_ACTIVE then
-        deckBuilder.call("disableBonusSouls")
+        deckBuilder.call("disableDeck", {deckID = "BONUS_SOUL"})
     end
     if confTable.CHALLENGES_ACTIVE then
-        local tempChallengeBag = getObjectFromGUID("e5a404").takeObject()
-        Wait.frames(function()
-            for _, challenge in pairs(tempChallengeBag.getObjects()) do
-                if challenge.name == confTable.CHALLENGE then
-                    tempChallengeBag.takeObject({guid = challenge.guid, position = DISCARD_PILE_POSITION.LOOT})
-                    break
-                end
-            end
-            destroyObject(tempChallengeBag)
-        end)
+        placeChallenge()
     end
-    deckBuilder.call(BUILDING_MODE_FUNCTIONS[confTable.BUILDING_MODE])
-
-
     if confTable.EXPANSION_ACTIVE then
-        local nextPosition = Vector(-42, 3, 4.5)
-        local allObjects = Global.getObjects()
-        for expansionName, selected in pairs(confTable.EXPANSIONS) do
-            if selected then
-                for _, obj in ipairs(allObjects) do
-                    if obj.getName() == expansionName then
-                        obj.takeObject({position = nextPosition})
-                        nextPosition:setAt('x', nextPosition.x + 3)
-                        break
-                    end
-                end
-            end
-        end
+        placeExpansions()
     end
 
     UI.hide("config")
 
-    if confTable.SEED_ACTIVE then
-        if confTable.SEED then
-            if #confTable.SEED ~= 8 then
-                printWarning({text="If you want to use a seed, make sure it is 8 characters long."})
-                confTable.SEED = nil
-            end
-        end
-        if confTable.SEED == nil then
-            for specialDeckID, selected in pairs(confTable.SPECIAL_DECKS) do
-                if not selected then
-                    deckBuilder.call("setNoGo", {nogo = specialDeckID})
+    if confTable.BUILDING_MODE == "BM_CUSTOM" then
+        customRatiosSet = false
+        UI.show("customRatios")
+    else
+        confTable.CUSTOM_RATIOS = nil
+    end
+
+    Wait.condition(function()
+        deckBuilder.call(BUILDING_MODE_FUNCTIONS[confTable.BUILDING_MODE], {ratios = confTable.CUSTOM_RATIOS})
+
+        if (confTable.ADVANCED_MODE_ACTIVE) and (confTable.BUILDING_MODE ~= "BM_NO") then
+            if confTable.SEED and not confTable.RANDOM_SEED then
+                if #confTable.SEED ~= 8 then
+                    printWarning({text="If you want to use a seed, make sure it is 8 characters long."})
+                    confTable.SEED = nil
                 end
             end
-        else
-            for specialDeckID, selected in pairs(confTable.SPECIAL_DECKS) do
-                confTable.SEED_ARGS[specialDeckID] = selected
+            if (confTable.SEED == nil) and not confTable.RANDOM_SEED then
+                for specialDeckID, selected in pairs(confTable.SPECIAL_DECKS) do
+                    if not selected then
+                        deckBuilder.call("setNoGo", {nogo = specialDeckID})
+                    end
+                end
+            else
+                prepareSeedArgs()
+                local webArgs = seedargsToWebargs(confTable.SEED, confTable.SEED_ARGS)
+                getObjectFromGUID("19bfa6").call("startSeedAlgorithm", {httpBody = webArgs})
             end
-            if not confTable.CHARACTERS_ACTIVE then
-                confTable.SEED_ARGS["CHARACTERS"] = nil
-            end
-            startSeedAlgorithm(confTable.SEED, confTable.SEED_ARGS)
+        end
+    end, function() return customRatiosSet end)
+end
+
+function UI_setRatio(_, ratio, ratioID)
+    local ratioType = getRatioType(ratioID)
+    if ratio and tonumber(ratio) then
+        if tonumber(ratio) >= 0 then
+            confTable.CUSTOM_RATIOS[ratioType][ratioID] = tonumber(ratio)
+            return
         end
     end
+    local stdRatio = STD_RATIOS[ratioType][ratioID]
+    confTable.CUSTOM_RATIOS[ratioType][ratioID] = stdRatio
+    UI.setAttribute(ratioID, "text", tostring(stdRatio))
+end
+
+function UI_ratiosDone()
+    UI.hide("customRatios")
+    customRatiosSet = true
 end
 
 local clickCounterDebug = 0
@@ -531,6 +643,13 @@ GAME_LANGUAGE = {
   ES = "ES"
 }
 
+PLAYER = {
+    Red = "Red",
+    Blue = "Blue",
+    Green = "Green",
+    Yellow = "Yellow"
+}
+
 REAL_PLAYER_COLOR = {
     Yellow = "[D0E431]",
     Green = "[2BB837]",
@@ -680,6 +799,8 @@ DECK_POSITION = {
     LO_ROOM = {},
     LO_BONUS_SOUL = {}
 }
+
+DEAD_END_POSITION = {}
 
 function printWarning(params)
     if params.text == nil then
@@ -848,31 +969,59 @@ function getDeckFromZone(params)
 end
 
 function getMonsterDeck()
-    return getDeckOrCard(ZONE_GUID_DECK.MONSTER)
+    local deck = getDeckOrCard(ZONE_GUID_DECK.MONSTER)
+    if deck == nil then
+        printWarning({text = "Can't find the deck or card in zone: Monster Zone."})
+    end
+    return deck
 end
 
 function getHappenDeck()
-    return getDeckOrCard(ZONE_GUID_DECK.HAPPEN)
+    local deck = getDeckOrCard(ZONE_GUID_DECK.HAPPEN)
+    if deck == nil then
+        printWarning({text = "Can't find the deck or card in zone: Happen Zone."})
+    end
+    return deck
 end
 
 function getTreasureDeck()
-    return getDeckOrCard(ZONE_GUID_DECK.TREASURE)
+    local deck = getDeckOrCard(ZONE_GUID_DECK.TREASURE)
+    if deck == nil then
+        printWarning({text = "Can't find the deck or card in zone: Treasure Zone."})
+    end
+    return deck
 end
 
 function getLootDeck()
-    return getDeckOrCard(ZONE_GUID_DECK.LOOT)
+    local deck = getDeckOrCard(ZONE_GUID_DECK.LOOT)
+    if deck == nil then
+        printWarning({text = "Can't find the deck or card in zone: Loot Zone."})
+    end
+    return deck
 end
 
 function getBonusSoulDeck()
-    return getDeckOrCard(ZONE_GUID_DECK.BONUS_SOUL)
+    local deck = getDeckOrCard(ZONE_GUID_DECK.BONUS_SOUL)
+    if deck == nil then
+        printWarning({text = "Can't find the deck or card in zone: Bonus Soul Zone."})
+    end
+    return deck
 end
 
 function getRoomDeck()
-    return getDeckOrCard(ZONE_GUID_DECK.ROOM)
+    local deck = getDeckOrCard(ZONE_GUID_DECK.ROOM)
+    if deck == nil then
+        printWarning({text = "Can't find the deck or card in zone: Room Zone."})
+    end
+    return deck
 end
 
 function getSoulTokenDeck()
-    return getDeckOrCard(ZONE_GUID_DECK.SOUL_TOKEN)
+    local deck = getDeckOrCard(ZONE_GUID_DECK.SOUL_TOKEN)
+    if deck == nil then
+        printWarning({text = "Can't find the deck or card in zone: Soul token zone."})
+    end
+    return deck
 end
 
 function getActivePlayerZone()

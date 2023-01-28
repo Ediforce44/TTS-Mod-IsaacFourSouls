@@ -244,7 +244,8 @@
                 </GridLayout>
                 <Text color="red" fontSize="20">COMMING SOON!</Text>
                 <!--<Text color="red">The Seed function will use the officil algorithm, but freeze the Game for a few seconds after you hit the Start button!</Text>-->
-                <HorizontalLayout childForceExpandWidth="false" childForceExpandHeight="false">
+                <HorizontalLayout childForceExpandWidth="false" childForceExpandHeight="false" spacing="10" childAlignment="MiddleLeft">
+                    <HorizontalLayout childForceExpandHeight="false">
                     <Text class="isaacColor" fontSize="20" minHeight="30" preferredWidth="55">Seed:</Text>
                     <InputField
                         id="confSeedSeed"
@@ -256,9 +257,11 @@
                         class="isaacColor"
                         fontStyle="bold"
                         fontSize="15"
-                        preferredWidth="150"
+                        preferredWidth="120"
                         preferredHeight="30">
                     </InputField>
+                    </HorizontalLayout>
+                    <Toggle class="isaacColor" alignment="MiddleRight" onValueChanged="UI_toggleRandomSeed">Random?</Toggle>
                 </HorizontalLayout>
                 <HorizontalLayout childForceExpandWidth="false" childForceExpandHeight="false" childAlignment="MiddleCenter" padding="0 0 10 10">
                     <Toggle id="CHARACTERS" class="isaacColor" onValueChanged="UI_toggleSeededChars">Seeded Chars</Toggle>
@@ -416,7 +419,7 @@
     id="reminder"
     active="false"
     class="isaacBackground"
-    height="800"
+    height="850"
     width="250"
     rectAlignment="UpperCenter"
     offsetXY="-450 -50"
@@ -425,6 +428,10 @@
     <VerticalLayout childAlignment="UpperLeft" padding="10 10 10 10" childForceExpandWidth="false">
         <Text class="isaacColor" fontSize="30" fontStyle="bold" alignment="UpperCenter" color="red">Checklist for adding cards</Text>
         <Text class="isaacColor reminderTitle" alignment="UpperCenter" color="red">- Replace ? with your values (Always integers)! -</Text>
+        <Text class="isaacColor reminderTitle">Adding Cards in general:</Text>
+        <Text class="isaacColor reminder">  Set the GM-Note of the card to the official card-ID.</Text>
+        <Text class="isaacColor reminderTitle">Adding Cards from packs like WARP ZONE:</Text>
+        <Text class="isaacColor reminder">  Add the matching TAG "WARP_ZONE" / "PROMO" / "ALT_ART" etc.</Text>
         <Text class="isaacColor reminderTitle">Monster cards:</Text>
         <Text class="isaacColor reminder">  Add "hp = ?", "atk = ?" and "dice = ?" to the script.</Text>
         <Text class="isaacColor reminderTitle">Monster with Rewards:</Text>
@@ -439,8 +446,6 @@
         <Text class="isaacColor reminder">  Add "isEvent = true" and "eventType = "curse"" to the script.</Text>
         <Text class="isaacColor reminderTitle">Soul worthy cards:</Text>
         <Text class="isaacColor reminder">  Add "soul = ?" to the script.</Text>
-        <Text class="isaacColor reminderTitle">Cards from packs like WARP ZONE:</Text>
-        <Text class="isaacColor reminder">  Add the matching TAG "WARP_ZONE" / "PROMO" / "ALT_ART" etc.</Text>
         <Text class="isaacColor reminderTitle">Character Packs:</Text>
         <Text class="isaacColor reminder">  Set the description to "character-pack".</Text>
         <Text class="isaacColor reminder">  Set the description of Character cards to "US_character" / "RU_character" etc.</Text>
