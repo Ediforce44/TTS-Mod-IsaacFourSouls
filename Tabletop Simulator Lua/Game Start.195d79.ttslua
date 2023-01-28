@@ -1,5 +1,4 @@
 CHARACTER_MANAGER_GUID = "bc6e13"
-FLOOR_CHANGE_GUID = "69a80d"
 
 PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
 
@@ -24,7 +23,12 @@ TABLE_BASE_GUID         = "f5c4fe"
 
 ready_for_setup = false
 
+local isButtonBlocked = false
+
 local function topTwoCardsAreMonster(deck)
+    if not deck or deck.getQuantity() < 2 then
+        return true
+    end
     local allCards = deck.getObjects()
     if (not Global.call("findBoolInScript", {scriptString = allCards[1].lua_script, varName = "isEvent"})) and
         (not Global.call("findBoolInScript", {scriptString = allCards[2].lua_script, varName = "isEvent"})) then
@@ -37,8 +41,13 @@ local function setupPlayingArea()
     -- Edited by Ediforce44
     -- Init Monster Zones and Monster Buttons
     local allMonsterCards = BUILT_DECKS.MONSTER.getObjects()
+    local emergenyExit = 0
     while not topTwoCardsAreMonster(BUILT_DECKS.MONSTER) do
         BUILT_DECKS.MONSTER.shuffle()
+        emergenyExit = emergenyExit + 1
+        if emergenyExit > 50 then
+            break
+        end
     end
 
     local monsterZoneGUIDs = Global.getTable("ZONE_GUID_MONSTER")
@@ -74,21 +83,33 @@ local function setupPlayingArea()
     if Global.getTable("confTable").BONUS_SOULS_ACTIVE then
         local bonusSoulZones = Global.getTable("ZONE_GUID_BONUSSOUL")
         if BUILT_DECKS.BONUS_SOUL ~= nil then
-            BUILT_DECKS.BONUS_SOUL.takeObject({position=getObjectFromGUID(bonusSoulZones.ONE).getPosition(), flip=true})
-            BUILT_DECKS.BONUS_SOUL.takeObject({position=getObjectFromGUID(bonusSoulZones.TWO).getPosition(), flip=true})
-            BUILT_DECKS.BONUS_SOUL.takeObject({position=getObjectFromGUID(bonusSoulZones.THREE).getPosition(), flip=true})
+            local remainder = nil
+            if BUILT_DECKS.BONUS_SOUL.getQuantity() > 0 then
+                for _, soulZone in pairs(bonusSoulZones) do
+                    if remainder then
+                        remainder.flip()
+                        remainder.setPositionSmooth(getObjectFromGUID(soulZone).getPosition(), false)
+                        break
+                    end
+                    BUILT_DECKS.BONUS_SOUL.takeObject({position=getObjectFromGUID(soulZone).getPosition(), flip=true})
+                    remainder = BUILT_DECKS.BONUS_SOUL.remainder
+                end
+            else
+                BUILT_DECKS.BONUS_SOUL.flip()
+                BUILT_DECKS.BONUS_SOUL.setPositionSmooth(getObjectFromGUID(bonusSoulZones.ONE).getPosition(), false)
+            end
         end
     end
+
 end
 
 local function extractDecksToDeckPositions(containerObj)
     local zoneGUIDs = Global.getTable('ZONE_GUID_DECK')
     local containerEmpty = true
-    if not Global.getTable("confTable").ROOMS_ACTIVE then
-        zoneGUIDs.ROOM = nil
-    end
-    if not Global.getTable("confTable").BONUS_SOULS_ACTIVE then
-        zoneGUIDs.BONUS_SOUL = nil
+    for type, infoTable in pairs(getObjectFromGUID(DECK_BUILDER_GUID).call("getDeckInfos")) do
+        if infoTable.DISABLED then
+            zoneGUIDs[type] = nil
+        end
     end
     for _, deck in ipairs(containerObj.getObjects()) do
         if zoneGUIDs[deck.name] ~= nil then
@@ -278,26 +299,12 @@ function onLoad()
 })
 end
 
-function shuffleOptions(array)
+function blockStartButton()
+    isButtonBlocked = true
+end
 
-    local output = { }
-    local random = math.random
-
-    for index = 1, #array do
-        local offset = index - 1
-        local value = array[index]
-        local randomIndex = offset*random()
-        local flooredIndex = randomIndex - randomIndex%1
-
-        if flooredIndex == offset then
-            output[#output + 1] = value
-        else
-            output[#output + 1] = output[flooredIndex + 1]
-            output[flooredIndex + 1] = value
-        end
-    end
-
-    return output
+function unblockStartButton()
+    isButtonBlocked = false
 end
 
 function decksBuilt(createdDecks)
@@ -323,6 +330,11 @@ end
 
 function onStart()
     if Global.call("hasGameStarted") then
+        return
+    end
+
+    if isButtonBlocked then
+        Global.call("printWarning", {text = "The Start button is blocked until all configuration calculations are done."})
         return
     end
 

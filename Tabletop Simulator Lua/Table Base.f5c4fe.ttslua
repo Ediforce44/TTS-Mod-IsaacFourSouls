@@ -65,6 +65,10 @@ OBJECTS_UNDER_TABLE = {
     RU = "ac9ceb",
     ES = "5a30af",
     EL_BAG = "3316b6",
+    DUMMY_TREASURE = "c93b7d",
+    DUMMY_LOOT = "35efd9",
+    DUMMY_MONSTER = "617e0e",
+    DUMMY_BONUS_SOUL = "c16c3c",
     R_EDEN = "1adaea",
     R_EDEN_2 = "44f74a",
     AA_EDEN = "25f5c0",
@@ -79,7 +83,7 @@ LANGUAGE_OBJECTS = {
     US = {
         TREASURE = {
             T_ACTIVE  = "b706e2",
-            T_PASSIVE = "ba5088",
+            T_PASSIVE = "8e7f9d",
             T_PAID    = "aa6f53",
             T_ONE_USE = "8932fd",
             T_SOUL    = "2b8b2c"
@@ -94,7 +98,7 @@ LANGUAGE_OBJECTS = {
             L_BATTERY       = "a2ce3b",
             L_DICE_SHARD    = "a10518",
             L_SOUL_HEART    = "e36afb",
-            L_LOST_SOUL     = "31400e",
+            L_LOST_SOUL     = "5443fd",
             L_NICKEL        = "be9b22",
             L_FOUR_CENT     = "7066cd",
             L_THREE_CENT    = "3f64ec",
@@ -183,12 +187,12 @@ LANGUAGE_OBJECTS = {
             L_BOMB          = "3dfc41",
             L_BATTERY       = "f4edad",
             L_DICE_SHARD    = "b6004b",
-            L_SOUL_HEART    = "a66cce",
-            L_LOST_SOUL     = "7db0d7",
+            L_SOUL_HEART    = "ec73cb",
+            L_LOST_SOUL     = "bb3cf3",
             L_NICKEL        = "77d2b2",
             L_FOUR_CENT     = "c7a49f",
             L_THREE_CENT    = "0686ae",
-            L_TWO_CENT      = "7066e1",
+            L_TWO_CENT      = "e88b23",
             L_ONE_CENT      = "ec2c81"
         },
         MONSTER = {
@@ -202,7 +206,7 @@ LANGUAGE_OBJECTS = {
             M_CURSE       = "cdcb48"
         },
         ROOM = {
-            R_ALL   = "5447fb"
+            R_ALL   = "4a7cd0"
         },
         BONUS_SOUL = {
             BS_ALL  = "8fcabc"
@@ -246,6 +250,27 @@ function prepareDebug()
         self.setPosition(newPosition)
     end
     return newPosition
+end
+
+function getDummyDeckGuids()
+    local dummyGuids = {}
+    dummyGuids["TREASURE"] = OBJECTS_UNDER_TABLE.DUMMY_TREASURE
+    dummyGuids["LOOT"] = OBJECTS_UNDER_TABLE.DUMMY_LOOT
+    dummyGuids["MONSTER"] = OBJECTS_UNDER_TABLE.DUMMY_MONSTER
+    dummyGuids["BONUS_SOUL"] = OBJECTS_UNDER_TABLE.DUMMY_BONUS_SOUL
+    return dummyGuids
+end
+
+function getDummyDeck(params)
+    if params.deckID == nil then
+        Global.call("printWarning", {text = "Wrong parameter in Table Base function getDummyDeck()."})
+        return nil
+    end
+    local guid = OBJECTS_UNDER_TABLE["DUMMY_" .. tostring(params.deckID)]
+    if guid == nil then
+        return nil
+    end
+    return getObjectFromGUID(guid)
 end
 
 function onLoad()
