@@ -1,22 +1,16 @@
-
-local DECK_BUILDER_ON = true
-
-local GAMEMODE_CHANGE_BLOCKED = false
-
-local SELECTED_BUILD_MODE = nil
-
 local TABLE_BASE_GUID = "f5c4fe"
-
 local MAX_EMPTY_CARDS = 1500
+local DECK_BUILDER_ON = true
+local GAMEMODE_CHANGE_BLOCKED = false
+local SELECTED_BUILD_MODE = nil
+local SEED_MODE = false
+local seed_selectedCards = nil
 
 BUILD_MODE = {
     NORMAL  = 1,
-    DRAFT   = 2
-}
-
-BUILD_MODE_NAME = {
-    "Normal",
-    "Draft"
+    DRAFT   = 2,
+    SEED    = 3,
+    CUSTOM  = 4
 }
 
 -- Table base
@@ -164,7 +158,9 @@ local DECK_TREASURE_RATIOS = {
         T_PAID    = 10,
         T_ONE_USE = 5,
         T_SOUL    = 1
-    }
+    },
+    { T_ACTIVE = 0, T_PASSIVE = 0, T_PAID = 0, T_ONE_USE = 0, T_SOUL = 0},
+    { T_ACTIVE = 0, T_PASSIVE = 0, T_PAID = 0, T_ONE_USE = 0, T_SOUL = 0}
 }
 
 local DECK_LOOT_RATIOS = {
@@ -201,7 +197,11 @@ local DECK_LOOT_RATIOS = {
         L_THREE_CENT    = 10,
         L_TWO_CENT      = 5,
         L_ONE_CENT      = 2
-    }
+    },
+    {L_TAROT_MISC = 0, L_TRINKET = 0, L_PILL = 0, L_RUNE = 0, L_BUTTER_BEAN = 0, L_BOMB = 0, L_BATTERY = 0, L_DICE_SHARD = 0,
+        L_SOUL_HEART = 0, L_LOST_SOUL = 0, L_NICKEL = 0, L_FOUR_CENT = 0, L_THREE_CENT = 0, L_TWO_CENT = 0, L_ONE_CENT = 0},
+    {L_TAROT_MISC = 0, L_TRINKET = 0, L_PILL = 0, L_RUNE = 0, L_BUTTER_BEAN = 0, L_BOMB = 0, L_BATTERY = 0, L_DICE_SHARD = 0,
+        L_SOUL_HEART = 0, L_LOST_SOUL = 0, L_NICKEL = 0, L_FOUR_CENT = 0, L_THREE_CENT = 0, L_TWO_CENT = 0, L_ONE_CENT = 0}
 }
 
 local DECK_MONSTER_RATIOS = {
@@ -224,39 +224,36 @@ local DECK_MONSTER_RATIOS = {
         M_GOOD        = 8,
         M_BAD         = 8,
         M_CURSE       = 5
-    }
+    },
+    {M_BOSS = 0, M_EPIC = 0, M_BASIC = 0, M_CURSED = 0, M_HOLY_CHARMED= 0, M_GOOD = 0, M_BAD = 0, M_CURSE = 0},
+    {M_BOSS = 0, M_EPIC = 0, M_BASIC = 0, M_CURSED = 0, M_HOLY_CHARMED= 0, M_GOOD = 0, M_BAD = 0, M_CURSE = 0}
 }
 
 local DECK_ROOM_RATIOS = {
-    {
-        R_ALL   = 200
-    },
-    {
-        R_ALL   = 200
-    }
+    {R_ALL   = 200},
+    {R_ALL   = 200},
+    {R_ALL   = 0},
+    {R_ALL   = 200}
 }
 
 local DECK_BONUS_SOUL_RATIOS = {
-    {
-        BS_ALL  = 100
-    },
-    {
-        BS_ALL  = 100
-    }
+    {BS_ALL  = 100},
+    {BS_ALL  = 100},
+    {BS_ALL  = 0},
+    {BS_ALL  = 100}
 }
 
 local DECK_MONSTER_SEP_RATIOS = {
-    {
-        MS_ALL  = 100
-    },
-    {
-        MS_ALL  = 100
-    }
+    {MS_ALL  = 100},
+    {MS_ALL  = 100},
+    {MS_ALL  = 0},
+    {MS_ALL  = 100}
 }
 
 local DECK_INFOS = {
     TREASURE = {
         ID                  = "TREASURE",
+        DISABLED            = false,
         RATIOS              = DECK_TREASURE_RATIOS,
         DECK_POSITION       = nil,
         DECK_ROTATION       = Vector(180, 0, 0),
@@ -267,6 +264,7 @@ local DECK_INFOS = {
     },
     LOOT = {
         ID                  = "LOOT",
+        DISABLED            = false,
         RATIOS              = DECK_LOOT_RATIOS,
         DECK_POSITION       = nil,
         DECK_ROTATION       = Vector(180, 0, 0),
@@ -277,6 +275,7 @@ local DECK_INFOS = {
     },
     MONSTER = {
         ID                  = "MONSTER",
+        DISABLED            = false,
         RATIOS              = DECK_MONSTER_RATIOS,
         DECK_POSITION       = nil,
         DECK_ROTATION       = Vector(180, 0, 0),
@@ -287,6 +286,7 @@ local DECK_INFOS = {
     },
     ROOM = {
         ID                  = "ROOM",
+        DISABLED            = false,
         RATIOS              = DECK_ROOM_RATIOS,
         DECK_POSITION       = nil,
         DECK_ROTATION       = Vector(180, 0, 0),
@@ -297,6 +297,7 @@ local DECK_INFOS = {
     },
     BONUS_SOUL = {
         ID                  = "BONUS_SOUL",
+        DISABLED            = false,
         RATIOS              = DECK_BONUS_SOUL_RATIOS,
         DECK_POSITION       = nil,
         DECK_ROTATION       = Vector(0, 270, 180),
@@ -307,6 +308,7 @@ local DECK_INFOS = {
     },
     MONSTER_SEP = {
         ID                  = "MONSTER_SEP",
+        DISABLED            = false,
         RATIOS              = DECK_MONSTER_SEP_RATIOS,
         DECK_POSITION       = nil,
         DECK_ROTATION       = Vector(0, 270, 0),
@@ -334,28 +336,63 @@ local function buildDeck(preDeckGUIDs, tagTable)
     return deckAndLeftover
 end
 
-function disableRooms()
-    for gameMode, ratioTable in pairs(DECK_INFOS.ROOM.RATIOS) do
-        for ratio, _ in pairs(ratioTable) do
-            DECK_INFOS.ROOM.RATIOS[gameMode][ratio] = 0
+function getDeckInfos()
+    return DECK_INFOS
+end
+
+function disableDeck(params)
+    if params.deckID == nil then
+        Global.call("printWarning", {text = "Wrong parameter in function disableDeckBuilding()."})
+        return false
+    end
+    for deckType, deckInfoTable in pairs(DECK_INFOS) do
+        if deckInfoTable.ID == params.deckID then
+            DECK_INFOS[deckType].DISABLED = true
         end
     end
 end
 
-function enableRooms()
-    DECK_INFOS.ROOM.RATIOS = DECK_ROOM_RATIOS
-end
-
-function disableBonusSouls()
-    for gameMode, ratioTable in pairs(DECK_INFOS.BONUS_SOUL.RATIOS) do
-        for ratio, _ in pairs(ratioTable) do
-            DECK_INFOS.BONUS_SOUL.RATIOS[gameMode][ratio] = 0
+function enableDeck(params)
+    if params.deckID == nil then
+        Global.call("printWarning", {text = "Wrong parameter in function enableDeckBuilding()."})
+        return false
+    end
+    for deckType, deckInfoTable in pairs(DECK_INFOS) do
+        if deckInfoTable.ID == params.deckID then
+            DECK_INFOS[deckType].DISABLED = false
         end
     end
 end
 
-function enableBonusSouls()
-    DECK_INFOS.BONUS_SOUL.RATIOS = DECK_BONUS_SOUL_RATIOS
+function activateSeedMode(params)
+    if Global.call("hasGameStarted") or GAMEMODE_CHANGE_BLOCKED then
+        return
+    end
+    seed_selectedCards = params.selectedCards
+    for deckType, infoTable in pairs(DECK_INFOS) do
+        if not seed_selectedCards[deckType] then
+            DECK_INFOS[deckType].RATIOS[BUILD_MODE.SEED] = infoTable.RATIOS[SELECTED_BUILD_MODE]
+        end
+    end
+    SEED_MODE = true
+end
+
+function gmCustom(params)
+    if Global.call("hasGameStarted") or GAMEMODE_CHANGE_BLOCKED then
+        return
+    end
+    local newRatios = params.ratios or {}
+    for deckType, infoTable in pairs(DECK_INFOS) do
+        if newRatios[deckType] then
+            for ratioID, newRatio in pairs(newRatios[deckType]) do
+                DECK_INFOS[deckType].RATIOS[BUILD_MODE.CUSTOM][ratioID] = newRatio
+            end
+        else
+            DECK_INFOS[deckType].RATIOS[BUILD_MODE.CUSTOM] = infoTable.RATIOS[BUILD_MODE.NORMAL]
+        end
+    end
+    changeBuildMode(BUILD_MODE.CUSTOM)
+    unsetNoGo({nogo = NO_GO_TYPES.ONLY_MULTIPLAYER})
 end
 
 -------------------------------------------------- Load and Save -------------------------------------------------------
@@ -488,37 +525,58 @@ end
 local function setupDeck(buildMode, preDeckGUIDs, deckInfoTable)
     local _temp_currentNoGoes = ACTIVE_NO_GOES
     ACTIVE_NO_GOES = deckInfoTable.NO_GOES or _temp_currentNoGoes
-    local createdDecks = buildDeck(preDeckGUIDs, deckInfoTable.RATIOS[buildMode])
+    local createdDecks = {}
+    if deckInfoTable.DISABLED then
+        createdDecks = buildDeck(preDeckGUIDs, nil)
+    else
+        createdDecks = buildDeck(preDeckGUIDs, deckInfoTable.RATIOS[buildMode])
+    end
     ACTIVE_NO_GOES = _temp_currentNoGoes
 
-    local buildDeck = createdDecks[1]
+    local builtDeck = createdDecks[1]
     local leftoverDeck = createdDecks[2]
-
-    placeDeck(buildDeck, deckInfoTable.DECK_POSITION, deckInfoTable.DECK_ROTATION, deckInfoTable.DECK_NAME)
+    placeDeck(builtDeck, deckInfoTable.DECK_POSITION, deckInfoTable.DECK_ROTATION, deckInfoTable.DECK_NAME)
     placeDeck(leftoverDeck, deckInfoTable.LEFTOVERS_POSITION, deckInfoTable.LEFTOVERS_ROTATION
         , deckInfoTable.LEFTOVERS_NAME)
 
-    if buildDeck == nil then
-        log("Can't build deck " .. tostring(deckInfoTable.DECK_NAME) .. ".")
-        deckBuildBarrier(deckInfoTable.ID, nil)
-        return
+    if SELECTED_BUILD_MODE == BUILD_MODE.SEED then
+        if (not deckInfoTable.DISABLED) and (seed_selectedCards[deckInfoTable.ID]) then
+            Wait.condition(
+                function()
+                    local seededDeck = buildDeckSeed(deckInfoTable, leftoverDeck)
+                    if seededDeck ~= nil then
+                        Wait.condition(function() deckBuildBarrier(deckInfoTable.ID, seededDeck) end, function() return seededDeck.resting end)
+                    else
+                        deckBuildBarrier(deckInfoTable.ID, seededDeck)
+                    end
+                end, function() return leftoverDeck.resting end)
+        else
+            Wait.condition(function() deckBuildBarrier(deckInfoTable.ID, builtDeck) end, function() return builtDeck.resting end)
+        end
+    else
+        if builtDeck == nil then
+            log("Can't build deck " .. tostring(deckInfoTable.DECK_NAME) .. ".")
+            deckBuildBarrier(deckInfoTable.ID, nil)
+            return
+        end
+        Wait.condition(function() deckBuildBarrier(deckInfoTable.ID, builtDeck) end, function() return builtDeck.resting end)
     end
-
-    Wait.condition(function() deckBuildBarrier(deckInfoTable.ID, buildDeck) end, function() return buildDeck.resting end)
 end
 
 function buildAllDecks(params)
-    local buildMode = SELECTED_BUILD_MODE
     if params.preDecks == nil then
         Global.call("printWarning", {text = "Wrong parameters in Deck Builder function 'buildAllDecks()'."})
     end
+    if SEED_MODE then
+        changeBuildMode(BUILD_MODE.SEED)
+    end
     for deckName, infoTable in pairs(DECK_INFOS) do
-        setupDeck(buildMode, params.preDecks[deckName], infoTable)
+        setupDeck(SELECTED_BUILD_MODE, params.preDecks[deckName], infoTable)
     end
 end
 
 ------------------------------------------------------------------------------------------------------------------------
--------------------------------------- Implementation of the two deck builder ------------------------------------------
+------------------------------- Implementation of the two deck builders + Seeded version -------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 local function mergeCards(cards)
     local buildDeck = cards[1]
@@ -577,72 +635,53 @@ end
 function buildDeckSpeed(preDeckGUIDs, tagTable)
     local selectedDecks = {}
     local leftoverDecks = {}
-    if isDeckBuilderON() then
-        tagTable["EMPTY"] = MAX_EMPTY_CARDS
-        for type, amountToTake in pairs(tagTable) do
-            if preDeckGUIDs[type] ~= nil then
-                local preDeck = getObjectFromGUID(preDeckGUIDs[type])
-                if amountToTake > 0 then
-                    if preDeck.tag == "Deck" then
-                        -- For the edge case that only one card should be choosen
-                        if amountToTake == 1 then
-                            if preDeck.getQuantity() == 2 then
-                                local secondCardGUID = preDeck.getObjects()[2].guid
+    if tagTable == nil then
+        for _, guid in pairs(preDeckGUIDs) do
+            table.insert(leftoverDecks, getObjectFromGUID(guid))
+        end
+    else
+        if isDeckBuilderON() then
+            tagTable["EMPTY"] = MAX_EMPTY_CARDS
+            for type, amountToTake in pairs(tagTable) do
+                if preDeckGUIDs[type] ~= nil then
+                    local preDeck = getObjectFromGUID(preDeckGUIDs[type])
+                    if amountToTake > 0 then
+                        if preDeck.tag == "Deck" then
+                            -- For the edge case that only one card should be choosen
+                            if amountToTake == 1 then
                                 table.insert(selectedDecks, preDeck.takeObject())
-                                table.insert(leftoverDecks, getObjectFromGUID(secondCardGUID))
+                                local leftovers = preDeck.remainder
+                                if leftovers == nil then
+                                    leftovers = preDeck
+                                end
+                                table.insert(leftoverDecks, leftovers)
+                            elseif amountToTake == (preDeck.getQuantity() - 1) then
+                                local cardLeft = preDeck.takeObject()
+                                table.insert(selectedDecks, preDeck)
+                                table.insert(leftoverDecks, cardLeft)
                             else
-                                table.insert(selectedDecks, preDeck.takeObject())
-                                table.insert(leftoverDecks, preDeck)
+                                local splitDecks = preDeck.cut(preDeck.getQuantity() - amountToTake)
+                                if splitDecks ~= nil then
+                                    table.insert(leftoverDecks, splitDecks[2])
+                                end
+                                table.insert(selectedDecks, preDeck)
                             end
-                        elseif amountToTake == (preDeck.getQuantity() - 1) then
-                            local cardLeft = preDeck.takeObject()
-                            table.insert(selectedDecks, preDeck)
-                            table.insert(leftoverDecks, cardLeft)
                         else
-                            local splitDecks = preDeck.cut(preDeck.getQuantity() - amountToTake)
-                            if splitDecks ~= nil then
-                                table.insert(leftoverDecks, splitDecks[2])
-                            end
                             table.insert(selectedDecks, preDeck)
                         end
                     else
-                        table.insert(selectedDecks, preDeck)
+                        table.insert(leftoverDecks, preDeck)
                     end
-                else
-                    table.insert(leftoverDecks, preDeck)
                 end
             end
-        end
-    else
-        for _, guid in pairs(preDeckGUIDs) do
-            table.insert(selectedDecks, getObjectFromGUID(guid))
+        else
+            for _, guid in pairs(preDeckGUIDs) do
+                table.insert(selectedDecks, getObjectFromGUID(guid))
+            end
         end
     end
 
     return {mergeDecks(selectedDecks), mergeDecks(leftoverDecks)}
-end
-
-local function _dbf_takeFirstAcceptableCard(preDeck)
-    local selectedCard = nil
-    local leftoverDeck = preDeck
-    if preDeck.getQuantity() == 2 then
-        local preDeckObjects = preDeck.getObjects()
-        if checkForNoGoes(preDeckObjects[1]) then
-            selectedCard = preDeck.takeObject({guid = preDeckObjects[1].guid})
-            leftoverDeck = getObjectFromGUID(preDeckObjects[2].guid)
-        elseif checkForNoGoes(preDeckObjects[2]) then
-            selectedCard = preDeck.takeObject({guid = preDeckObjects[2].guid})
-            leftoverDeck = getObjectFromGUID(preDeckObjects[1].guid)
-        end
-    else
-        for _, objTable in pairs(preDeck.getObjects())do
-            if checkForNoGoes(objTable) then
-                selectedCard = preDeck.takeObject({guid = objTable.guid})
-                break
-            end
-        end
-    end
-    return {selectedCard, leftoverDeck}
 end
 
 local function _dbf_determineGoodAndBadCards(preDeck, amountToTake)
@@ -666,76 +705,134 @@ end
 function buildDeckFilter(preDeckGUIDs, tagTable)
     local selectedDecks = {}
     local leftoverDecks = {}
-    if isDeckBuilderON() then
-        tagTable["EMPTY"] = MAX_EMPTY_CARDS
-        for type, amountToTake in pairs(tagTable) do
-            if preDeckGUIDs[type] ~= nil then
-                local preDeck = getObjectFromGUID(preDeckGUIDs[type])
-                if amountToTake > 0 then
-                    if preDeck.tag == "Deck" then
-                        -- For the edge case that only one card should be choosen
-                        if amountToTake == 1 then
-                            local selectionTable = _dbf_takeFirstAcceptableCard(preDeck)
-                            if selectionTable[1] ~= nil then
-                                table.insert(selectedDecks, selectionTable[1])
-                            end
-                            table.insert(leftoverDecks, selectionTable[2])
-                        else
-                            local goodAndBad = _dbf_determineGoodAndBadCards(preDeck, amountToTake)
-                            if goodAndBad.GOOD_AMOUNT > 0 then
-                                if goodAndBad.GOOD_AMOUNT > goodAndBad.BAD_AMOUNT then
-                                    -- More good than bad cards
-                                    leftoverDecks = takeCardsFromDeck(preDeck, goodAndBad.BAD, leftoverDecks)
-                                    if (goodAndBad.GOOD_AMOUNT + goodAndBad.BAD_AMOUNT) < preDeck.getQuantity() then
-                                        -- There are more cards in the preDeck than the counted good and bad cards
-                                            -- This appears if _dbf_determineGoodAndBadCards() found enough good cards to return
-                                        if goodAndBad.GOOD_AMOUNT == (preDeck.getQuantity() - 1) then
-                                            -- One needless card left
-                                            local cardLeft = preDeck.takeObject({top = false})
-                                            table.insert(leftoverDecks, cardLeft)
-                                            table.insert(selectedDecks, preDeck)
-                                        else
-                                            -- More than one needless card left => cut()
-                                            local splitDecks = preDeck.cut(preDeck.getQuantity() - goodAndBad.GOOD_AMOUNT)
-                                            if splitDecks ~= nil then
-                                                table.insert(leftoverDecks, splitDecks[2])
-                                            end
-                                            table.insert(selectedDecks, preDeck)
-                                        end
-                                    else
-                                        -- Whole deck is split into good and bad cards
-                                        table.insert(selectedDecks, preDeck)
+    if tagTable == nil then
+        for _, guid in pairs(preDeckGUIDs) do
+            table.insert(leftoverDecks, getObjectFromGUID(guid))
+        end
+    else
+        if isDeckBuilderON() then
+            tagTable["EMPTY"] = MAX_EMPTY_CARDS
+            for type, amountToTake in pairs(tagTable) do
+                if preDeckGUIDs[type] ~= nil then
+                    local preDeck = getObjectFromGUID(preDeckGUIDs[type])
+                    if amountToTake > 0 then
+                        if preDeck.tag == "Deck" then
+                            -- For the edge case that only one card should be choosen
+                            if amountToTake == 1 then
+                                local leftovers = nil
+                                for _, objTable in pairs(preDeck.getObjects())do
+                                    if checkForNoGoes(objTable) then
+                                        table.insert(selectedDecks, preDeck.takeObject({guid = objTable.guid}))
+                                        leftovers = preDeck.remainder
+                                        break
                                     end
+                                end
+                                if leftovers then
+                                    table.insert(leftoverDecks, leftovers)
                                 else
-                                    -- More bad than good cards
-                                    selectedDecks = takeCardsFromDeck(preDeck, goodAndBad.GOOD, selectedDecks)
                                     table.insert(leftoverDecks, preDeck)
                                 end
                             else
-                                -- No good cards found
+                                local goodAndBad = _dbf_determineGoodAndBadCards(preDeck, amountToTake)
+                                if goodAndBad.GOOD_AMOUNT > 0 then
+                                    if goodAndBad.GOOD_AMOUNT > goodAndBad.BAD_AMOUNT then
+                                        -- More good than bad cards
+                                        leftoverDecks = takeCardsFromDeck(preDeck, goodAndBad.BAD, leftoverDecks)
+                                        if goodAndBad.GOOD_AMOUNT < preDeck.getQuantity() then
+                                            -- There are more cards in the preDeck than the counted good and bad cards
+                                                -- This appears if _dbf_determineGoodAndBadCards() found enough good cards to return
+                                            if goodAndBad.GOOD_AMOUNT == (preDeck.getQuantity() - 1) then
+                                                -- One needless card left
+                                                local cardLeft = preDeck.takeObject({top = false})
+                                                table.insert(leftoverDecks, cardLeft)
+                                                table.insert(selectedDecks, preDeck)
+                                            else
+                                                -- More than one needless card left => cut()
+                                                local splitDecks = preDeck.cut(preDeck.getQuantity() - goodAndBad.GOOD_AMOUNT)
+                                                if splitDecks ~= nil then
+                                                    table.insert(leftoverDecks, splitDecks[2])
+                                                end
+                                                table.insert(selectedDecks, preDeck)
+                                            end
+                                        else
+                                            -- Whole deck is split into good and bad cards
+                                            table.insert(selectedDecks, preDeck)
+                                        end
+                                    else
+                                        -- More bad than good cards
+                                        selectedDecks = takeCardsFromDeck(preDeck, goodAndBad.GOOD, selectedDecks)
+                                        table.insert(leftoverDecks, preDeck)
+                                    end
+                                else
+                                    -- No good cards found
+                                    table.insert(leftoverDecks, preDeck)
+                                end
+                            end
+                        else
+                            -- preDeck is Card
+                            if checkForNoGoes({name = preDeck.getName(), lua_script = preDeck.getLuaScript()
+                                , tags = preDeck.getTags()}) then
+                                table.insert(selectedDecks, preDeck)
+                            else
                                 table.insert(leftoverDecks, preDeck)
                             end
                         end
                     else
-                        -- preDeck is Card
-                        if checkForNoGoes({name = preDeck.getName(), lua_script = preDeck.getLuaScript()
-                            , tags = preDeck.getTags()}) then
-                            table.insert(selectedDecks, preDeck)
-                        else
-                            table.insert(leftoverDecks, preDeck)
-                        end
+                        -- No cards needed from this preDeck
+                        table.insert(leftoverDecks, preDeck)
                     end
-                else
-                    -- No cards needed from this preDeck
-                    table.insert(leftoverDecks, preDeck)
                 end
             end
-        end
-    else
-        for _, guid in pairs(preDeckGUIDs) do
-            table.insert(selectedDecks, getObjectFromGUID(guid))
+        else
+            for _, guid in pairs(preDeckGUIDs) do
+                table.insert(selectedDecks, getObjectFromGUID(guid))
+            end
         end
     end
 
     return {mergeDecks(selectedDecks), mergeDecks(leftoverDecks)}
+end
+
+function buildDeckSeed(deckInfoTable, baseDeck)
+    for deckType, selectedCards in pairs(seed_selectedCards) do
+        if deckInfoTable.ID == deckType then
+            local zoneGUID = Global.getTable("ZONE_GUID_DECK")[deckType]
+            local finalDeck = Global.call("getDeckFromZone", {zoneGUID = zoneGUID})
+            local dummyCards = nil
+            if (finalDeck == nil) or (finalDeck.type ~= "Deck") then
+                local dummyDeck = getObjectFromGUID(TABLE_BASE_GUID).call("getDummyDeck", {deckID = deckType})
+                if dummyDeck == nil then
+                    Global.call("printWarning", {text = "Can't find dummy deck for " .. deckType})
+                    return nil
+                end
+                dummyDeck.interactable = true
+                dummyDeck.setPosition(getObjectFromGUID(zoneGUID).getPosition():setAt('y', 5))
+                dummyDeck.setRotation(getObjectFromGUID(zoneGUID).getRotation():setAt('z', 180))
+                dummyCards = dummyDeck.getObjects()
+                finalDeck = dummyDeck
+            end
+            finalDeck.setName("")
+
+            for _, cardInfoTable in pairs(baseDeck.getObjects()) do
+                if selectedCards[cardInfoTable.gm_notes] then
+                    finalDeck.putObject(baseDeck.takeObject({guid = cardInfoTable.guid}))
+                end
+            end
+
+            if dummyCards then
+                if finalDeck.getQuantity() == 2 then
+                    destroyObject(finalDeck)
+                    return finalDeck
+                else
+                    local remainder = nil
+                    for _, infoTable in pairs(dummyCards) do
+                        finalDeck.takeObject({guid = infoTable.guid, position = Global.getTable("DEAD_END_POSITION")})
+                        remainder = finalDeck.remainder
+                    end
+                    finalDeck = remainder or finalDeck
+                end
+            end
+            return finalDeck
+        end
+    end
 end
