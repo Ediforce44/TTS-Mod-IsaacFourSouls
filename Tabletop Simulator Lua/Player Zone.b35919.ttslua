@@ -275,7 +275,7 @@ function placeObjectInZone(params)
     end
     if position ~= nil then
         placeObject(params.object, position)
-    elseif not params.object.getQuantity() then
+    elseif params.object.getQuantity() < 0 then
         params.object.deal(1, owner_color)
     end
 end
@@ -310,7 +310,7 @@ function placeMultipleObjectsInZone(params)
     end
     -- Not enough free fields for cards
     for index = nextObjectIndex , maxObjectIndex do
-        if not params.objects[index].getQuantity() then
+        if params.objects[index].getQuantity() < 0 then
             params.objects[index].deal(1, owner_color)
         end
     end

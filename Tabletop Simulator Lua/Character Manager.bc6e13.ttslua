@@ -16,6 +16,8 @@ playersSpawnedCharacterObj = {
   Yellow = {}
 }
 
+originalPositionTable = {}
+
 math.randomseed(os.time())
 
 function onLoad(saved_data)
@@ -37,8 +39,7 @@ function loadCharPacksFromWorld()
   characterPull = {}
   local allObj = getAllObjects()
   for i, obj in pairs(allObj) do
-    local objDesc = obj.getDescription()
-    if objDesc == "character-pack" and not isCharUsedInWaitPull(obj.guid) then
+    if (obj.getDescription() == "character-pack") and not isCharUsedInWaitPull(obj.guid) then
       table.insert(characterPull, obj)
     end
   end

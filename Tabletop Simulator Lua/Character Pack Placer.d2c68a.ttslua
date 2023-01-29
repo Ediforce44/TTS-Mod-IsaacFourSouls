@@ -139,8 +139,7 @@ function loadCharactersFromWorld()
   charObjs = {}
   local allObj = getAllObjects()
   for i, obj in pairs(allObj) do
-    local objDescription = obj.getDescription()
-    if objDescription == "character-pack" then
+    if (obj.getDescription() == "character-pack") and (obj.getPosition().y > 0) then
       setCharacterPackScript(obj)
       calcNextPackPosition()
       table.insert(charObjs, obj)
@@ -255,13 +254,13 @@ function calcNextPackPosition()
 end
 
 function reloadWorldCharacterPacksInExternalObj()
-  Wait.frames(function() getObjectFromGUID(CHARACTER_MANAGER_GUID).call("loadCharactersFromWorld") end, 60)
+  Wait.frames(function() getObjectFromGUID(CHARACTER_MANAGER_GUID).call("loadCharPacksFromWorld") end, 60)
 end
 
 function setCharacterPackScript(obj)
   obj.setLuaScript([[
 CHARACTER_MANAGER_GUID = "]] .. CHARACTER_MANAGER_GUID .. [["
-PLAYER_COLORS = {Red = 'Red', Blue = 'Blue', Yellow = 'Yellow', Green = 'Green'}
+PLAYER_COLORS = Global.getTable("PLAYER")
 
 function onLoad()
   initButtons()
