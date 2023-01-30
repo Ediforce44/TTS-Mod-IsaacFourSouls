@@ -258,6 +258,69 @@ function onSave()
     return JSON.encode({currentLabel})
 end
 
+-------------------------------------------------- Monster Zone API ----------------------------------------------------
+local function payOutCents(playerColor, amount)
+    getObjectFromGUID(Global.getTable("COIN_COUNTER_GUID")[playerColor]).call("modifyCoins", {modifier = amount})
+end
+
+local function payOutLoot(playerColor, amount)
+    local lootDeck = Global.call("getLootDeck")
+    if lootDeck == nil then
+        Global.call("printWarning", {text = "Can't find the Loot deck."
+            .. " Place the Loot deck on its starting position."})
+    end
+    lootDeck.deal(amount, playerColor)
+end
+
+local function payOutTreasures(playerColor, amount)
+    local treasureDeck = Global.call("getTreasureDeck")
+    if treasureDeck == nil then
+        Global.call("printWarning", {text = "Can't find the Treasure deck."
+            .. " Place the Treasure deck on its starting position."})
+    end
+    if amount > 1 then
+        local cards = {}
+        for n = 1, amount do
+            cards[n] = treasureDeck.takeObject({flip = true})
+        end
+        Global.call("getActivePlayerZone").call("placeMultipleObjectsInZone", {objects = cards})
+    elseif amount == 1 then
+        Global.call("getActivePlayerZone").call("placeObjectInZone", {object = treasureDeck.takeObject({flip = true})})
+    end
+end
+
+local function payOutSouls(playerColor, amount)
+    for i = 1, amount do
+        Global.call("placeSoulToken", {playerColor = playerColor})
+    end
+end
+
+
+function payOutRewards(params)
+    if (params.playerColor == nil) or (params.rewardTable == nil) then
+        Global.call("printWarning", {text = "Wrong parameter in Monster-Deck Zone function 'payOutRewards()'."})
+        return false
+    end
+    local rewardTable = params.rewardTable
+    local playerColor = params.playerColor
+    local rewarded = false
+    if rewardTable.CENTS ~= 0 then
+        payOutCents(playerColor, rewardTable.CENTS)
+        rewarded = true
+    end
+    if rewardTable.LOOT ~= 0 then
+        payOutLoot(playerColor, rewardTable.LOOT)
+        rewarded = true
+    end
+    if rewardTable.TREASURES ~= 0 then
+        payOutTreasures(playerColor, rewardTable.TREASURES)
+        rewarded = true
+    end
+    return rewarded
+end
+
+------------------------------------------------------------------------------------------------------------------------
+
 function containsDeckOrCard(params)
     if params.zone == nil then
         Global.call("printWarning", {text = "Wrong parameters in 'monster deck' function 'containsDeckOrCard()'."})

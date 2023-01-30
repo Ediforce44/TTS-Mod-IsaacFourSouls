@@ -56,42 +56,6 @@ function containsDeckOrCard()
     return false
 end
 
-local function payOutCents(playerColor, amount)
-    getObjectFromGUID(Global.getTable("COIN_COUNTER_GUID")[playerColor]).call("modifyCoins", {modifier = amount})
-end
-
-local function payOutLoot(playerColor, amount)
-    local lootDeck = Global.call("getLootDeck")
-    if lootDeck == nil then
-        Global.call("printWarning", {text = "Can't find the Loot deck."
-            .. " Place the Loot deck on its starting position."})
-    end
-    lootDeck.deal(amount, playerColor)
-end
-
-local function payOutTreasures(playerColor, amount)
-    local treasureDeck = Global.call("getTreasureDeck")
-    if treasureDeck == nil then
-        Global.call("printWarning", {text = "Can't find the Treasure deck."
-            .. " Place the Treasure deck on its starting position."})
-    end
-    if amount > 1 then
-        local cards = {}
-        for n = 1, amount do
-            cards[n] = treasureDeck.takeObject({flip = true})
-        end
-        Global.call("getActivePlayerZone").call("placeMultipleObjectsInZone", {objects = cards})
-    elseif amount == 1 then
-        Global.call("getActivePlayerZone").call("placeObjectInZone", {object = treasureDeck.takeObject({flip = true})})
-    end
-end
-
-local function payOutSouls(playerColor, amount)
-    for i = 1, amount do
-        Global.call("placeSoulToken", {playerColor = playerColor})
-    end
-end
-
 local function placeNewMonsterIfEmpty()
     Wait.frames(function ()
             if not containsDeckOrCard() then
@@ -256,21 +220,7 @@ function finishMonster()
         return
     end
     if Global.getTable("automaticRewarding")[activePlayerColor] then
-        local rewarded = false
-
-        if active_monster_reward.CENTS ~= 0 then
-            payOutCents(activePlayerColor, active_monster_reward.CENTS)
-            rewarded = true
-        end
-        if active_monster_reward.LOOT ~= 0 then
-            payOutLoot(activePlayerColor, active_monster_reward.LOOT)
-            rewarded = true
-        end
-        if active_monster_reward.TREASURES ~= 0 then
-            payOutTreasures(activePlayerColor, active_monster_reward.TREASURES)
-            rewarded = true
-        end
-
+        local rewarded = MONSTER_DECK_ZONE.call("payOutRewards", {playerColor = activePlayerColor, rewardTable = active_monster_reward})
         if rewarded then
             broadcastToAll(Global.call("getActivePlayerString") .. " got rewards for killing "
                 .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME .. "[-] !!!")
