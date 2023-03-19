@@ -38,6 +38,27 @@ function onload(saved_data)
 end
 
 
+function changeBoard(params)
+    local imageURL = params.url
+    if controcActive then
+        if imageURL == nil then
+            imageURL = self.getInputs()[2].value
+        else
+            if params.name then
+                self.editInput({index = 0, value = tostring(params.name)})
+                self.editInput({index = 1, value = tostring(imageURL)})
+            end
+        end
+    else
+        if imageURL == nil then return end
+    end
+    local customInfo = obj_surface.getCustomObject()
+    customInfo.diffuse = imageURL
+    obj_surface.setCustomObject(customInfo)
+    obj_surface = obj_surface.reload()
+end
+
+
 
 --Activation/deactivation of control panel
 

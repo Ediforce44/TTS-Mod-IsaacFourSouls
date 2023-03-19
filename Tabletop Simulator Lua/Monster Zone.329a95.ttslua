@@ -21,8 +21,8 @@ active_monster_reward = {
 
 active = false
 
--- Don't use it. It is only used for monster reanimation
-lastState = nil
+-- It is used for states which vary their behavior depending on the previous state
+LAST_STATE = nil
 
 MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
 ATTACK_BUTTON_STATES = {}
@@ -47,6 +47,21 @@ function getState()
     return attackButton.label
 end
 
+function getLeftoverHP()
+    return getObjectFromGUID(HP_COUNTER_GUID).getVar("value")
+end
+
+function editHP(params)
+    local hpCounter = getObjectFromGUID(HP_COUNTER_GUID)
+    if params and hpCounter then
+        if params.hp then
+            hpCounter.call("updateHP", {HP = params.hp})
+        elseif params.modifier then
+            hpCounter.call("modifyHP", {modifier = params.modifier})
+        end
+    end
+end
+
 function containsDeckOrCard()
     for _ , obj in pairs(self.getObjects()) do
         if obj.tag == "Deck" or obj.tag == "Card" then
@@ -56,7 +71,7 @@ function containsDeckOrCard()
     return false
 end
 
-local function placeNewMonsterIfEmpty()
+function placeNewMonsterIfEmpty()
     Wait.frames(function ()
             if not containsDeckOrCard() then
                 repeat
@@ -71,7 +86,7 @@ function onLoad(saved_data)
     ATTACK_BUTTON_STATES = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_STATES")
     ATTACK_BUTTON_COLORS = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_COLORS")
     EVENT_TYPES = MONSTER_DECK_ZONE.getTable("EVENT_TYPES")
-    lastState = ATTACK_BUTTON_STATES.ATTACK
+    LAST_STATE = ATTACK_BUTTON_STATES.ATTACK
     if saved_data == "" then
         return
     end
@@ -133,7 +148,7 @@ function dealEventToPlayer(params)
     if params.pickedColor then
         local card = getActiveMonsterCard()
         Wait.frames(function ()
-                if card.getVar("isEvent") and (card ~= nil) then
+                if (card ~= nil) and card.getVar("isEvent") then
                     Global.call("placeObjectInPillZone", {playerColor = params.pickedColor, object = card})
                     placeNewMonsterIfEmpty()
                 end
@@ -179,6 +194,22 @@ function activateAttackButton()
     end
 end
 
+function resetAttackButton()
+    if ATTACK_BUTTON_INDEX == nil then
+        activateAttackButton()
+    else
+        if active then
+            self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.ATTACK
+                , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.ATTACK})
+                , color = ATTACK_BUTTON_COLORS.ACTIVE})
+        else
+            self.editButton({index = ATTACK_BUTTON_INDEX, label = ATTACK_BUTTON_STATES.INATTACK
+                , tooltip = MONSTER_DECK_ZONE.call("getAttackButtonTooltip", {newState = ATTACK_BUTTON_STATES.INATTACK})
+                , color = ATTACK_BUTTON_COLORS.INACTIVE})
+        end
+    end
+end
+
 function killMonster()
     getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = 0})
     monsterDied()
@@ -189,7 +220,6 @@ function monsterDied()
         getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = 0})
         local attackButton = getAttackButton()
         if attackButton then
-            lastState = attackButton.label
             broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME
                 .. "[-] got killed !!!")
             MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.DIED})
@@ -201,7 +231,9 @@ function monsterReanimated()
     if active and active_monster_attrs.HP ~= 0 then
         broadcastToAll(Global.call("getActivePlayerString") .. " fucked up. "
             .. Global.getTable("PRINT_COLOR_SPECIAL").MONSTER_LIGHT .. active_monster_attrs.NAME .. "[-] is undead ???")
-        if lastState == ATTACK_BUTTON_STATES.ATTACKING then
+        if getState() == ATTACK_BUTTON_STATES.SELECT then
+            LAST_STATE = ATTACK_BUTTON_STATES.ATTACKING
+        elseif LAST_STATE == ATTACK_BUTTON_STATES.ATTACKING then
             MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.ATTACKING})
         else
             MONSTER_DECK_ZONE.call("changeZoneState", {zone = self, newState = ATTACK_BUTTON_STATES.ATTACK})
@@ -214,11 +246,16 @@ end
 ---     Otherwise the card will be placed in the soul zone of the active player.
 ---   The `onDie()` function of the card will be executed and if it returns true or nothing,
 ---     the card will be taged as DEAD and a new monster card will be placed in this zone if it is empty.
-function finishMonster()
+function finishMonster(params)
+    local selected = false
+    if params then
+        selected = (params.selected == true)
+    end
+
     local activePlayerColor = Global.getVar("activePlayerColor")
     local monsterCard = getActiveMonsterCard()
     if monsterCard == nil then
-        return
+        return nil
     end
     if Global.getTable("automaticRewarding")[activePlayerColor] then
         local rewarded = MONSTER_DECK_ZONE.call("payOutRewards", {playerColor = activePlayerColor, rewardTable = active_monster_reward})
@@ -229,21 +266,29 @@ function finishMonster()
     end
     -- OnDie
     Wait.frames(function ()
-            -- Place discard monster card
-            if active_monster_reward.SOULS ~= 0 then    -- Monster becomes soul token
-                Global.call("placeObjectInSoulZone", {playerColor = activePlayerColor, object = monsterCard})
-            else    -- Monster just get discarded
-                monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+            if not selected then
+                -- Place discard monster card
+                if active_monster_reward.SOULS ~= 0 then    -- Monster becomes soul token
+                    Global.call("placeObjectInSoulZone", {playerColor = activePlayerColor, object = monsterCard})
+                else    -- Monster just get discarded
+                    monsterCard.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").MONSTER)
+                end
             end
-            local died = not (monsterCard.call("onDie", {zone = self}) == false)    --default: true, only false on false
-            if died then        --if monster died it will tagged as dead
+            --default: true, only false on false
+            local died = not (monsterCard.call("onDie", {zone = self, selected = selected}) == false)
+
+            if died or selected then        --if monster died it will tagged as dead
                 local deadTag = MONSTER_DECK_ZONE.getTable("MONSTER_TAGS").DEAD
                 monsterCard.addTag(deadTag)
-                Wait.time(function () monsterCard.removeTag(deadTag) end, 1)
+                Wait.condition(function() monsterCard.removeTag(deadTag) end
+                    , function() return not monsterCard.isSmoothMoving() end)
+
+                MONSTER_DECK_ZONE.call("callMonsterDieEvents", {guid = monsterCard.getGUID(), zone = self})
                 -- Place new monster card
                 placeNewMonsterIfEmpty()
             end
         end)
+    return monsterCard
 end
 
 function resetAltClickCounter()
@@ -329,6 +374,7 @@ function changeButtonState(params)
     else
         for _ , state in pairs(ATTACK_BUTTON_STATES) do
             if params.newState == state then
+                LAST_STATE = getState()
                 local buttonColor = (state == ATTACK_BUTTON_STATES.INACTIVE) and ATTACK_BUTTON_COLOR.INACTIVE
                     or ATTACK_BUTTON_COLORS.ACTIVE
                 self.editButton({index = ATTACK_BUTTON_INDEX, label = state

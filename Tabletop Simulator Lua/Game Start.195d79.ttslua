@@ -1,4 +1,5 @@
 CHARACTER_MANAGER_GUID = "bc6e13"
+CHALLENGE_MODULE_GUID = "b7ad0b"
 
 PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
 
@@ -60,6 +61,11 @@ local function setupPlayingArea()
     getObjectFromGUID(monsterZoneGUIDs.SEVEN).call("deactivateZone")
     getObjectFromGUID(MONSTER_DECK_ZONE_GUID).call("activateChooseButton")
 
+    local bossZoneGUID = Global.getVar("ZONE_GUID_BOSS")
+    if bossZoneGUID then
+        getObjectFromGUID(bossZoneGUID).call("setupZone")
+    end
+
     -- Init Shop Zones and Shop Buttons
     local shopZoneGUIDs = Global.getTable("ZONE_GUID_SHOP")
     getObjectFromGUID(shopZoneGUIDs.ONE).call("activateZone")
@@ -100,7 +106,6 @@ local function setupPlayingArea()
             end
         end
     end
-
 end
 
 local function extractDecksToDeckPositions(containerObj)
@@ -245,16 +250,43 @@ local function setupOfficialContent(gameLanguage)
             end)
     end
 
+    local allCounterGuids = Global.getTable("COIN_COUNTER_GUID")
+    for _, counterGuid in pairs(allCounterGuids) do
+        local counter = getObjectFromGUID(counterGuid)
+        if counter then
+            counter.call("setCoins", {newValue = 0})
+        end
+    end
+    local playerZones = Global.getTable("ZONE_GUID_PLAYER")
+    for color, counterGuid in pairs(allCounterGuids) do
+        local counter = getObjectFromGUID(counterGuid)
+        if counter then
+            local playerZone = getObjectFromGUID(playerZones[color])
+            if playerZone and playerZone.getVar("active") then
+                counter.call("modifyCoins", {modifier = 3})
+            end
+        end
+    end
+
     Wait.condition(
         function()
             checkAndShuffleDecks()
             if BUILT_DECKS.LOOT ~= nil then
-                BUILT_DECKS.LOOT.deal(3)
+                for zoneColor, guid in pairs(Global.getTable("ZONE_GUID_PLAYER")) do
+                    local zone = getObjectFromGUID(guid)
+                    if zone and zone.getVar("active") then
+                        local handInfo = Global.getTable("HAND_INFO")[zoneColor]
+                        BUILT_DECKS.LOOT.deal(3, handInfo.owner, handInfo.index)
+                    end
+                end
             end
             setupPlayingArea()
 
-            for _, color in pairs(getSeatedPlayers()) do
-                Global.call("deactivateCharacter", {playerColor = color})
+            for zoneColor, zoneGuid in pairs(Global.getTable("ZONE_GUID_PLAYER")) do
+                local playerZone =  getObjectFromGUID(zoneGuid)
+                if playerZone and playerZone.getVar("active") then
+                    playerZone.call("deactivateCharacter")
+                end
             end
 
             -- INSERT other setup steps
@@ -269,19 +301,28 @@ local function setupOfficialContent(gameLanguage)
                 font_size = 0
             })
 
-            local startPlayerColor = Global.getVar("startPlayerColor")
-
-            -- !!! Order matters !!!
-            Turns.type = 2
-            Turns.order = {"Red", "Blue", "Green", "Yellow"}
-            Turns.turn_color = startPlayerColor
-            Turns.enable = true
+            Global.call("startTurnSystem")
 
             self.destroy()
         end,
         function()
             return ready_for_setup
         end)
+end
+
+local function setupChallengeStart(gameLanguage)
+    if not ready_for_setup then
+        local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
+
+        local preDeckGUIDs = tableBase.call("getPreDeckGUIDs", {language = gameLanguage})
+        local preExpansionDeckGUIDs = getPreDecksOnTable()
+        preDeckGUIDs = mergePreDecks(preDeckGUIDs, preExpansionDeckGUIDs)
+
+        getObjectFromGUID(CHALLENGE_MODULE_GUID).call("setupChallenge", {preDeckGUIDs = preDeckGUIDs})
+    else
+        local preDeckGUIDs = getPreDecksOnTable()
+        getObjectFromGUID(CHALLENGE_MODULE_GUID).call("setupChallenge", {preDeckGUIDs = preDeckGUIDs})
+    end
 end
 
 function onLoad()
@@ -365,12 +406,14 @@ function onStart()
         destroyObject(settingUpNote)
     end
 
+    getObjectFromGUID(CHARACTER_MANAGER_GUID).call("returnAllCharPacks")
+
     local gameLanguage = Global.getVar("gameLanguage")
 
-    broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Expansions")
     local amountOfExpansionsInPlay = setupExpansions(gameLanguage)
     local officialSetupDelay = 0
     if amountOfExpansionsInPlay > 0 then
+        broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Expansions")
         local elBag = getObjectFromGUID(EXPANSION_LEFTOVERS_BAG_GUID)
         elBag.setPosition(EXPANSION_LEFTOVERS_POSITION)
         elBag.setScale({1.5, 1.5, 1.5})
@@ -383,8 +426,18 @@ function onStart()
 
     Wait.time(
         function()
-            broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Official Content")
-            setupOfficialContent(gameLanguage)
+            if Global.getTable("confTable").CHALLENGES_ACTIVE then
+                broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Challenge")
+                setupChallengeStart(gameLanguage)
+                Wait.time(
+                    function()
+                        broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Official Content")
+                        setupOfficialContent(gameLanguage)
+                    end, 1)
+            else
+                broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Official Content")
+                setupOfficialContent(gameLanguage)
+            end
         end, officialSetupDelay)
 end
 
@@ -402,15 +455,19 @@ function isAllPlayersSelectCharacter()
 end
 
 function getPlayersCount()
-  local counter = 0
-  for _, player in pairs(Player.getPlayers()) do
-    for _, color in pairs(PLAYER_COLORS) do
-      if player.color == color then
-        counter = counter + 1
-      end
+    local counter = 0
+    for _, zoneGuid in pairs(Global.getTable("ZONE_GUID_PLAYER")) do
+        local playerZone = getObjectFromGUID(zoneGuid)
+        if playerZone then
+            local ownerColor = playerZone.getVar("owner_color")
+            for _, player in pairs(Player.getPlayers()) do
+                if ownerColor == player.color then
+                    counter = counter + 1
+                end
+            end
+        end
     end
-  end
-  return counter
+    return counter
 end
 
 function checkAndShuffleDecks()

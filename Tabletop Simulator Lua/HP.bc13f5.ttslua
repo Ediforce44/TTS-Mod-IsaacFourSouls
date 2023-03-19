@@ -3,15 +3,22 @@ zone = getObjectFromGUID(Global.getTable("ZONE_GUID_MONSTER").SEVEN)
 
 value = 0
 MIN_VALUE = 0
-MAX_VALUE = 9
+MAX_VALUE = 99
 
 function updateHP(params)
     local newValue = params.HP
-    if newValue ~= nil and newValue >= 0 and newValue < 10 then
+    if newValue ~= nil and newValue >= MIN_VALUE and newValue <= MAX_VALUE then
         value = newValue
         updateVal()
         updateSave()
     end
+end
+
+function modifyHP(params)            -- EbyE44
+    if params.modifier == nil then
+        Global.call("printWarning", {text = "Wrong parameters in HP counter function 'modifyHP()'."})
+    end
+    updateHP({HP = value + params.modifier})
 end
 
 function reset()

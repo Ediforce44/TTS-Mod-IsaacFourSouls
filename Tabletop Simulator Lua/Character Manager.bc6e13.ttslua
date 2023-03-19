@@ -39,7 +39,7 @@ function loadCharPacksFromWorld()
   characterPull = {}
   local allObj = getAllObjects()
   for i, obj in pairs(allObj) do
-    if (obj.getDescription() == "character-pack") and not isCharUsedInWaitPull(obj.guid) then
+    if (obj.getDescription() == "character-pack") and (obj.getPosition().y > 0) and not isCharUsedInWaitPull(obj.guid) then
       table.insert(characterPull, obj)
     end
   end
@@ -69,6 +69,10 @@ function cleanupSpawnedObj(params)
             end
         end
         playersSpawnedCharacterObj[params.playerColor] = {}
+        local playerZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[params.playerColor])
+        if playerZone then
+            playerZone.setVar("active", false)
+        end
     end
 end
 
@@ -166,6 +170,12 @@ local function returnAllCharPacksFromPlayer(playerColor)
     end
 end
 
+function returnAllCharPacks()
+    for color, _ in pairs(waitForSelectCharacters) do
+        returnAllCharPacksFromPlayer(color)
+    end
+end
+
 function randomizeToAll(_, playerClickerColor)
   loadCharPacksFromWorld()
   if #characterPull < 6 then
@@ -175,7 +185,12 @@ function randomizeToAll(_, playerClickerColor)
 
   playerList = Player.getPlayers()
   for _, player in pairs(playerList) do
-    randomizeToPlayer(player.color)
+      for zoneColor, zoneGuid in pairs(Global.getTable("ZONE_GUID_PLAYER")) do
+          local zone = getObjectFromGUID(zoneGuid)
+          if zone and (zone.getVar("owner_color") == player.color) then
+              randomizeToPlayer(zoneColor)
+          end
+      end
   end
 end
 
@@ -185,7 +200,12 @@ function randomizeToMe(_, playerClickerColor)
     Global.call("printWarningTP", {text = "Too few characters (min: 2). Maybe you forget  press \"Place characters\" button?", color =  playerClickerColor})
     return
   end
-  randomizeToPlayer(playerClickerColor)
+  for zoneColor, zoneGuid in pairs(Global.getTable("ZONE_GUID_PLAYER")) do
+      local zone = getObjectFromGUID(zoneGuid)
+      if zone and (zone.getVar("owner_color") == playerClickerColor) then
+          randomizeToPlayer(zoneColor)
+      end
+  end
 end
 
 function randomizeToPlayer(playerColor)
@@ -195,16 +215,16 @@ function randomizeToPlayer(playerColor)
   end
 
   if #waitForSelectCharacters[playerColor] ~= 0 then
-    printToColor("Reshuffle Characters", playerColor)
+    printToAll("Reshuffle Characters")
     returnAllCharPacksFromPlayer(playerColor)
   end
 
   cleanupSpawnedObj({playerColor = playerColor})
 
   for i = 1, inputCharCount do
-    local randomCharPackIndex = math.random(#characterPull)
-    local randomCharPack = characterPull[randomCharPackIndex]
-    dealCharPackToPlayer({charPack = randomCharPack, playerColor = playerColor})
+      local randomCharPackIndex = math.random(#characterPull)
+      local randomCharPack = characterPull[randomCharPackIndex]
+      dealCharPackToPlayer({charPack = randomCharPack, playerColor = playerColor})
   end
 end
 

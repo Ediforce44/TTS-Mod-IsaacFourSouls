@@ -64,7 +64,9 @@ OBJECTS_UNDER_TABLE = {
     US = "7f7406",
     RU = "ac9ceb",
     ES = "5a30af",
+    FR = "6f6751",
     EL_BAG = "3316b6",
+    CP_BAG = "143ff6",
     DUMMY_TREASURE = "c93b7d",
     DUMMY_LOOT = "35efd9",
     DUMMY_MONSTER = "617e0e",
@@ -214,6 +216,51 @@ LANGUAGE_OBJECTS = {
         MONSTER_SEP = {
             MS_ALL = "11585a"
         }
+    },
+    FR = {
+        TREASURE = {
+            T_ACTIVE  = "8d0702",
+            T_PASSIVE = "7c052e",
+            T_PAID    = "c7a948",
+            T_ONE_USE = "1b6735",
+            T_SOUL    = "dbd4a3"
+        },
+        LOOT = {
+            L_TAROT_MISC    = "43b38a",
+            L_TRINKET       = "adb699",
+            L_PILL          = "24e356",
+            L_RUNE          = "9e9432",
+            L_BUTTER_BEAN   = "05ea00",
+            L_BOMB          = "e36dc0",
+            L_BATTERY       = "e9a1a0",
+            L_DICE_SHARD    = "98846f",
+            L_SOUL_HEART    = "03f5a2",
+            L_LOST_SOUL     = "6a356b",
+            L_NICKEL        = "1af1ca",
+            L_FOUR_CENT     = "ab4337",
+            L_THREE_CENT    = "84ec0f",
+            L_TWO_CENT      = "f62474",
+            L_ONE_CENT      = "e5965e"
+        },
+        MONSTER = {
+            M_EPIC        = "38eadd",
+            M_BOSS        = "c204a4",
+            M_BASIC       = "b8fb25",
+            M_CURSED      = "5d6c2f",
+            M_HOLY_CHARMED= "a507d2",
+            M_GOOD        = "f4746c",
+            M_BAD         = "851433",
+            M_CURSE       = "604dbb"
+        },
+        ROOM = {
+            R_ALL   = "bb9dbd"
+        },
+        BONUS_SOUL = {
+            BS_ALL  = "7f0b55"
+        },
+        MONSTER_SEP = {
+            MS_ALL = "67fbb7"
+        }
     }
 }
 
@@ -358,9 +405,111 @@ function shufflePreDecks(params)
 end
 
 function getPreDeckGUIDs(params)
-    local language = params.language
-    if language == nil then
+    local language = Global.getVar("gameLanguage")
+    if params then
+        language = params.language
+    end
+    if (language == nil) or (language == "None") then
         language = Global.getTable("GAME_LANGUAGE").US
     end
     return LANGUAGE_OBJECTS[language]
+end
+
+function setPreDeckGUIDs(deckType, newPreDeckTable)
+    local language = Global.getVar("gameLanguage")
+    if params then
+        language = params.language
+    end
+    if (language == nil) or (language == "None") then
+        language = Global.getTable("GAME_LANGUAGE").US
+    end
+    LANGUAGE_OBJECTS[language][deckType] = newPreDeckTable
+end
+
+--Ignores filter options
+function getRandomTreasure(params)
+    local amount = 1
+    if params then
+        if params.amount ~= nil then
+            amount = params.amount
+        end
+    end
+
+    local treasureCardsAmount = 0
+    local treasurePreDecks = getPreDeckGUIDs().TREASURE
+    for _, guid in pairs(treasurePreDecks) do
+        local treasureDeck = getObjectFromGUID(guid)
+        if treasureDeck then
+            if treasureDeck.type == "Card" then
+                treasureCardsAmount = treasureCardsAmount + 1
+            else
+                treasureCardsAmount = treasureCardsAmount + treasureDeck.getQuantity()
+            end
+        end
+    end
+
+    local selectedCardsInfoTable = {}
+    for i = 1, amount do
+        table.insert(selectedCardsInfoTable, i, {})
+        local randomIndex = nil
+        local isIndexNew = false
+        while(not isIndexNew) do
+            randomIndex = math.random(treasureCardsAmount)
+            isIndexNew = true
+            for _, cardInfo in pairs(selectedCardsInfoTable) do
+                if randomIndex == cardInfo.random then
+                    isIndexNew = false
+                end
+            end
+        end
+        local randomIndexDeck = randomIndex
+        for id, guid in pairs(treasurePreDecks) do
+            local deck = getObjectFromGUID(guid)
+            if deck.type == "Card" then
+                if randomIndexDeck == 1 then
+                    selectedCardsInfoTable[i]["guid"] = deck.getGUID()
+                    selectedCardsInfoTable[i]["deckID"] = id
+                    selectedCardsInfoTable[i]["random"] = randomIndex
+                    break
+                else
+                    randomIndexDeck = randomIndexDeck - 1
+                end
+            else
+                if randomIndexDeck > deck.getQuantity() then
+                    randomIndexDeck = randomIndexDeck - deck.getQuantity()
+                else
+                    selectedCardsInfoTable[i]["guid"] = deck.getObjects()[randomIndexDeck].guid
+                    selectedCardsInfoTable[i]["deckID"] = id
+                    selectedCardsInfoTable[i]["random"] = randomIndex
+                    break
+                end
+            end
+        end
+    end
+
+    local selectedCards = {}
+    for i, cardInfo in pairs(selectedCardsInfoTable) do
+        local deck = getObjectFromGUID(treasurePreDecks[cardInfo.deckID])
+        if deck.type == "Card" then
+            table.insert(selectedCards, deck)
+        else
+            local newDeck = nil
+            if deck.getQuantity() == 2 then
+                newDeck = deck.remainder
+            end
+            local card = deck.takeObject({guid = cardInfo.guid})
+            if card == nil then
+                card = deck.takeObject()
+            end
+            if card ~= nil then
+                if newDeck then
+                    treasurePreDecks[cardInfo.deckID] = newDeck.getGUID()
+                    setPreDeckGUIDs("TREASURE", treasurePreDecks)
+                end
+                table.insert(selectedCards, card)
+            end
+        end
+    end
+
+    return selectedCards
 end

@@ -23,9 +23,13 @@ end
 function diceRolled()
     local rolledPlayerName = self.getRotationValue()
     for _, player in ipairs(Player.getPlayers()) do
-        if player.steam_name == rolledPlayerName then
+        if (player.steam_name == rolledPlayerName) then
             Global.call("setNewStartPlayer", {playerColor = player.color})
+            return
         end
+    end
+    if Global.getTable("PLAYER")[rolledPlayerName] then
+        Global.call("setNewStartPlayer", {playerColor = rolledPlayerName})
     end
 end
 
@@ -36,8 +40,12 @@ function whoGoesFirst()
     local colors = {"Red","Orange","Yellow","Green","Teal","Blue","Purple","Pink","Brown","White"}
     local shortc = {"r","o","y","g","t","b","p","i","n","w"}
     for k,color in pairs(colors) do
-        if Player[color].seated then
-            seated = seated .. shortc[k]
+        local colorTable = Global.getTable("ZONE_GUID_PLAYER")
+        if colorTable[color] then
+            local zone = getObjectFromGUID(colorTable[color])
+            if zone and Player[zone.getVar("owner_color")].seated then
+                seated = seated .. shortc[k]
+            end
         end
     end
 

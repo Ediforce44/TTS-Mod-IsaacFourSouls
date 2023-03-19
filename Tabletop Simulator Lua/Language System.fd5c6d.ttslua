@@ -79,9 +79,7 @@ local function switchLanguage(newLanguage)
     end
 
     for lang, flagGUID in pairs(LANGUAGE_FLAGS) do
-        if lang ~= "FR" then                                                --TODO DELETE
-            getObjectFromGUID(flagGUID).editButton({index=0, label=""})
-        end
+        getObjectFromGUID(flagGUID).editButton({index=0, label=""})
     end
     getObjectFromGUID(LANGUAGE_FLAGS[newLanguage]).editButton({index=0, label="✓", font_color={0, 0, 0}, font_size=450})
     getObjectFromGUID(GUID_TABLE_BASE).call("returnLanguageObjects", {language = newLanguage})

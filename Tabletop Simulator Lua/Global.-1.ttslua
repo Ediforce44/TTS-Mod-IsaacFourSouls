@@ -22,6 +22,7 @@ local function setPositionTables()
     DISCARD_PILE_POSITION.TREASURE = getObjectFromGUID(ZONE_GUID_DISCARD.TREASURE).getPosition():setAt('y', 5)
     DISCARD_PILE_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DISCARD.LOOT).getPosition():setAt('y', 5)
     DISCARD_PILE_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DISCARD.MONSTER).getPosition():setAt('y', 5)
+    DISCARD_PILE_POSITION.ROOM = getObjectFromGUID(ZONE_GUID_DISCARD.ROOM).getPosition():setAt('y', 5)
 
     DECK_POSITION.TREASURE = getObjectFromGUID(ZONE_GUID_DECK.TREASURE).getPosition():setAt('y', 5)
     DECK_POSITION.ROOM = getObjectFromGUID(ZONE_GUID_DECK.ROOM).getPosition():setAt('y', 5)
@@ -48,29 +49,55 @@ function onLoad(saved_data)         --EbyE44
 
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
-        if loaded_data[1] then
-            activePlayerColor = loaded_data[1]
+        if loaded_data.activePlayerColor then
+            activePlayerColor = loaded_data.activePlayerColor
         else
             activePlayerColor = "Red"
         end
-        if loaded_data[2] then
-            setNewStartPlayer({playerColor = loaded_data[2]})
+        if loaded_data.startPlayerColor then
+            setNewStartPlayer({playerColor = loaded_data.startPlayerColor})
         end
-        if loaded_data[3] then
-            automaticRewarding.Yellow = loaded_data[3].Yellow and true
-            automaticRewarding.Green = loaded_data[3].Green and true
-            automaticRewarding.Blue = loaded_data[3].Blue and true
-            automaticRewarding.Red = loaded_data[3].Red and true
+        if loaded_data.automaticRewarding then
+            local autoRewarding = loaded_data.automaticRewarding
+            automaticRewarding.Yellow = autoRewarding.Yellow and true
+            automaticRewarding.Green = autoRewarding.Green and true
+            automaticRewarding.Blue = autoRewarding.Blue and true
+            automaticRewarding.Red = autoRewarding.Red and true
+        end
+        if loaded_data.minionZoneInfo then
+            for i, infoTable in ipairs(loaded_data.minionZoneInfo) do
+                table.insert(ZONE_INFO_MINION, i, infoTable)
+            end
+        end
+        if loaded_data.bossZoneGuid then
+            ZONE_GUID_BOSS = loaded_data.bossZoneGuid
+            getObjectFromGUID("69a80d").call("deactivateSecondTurnButtons")
+        end
+        if loaded_data.customCounterBagGuids then
+            COUNTER_BAGS_GUID = loaded_data.customCounterBagGuids
+        end
+        if loaded_data.onTurnEvents then
+            ON_TURN_EVENTS = loaded_data.onTurnEvents
+        end
+        if loaded_data.handInfo then
+            HAND_INFO = loaded_data.handInfo
         end
     end
     if not hasGameStarted() then
         UI.show("config")
+    else
+        UI.setAttribute("passButton", "image", "turn_" .. string.lower(activePlayerColor))
+        UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[activePlayerColor])
+        UI.setAttribute("turnInfo", "visibility", activePlayerColor .. "|Black")
+        UI.show("turnInfo")
     end
     broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
 end
 
 function onSave()                   --EbyE44
-    return JSON.encode({activePlayerColor, startPlayerColor, automaticRewarding})
+    return JSON.encode({activePlayerColor = activePlayerColor, startPlayerColor = startPlayerColor
+        , automaticRewarding = automaticRewarding, minionZoneInfo = ZONE_INFO_MINION, bossZoneGuid = ZONE_GUID_BOSS
+        , customCounterBagGuids = COUNTER_BAGS_GUID, onTurnEvents = ON_TURN_EVENTS, handInfo = HAND_INFO})
 end
 
 HEART_TOKENS_GUID = {
@@ -80,56 +107,145 @@ HEART_TOKENS_GUID = {
     Red = {"bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
 }
 
--- Auto monster HP reset
-FIRST_HEARTS_GUID = {
-  -- Blue player hearts
-  HEART_TOKENS_GUID["Blue"][1],
-   -- Red player hearts
-  HEART_TOKENS_GUID["Red"][1],
-  -- Yellow player hearts
-  HEART_TOKENS_GUID["Yellow"][1],
-  -- Green player hearts
-  HEART_TOKENS_GUID["Green"][1]
-}
+ON_TURN_EVENTS = {END = {}, START = {{call_function = "turnEvent_resetZones", function_params = {}, valid = true}}}
 
-SECOND_HEARTS_GUID = {
-  -- Blue player hearts
-  HEART_TOKENS_GUID["Blue"][2],
-   -- Red player hearts
-  HEART_TOKENS_GUID["Red"][2],
-  -- Yellow player hearts
-  HEART_TOKENS_GUID["Yellow"][2],
-  -- Green player hearts
-  HEART_TOKENS_GUID["Green"][2]
-}
-
-function onPlayerTurn(player, previous_player)
-    if player ~= nil then
-        activePlayerColor = player.color
+function addTurnEvent(params)
+    if (params == nil) or (params.call_function == nil) then
+        return
     end
-
-    if previous_player == nil then
-        print(getPlayerString({playerColor = player.color}) .. " is going first. It's now their turn.")
-        previous_player = player
+    local functionParams = params.function_params or {}
+    local turnID = nil
+    if params.atEnd == true then
+        table.insert(ON_TURN_EVENTS.END, {call_function = params.call_function, function_params = functionParams
+            , function_owner = params.function_owner, valid = true})
+        eventID = tostring(#ON_TURN_EVENTS.END) .. "0"
     else
-        print(getPlayerString({playerColor = previous_player.color}) .. "'s turn is over. It's now "
-                .. getPlayerString({playerColor = player.color}) .. "'s turn.")
+        table.insert(ON_TURN_EVENTS.START, {call_function = params.call_function, function_params = functionParams
+            , function_owner = params.function_owner, valid = true})
+        eventID = tostring(#ON_TURN_EVENTS.START) .. "1"
     end
+    return tonumber(eventID)
+end
 
+function deactivateTurnEvent(params)
+    if params.eventID then
+        local turnID = tonumber(params.eventID) % 10
+        local functionID = math.floor(tonumber(params.eventID) / 10)
+        if turnID == 0 then
+            ON_TURN_EVENTS.END[functionID].valid = false
+        elseif turnID == 1 then
+            ON_TURN_EVENTS.START[functionID].valid = false
+        end
+    end
+end
+
+function activateTurnEvent(params)
+    if params.eventID then
+        local turnID = tonumber(params.eventID) % 10
+        local functionID = math.floor(tonumber(params.eventID) / 10)
+        if turnID == 0 then
+            ON_TURN_EVENTS.END[functionID].valid = true
+        elseif turnID == 1 then
+            ON_TURN_EVENTS.START[functionID].valid = true
+        end
+    end
+end
+
+local function callTurnEndEvents(previousPlayerColor, newPlayerColor)
+    local eventFunctionParams = {playerColorEnd = previousPlayerColor, playerColorStart = newPlayerColor}
+    if previousPlayerColor then
+        for _, eventTable in ipairs(ON_TURN_EVENTS.END) do
+            if eventTable.valid then
+                for id, param in pairs(eventTable.function_params) do
+                    eventFunctionParams[id] = param
+                end
+                if eventTable.function_owner == nil then
+                    Global.call(eventTable.call_function, eventFunctionParams)
+                else
+                    local functionOwner = getObjectFromGUID(eventTable.function_owner)
+                    if functionOwner then
+                        functionOwner.call(eventTable.call_function, eventFunctionParams)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function callTurnStartEvents(previousPlayerColor, newPlayerColor)
+    local eventFunctionParams = {playerColorEnd = previousPlayerColor, playerColorStart = newPlayerColor}
+    for _, eventTable in ipairs(ON_TURN_EVENTS.START) do
+        if eventTable.valid then
+            for id, param in pairs(eventTable.function_params) do
+                eventFunctionParams[id] = param
+            end
+            if eventTable.function_owner == nil then
+                Global.call(eventTable.call_function, eventFunctionParams)
+            else
+                local functionOwner = getObjectFromGUID(eventTable.function_owner)
+                if functionOwner then
+                    functionOwner.call(eventTable.call_function, eventFunctionParams)
+                end
+            end
+        end
+    end
+end
+
+function turnEvent_resetZones(_)
     -- Reset Monster Zones (inclusive HP-Counter)
     getObjectFromGUID(ZONE_GUID_DECK.MONSTER).call("resetAllMonsterZones")
-
     -- Reset Shop Zones
     getObjectFromGUID(ZONE_GUID_DECK.TREASURE).call("resetAllShopZones")        -- In this version it does nothing :D
+end
 
-    -- Reset Players HP
-   for color , guid in pairs(FIRST_HEARTS_GUID) do
-       local firstHeart = getObjectFromGUID(guid)
-       local isHeartActive = firstHeart.getVar("isActive")
-       if isHeartActive ~= nil and isHeartActive == false then
-           getObjectFromGUID(SECOND_HEARTS_GUID[color]).call("onPickUp")
-       end
-   end
+local function getNextPlayerColor(currentPlayerColor)
+    local nextColor = currentPlayerColor
+    local nextPlayerFound = false
+    while(not nextPlayerFound) do
+        nextColor = TURN_ORDER[nextColor]
+        activeZone = getObjectFromGUID(ZONE_GUID_PLAYER[nextColor])
+        if activeZone and activeZone.getVar("active") then
+            local zoneOwner = Player[activeZone.getVar("owner_color")]
+            if zoneOwner and zoneOwner.seated then
+                nextPlayerFound = true
+            end
+        end
+        if nextColor == currentPlayerColor then
+            nextPlayerFound = true
+        end
+    end
+    return nextColor
+end
+
+local function passTurn(nextPlayerColor)
+    local previousPlayerColor = activePlayerColor
+    activePlayerColor = nextPlayerColor
+
+    callTurnEndEvents(previousPlayerColor, activePlayerColor)
+    print(getPlayerString({playerColor = previousPlayerColor}) .. "'s turn is over. It's now "
+        .. getPlayerString({playerColor = activePlayerColor}) .. "'s turn.")
+    callTurnStartEvents(previousPlayerColor, activePlayerColor)
+
+    UI.setAttribute("passButton", "image", "turn_" .. string.lower(activePlayerColor))
+    UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[activePlayerColor])
+    UI.setAttribute("turnInfo", "visibility", activeZone.getVar("owner_color") .. "|Black")
+end
+
+function onPlayerChangeColor(playerColor)
+    if hasGameStarted() and PLAYER[activePlayerColor] then
+        local activeZone = getObjectFromGUID(ZONE_GUID_PLAYER[activePlayerColor])
+
+        if not activeZone or not activeZone.getVar("active") or not Player[activeZone.getVar("owner_color")].seated then
+            local nextPlayerColor = getNextPlayerColor(activePlayerColor)
+
+            if nextPlayerColor ~= activePlayerColor then
+                UI.setAttribute("skipTurn", "visibility", "Host")
+                UI.setAttribute("skipButton", "text", "Skip Turn of " .. activePlayerColor)
+                UI.setAttribute("skipButton", "textColor", "#EAE5DE")
+                UI.show("skipTurn")
+            end
+        end
+    end
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -176,6 +292,9 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------- UI config functions -----------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+CHALLENGE_MODULE = "b7ad0b"
+SEED_MODULE = "19bfa6"
+
 local BUILDING_MODE_TO_RATIOS = {
     BM_NO = nil,
     BM_NORMAL = "o",
@@ -203,10 +322,14 @@ confTable = {
     ADVANCED_MODE_ACTIVE= false,
     ROOMS_ACTIVE        = true,
     BONUS_SOULS_ACTIVE  = true,
+    MULTI_CHAR_ACTIVE   = false,
     CHALLENGES_ACTIVE   = false,
     EXPANSIONS  = {},
     BUILDING_MODE = "BM_NORMAL",
     CHALLENGE   = nil,
+    CHALLENGE_AUTO = true,
+    CHALLENGE_DIF = "DIF_NORMAL",
+    CHALLENGE_COMP = false,
     RANDOM_SEED = false,
     SEED        = nil,
     SEED_ARGS   = {
@@ -226,11 +349,12 @@ confTable = {
         CHARACTERS = 2,
         RATIOS = BUILDING_MODE_TO_RATIOS["BM_NORMAL"]
     },
+    MULTI_CHAR = {Red = 1, Blue = 2, Green = 3, Yellow = 4},
     SPECIAL_DECKS = {},
     CUSTOM_RATIOS = STD_RATIOS
 }
 
-customRatiosSet = true
+configurationFinished = true
 
 local function getRatioType(ratioID)
     for type, idTable in pairs(STD_RATIOS) do
@@ -246,7 +370,11 @@ local function placeChallenge()
     Wait.frames(function()
         for _, challenge in pairs(tempChallengeBag.getObjects()) do
             if challenge.name == confTable.CHALLENGE then
-                tempChallengeBag.takeObject({guid = challenge.guid, position = DISCARD_PILE_POSITION.LOOT})
+                local challengeBag = tempChallengeBag.takeObject({guid = challenge.guid, position = DISCARD_PILE_POSITION.LOOT})
+
+                if challengeBag.getVar("HAS_CUSTOM_SETTINGS") then
+                    challengeBag.call("configureSettings")
+                end
                 break
             end
         end
@@ -267,6 +395,30 @@ local function placeExpansions()
                 end
             end
         end
+    end
+end
+
+local function setPlayerZoneOwner(ownerTable)
+    for _, colorTable  in pairs(ownerTable) do
+        local ownerColor = colorTable[1]
+        local nextHandIndex = HAND_INFO[ownerColor].index
+        for _, color in ipairs(colorTable) do
+            local playerZone = getObjectFromGUID(ZONE_GUID_PLAYER[color])
+            if playerZone then
+                playerZone.setVar("owner_color", ownerColor)
+                local handZone = getObjectFromGUID(HAND_INFO[color].guid)
+                handZone.setValue(ownerColor)
+                HAND_INFO[color].index = nextHandIndex
+                HAND_INFO[color].owner = ownerColor
+                PLAYER_OWNER[color] = ownerColor
+                nextHandIndex = nextHandIndex + 1
+            end
+        end
+        local playerString = ""
+        for _, color in pairs(colorTable) do
+            playerString = playerString .. " - " .. getPlayerString({playerColor = color}) .. "[-]"
+        end
+        broadcastToAll(getPlayerString({playerColor = ownerColor}) .. "[-] plays " .. playerString)
     end
 end
 
@@ -355,6 +507,41 @@ function UI_toggleBonusSouls(_, checked)
     end
 end
 
+function UI_toggleMultiChar(_, checked)
+    if checked == "True" then
+        confTable.MULTI_CHAR_ACTIVE = true
+        UI.show("multiCharButton")
+    else
+        confTable.MULTI_CHAR_ACTIVE = false
+        UI.hide("multiCharButton")
+        UI_multiCharDone()
+    end
+end
+
+function UI_openMultiCharSettings()
+    if UI.getAttribute("multiCharSettings", "active") == "false" then
+        UI.show("multiCharSettings")
+    else
+        UI_multiCharDone()
+    end
+end
+
+function UI_multiCharChanged(_, checked, id)
+    if checked == "True" then
+        local multiCharID = {}
+        local i = 1
+        for key in string.gmatch(id, "[%w%d]+") do
+            multiCharID[i] = key
+            i = i + 1
+        end
+        confTable.MULTI_CHAR[multiCharID[1]] = tonumber(multiCharID[2])
+    end
+end
+
+function UI_multiCharDone()
+    UI.setAttribute("multiCharSettings", "active", "false")
+end
+
 function UI_toggleChallenges(_, checked)
     if checked == "True" then
         UI.show("challenges")
@@ -413,7 +600,14 @@ function UI_toggleSeedDeck(_, checked, seedDeckID)
     end
 end
 
-function UI_configurationDone()
+function UI_configurationDone(player)
+    if not player.admin then
+        return
+    end
+    UI_multiCharDone()
+
+    UI.hide("config")
+
     local deckBuilder = getObjectFromGUID("69a80e")
     if not confTable.ROOMS_ACTIVE then
         deckBuilder.call("disableDeck", {deckID = "ROOM"})
@@ -421,20 +615,35 @@ function UI_configurationDone()
     if not confTable.BONUS_SOULS_ACTIVE then
         deckBuilder.call("disableDeck", {deckID = "BONUS_SOUL"})
     end
+    if confTable.MULTI_CHAR_ACTIVE then
+        local ownerTable = {}
+        for color, playerID in pairs(confTable.MULTI_CHAR) do
+            if ownerTable[playerID] then
+                table.insert(ownerTable[playerID], color)
+            else
+                ownerTable[playerID] = {color}
+            end
+        end
+        setPlayerZoneOwner(ownerTable)
+    end
     if confTable.CHALLENGES_ACTIVE then
+        getObjectFromGUID(ZONE_GUID_DECK.MONSTER).call("activateChallengeMode")
+        getObjectFromGUID(CHALLENGE_MODULE).call("setupTableForChallenge")
         placeChallenge()
     end
     if confTable.EXPANSION_ACTIVE then
         placeExpansions()
     end
 
-    UI.hide("config")
-
     if confTable.BUILDING_MODE == "BM_CUSTOM" then
-        customRatiosSet = false
+        configurationFinished = false
         UI.show("customRatios")
     else
         confTable.CUSTOM_RATIOS = nil
+        if confTable.CHALLENGES_ACTIVE then
+            endconfigurationFinished = false
+            UI.show("challengeSettings")
+        end
     end
 
     Wait.condition(function()
@@ -456,10 +665,10 @@ function UI_configurationDone()
             else
                 prepareSeedArgs()
                 local webArgs = seedargsToWebargs(confTable.SEED, confTable.SEED_ARGS)
-                getObjectFromGUID("19bfa6").call("startSeedAlgorithm", {httpBody = webArgs})
+                getObjectFromGUID(SEED_MODULE).call("startSeedAlgorithm", {httpBody = webArgs})
             end
         end
-    end, function() return customRatiosSet end)
+    end, function() return configurationFinished end)
 end
 
 function UI_setRatio(_, ratio, ratioID)
@@ -475,9 +684,85 @@ function UI_setRatio(_, ratio, ratioID)
     UI.setAttribute(ratioID, "text", tostring(stdRatio))
 end
 
-function UI_ratiosDone()
+function UI_ratiosDone(player)
+    if not player.admin then
+        return
+    end
     UI.hide("customRatios")
-    customRatiosSet = true
+    if confTable.CHALLENGES_ACTIVE then
+        UI.show("challengeSettings")
+    else
+        configurationFinished = true
+    end
+end
+
+function UI_toggleChallengeAuto(_, checked)
+    if checked == "True" then
+        confTable.CHALLENGE_AUTO = true
+    else
+        confTable.CHALLENGE_AUTO = false
+    end
+end
+
+local CHALLENGE_DIFFICULTY = {
+    DIF_NORMAL = "DIF_NORMAL",
+    DIF_HARD = "DIF_HARD",
+    DIF_ULTRA = "DIF_ULTRA",
+    DIF_COMP = "DIF_COMP"
+}
+local hasSepCompMode = nil
+function UI_selectChallengeDifficulty(_, _, difficultyID)
+    if hasSepCompMode == nil then
+        hasSepCompMode = getObjectFromGUID(CHALLENGE_MODULE).call("hasCompetitiveMode", {challengeName = confTable.CHALLENGE})
+    end
+
+    if not hasSepCompMode then
+        if difficultyID == "DIF_COMP" then
+            if UI.getAttribute(difficultyID .. "_IMAGE", "image") == (difficultyID) then
+                UI.setAttribute(difficultyID .. "_IMAGE", "image", difficultyID .. "_SELECT")
+                confTable.CHALLENGE_COMP = true
+            else
+                UI.setAttribute(difficultyID .. "_IMAGE", "image", difficultyID)
+                confTable.CHALLENGE_COMP = false
+            end
+        else
+            for _, difficulty in pairs(CHALLENGE_DIFFICULTY) do
+                if difficulty == difficultyID then
+                    UI.setAttribute(difficulty .. "_IMAGE", "image", difficulty .. "_SELECT")
+                else
+                    if difficulty ~= "DIF_COMP" then
+                        UI.setAttribute(difficulty .. "_IMAGE", "image", difficulty)
+                    end
+                end
+            end
+            confTable.CHALLENGE_DIF = difficultyID
+        end
+    else
+        for _, difficulty in pairs(CHALLENGE_DIFFICULTY) do
+            if difficulty == difficultyID then
+                UI.setAttribute(difficulty .. "_IMAGE", "image", difficulty .. "_SELECT")
+            else
+                UI.setAttribute(difficulty .. "_IMAGE", "image", difficulty)
+            end
+        end
+        confTable.CHALLENGE_DIF = difficultyID
+    end
+end
+
+function UI_challengeDone(player)
+    if not player.admin then
+        return
+    end
+    UI.hide("challengeSettings")
+    local setupInfoTable = {}
+    setupInfoTable["filterTagsActive"] = ((confTable.ADVANCED_MODE_ACTIVE) and (confTable.BUILDING_MODE ~= "BM_NO"))
+    setupInfoTable["filterTags"] = confTable.SPECIAL_DECKS
+    setupInfoTable["difficulty"] = confTable.CHALLENGE_DIF
+    setupInfoTable["compMode"] = confTable.CHALLENGE_COMP
+    setupInfoTable["automation"] = confTable.CHALLENGE_AUTO
+    setupInfoTable["challengeName"] = confTable.CHALLENGE
+    getObjectFromGUID(CHALLENGE_MODULE).call("presetupChallenge", setupInfoTable)
+    configurationFinished = true
 end
 
 local clickCounterDebug = 0
@@ -514,6 +799,30 @@ function UI_hideReminder()
     UI.hide("reminder")
 end
 
+function startTurnSystem()
+    activePlayerColor = startPlayerColor
+    callTurnStartEvents(nil, activePlayerColor)
+    UI.setAttribute("passButton", "image", "turn_" .. string.lower(activePlayerColor))
+    UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[activePlayerColor])
+    UI.setAttribute("turnInfo", "visibility", activePlayerColor .. "|Black")
+    UI.show("turnInfo")
+end
+
+function UI_passTurn(clickerPlayer)
+    if clickerPlayer == nil then
+        return
+    end
+    local activeZone = getObjectFromGUID(ZONE_GUID_PLAYER[activePlayerColor])
+    if (activeZone.getVar("owner_color") == clickerPlayer.color) then
+        passTurn(getNextPlayerColor(activePlayerColor))
+    end
+end
+
+function UI_skipTurn()
+    UI.hide("skipTurn")
+    passTurn(getNextPlayerColor(activePlayerColor))
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------- Edited by Ediforce44 -----------------------------------------------------
 ----------------------------------------------- global functions -------------------------------------------------------
@@ -539,10 +848,11 @@ function detectExpansions()
 end
 
 function getRandomPlayerColor()
-    local allPlayerColors = {"Red", "Blue", "Green", "Yellow"}
+    local allPlayerColors = PLAYER
     local allActivePlayerColors = {}
     for _ , playerColor in pairs(allPlayerColors) do
-        if Player[playerColor].seated then
+        local zone = getObjectFromGUID(ZONE_GUID_PLAYER[playerColor])
+        if zone and zone.getVar("active") then
             table.insert(allActivePlayerColors, playerColor)
         end
     end
@@ -562,7 +872,7 @@ function pickColor(falseInput)
     if (not falseInput) then
         broadcastToAll(getPlayerString({playerColor = nextEntry.picker}) .. " picks a Player Color for "
             .. nextEntry.reason .. ".")
-        broadcastToColor("Please pick a Player Color for " .. nextEntry.reason .. ".", nextEntry.picker)
+        broadcastToColor("Please pick a Player Color for " .. nextEntry.reason .. ".", PLAYER_OWNER[nextEntry.picker])
     end
 end
 
@@ -588,8 +898,9 @@ function UI_colorPicked(player, _, idValue)
     else
         pickedColor = idValue
         local picked = getPlayerString({playerColor = pickedColor})
-        if not Player[pickedColor].seated then
-            broadcastToColor(picked .. " is not a active Player!", player.color)
+        local zone = getObjectFromGUID(ZONE_GUID_PLAYER[pickedColor])
+        if not (zone and zone.getVar("active")) then
+            broadcastToColor(picked .. " is not a active Player!", PLAYER_OWNER[player.color])
             pickColor(true)
             return
         end
@@ -650,15 +961,43 @@ PLAYER = {
     Yellow = "Yellow"
 }
 
+PLAYER_OWNER = {
+    Red = "Red",
+    Blue = "Blue",
+    Green = "Green",
+    Yellow = "Yellow"
+}
+
+HAND_INFO = {
+    Red = {index = 1, owner = "Red", guid = "b000d8"},
+    Blue = {index = 1, owner = "Blue", guid = "29f1f6"},
+    Green = {index = 1, owner = "Green", guid = "489f26"},
+    Yellow = {index = 1, owner = "Yellow", guid = "e2e2d1"}
+}
+
+TURN_ORDER = {
+    Red = "Blue",
+    Blue = "Green",
+    Green = "Yellow",
+    Yellow = "Red"
+}
+
 REAL_PLAYER_COLOR = {
-    Yellow = "[D0E431]",
+    Yellow = "[E7E52C]",
     Green = "[2BB837]",
     Blue = "[1C79F8]",
     Red = "[C60A00]"
 }
 
+PLAYER_COLOR_HEX = {
+    Red = "#C60A00",
+    Blue = "#1C79F8",
+    Green = "#33A92D",
+    Yellow = "#D3D626"
+}
+
 REAL_PLAYER_COLOR_RGB = {
-    Yellow = {208/255, 228/255, 49/255},
+    Yellow = {231/255, 229/255, 44/255},
     Green = {43/255, 184/255, 55/255},
     Blue = {28/255, 121/255, 248/255},
     Red = {198/255, 10/255, 0/255}
@@ -676,6 +1015,7 @@ PRINT_COLOR_SPECIAL = {
     SOUL = "[C8EFF7]",
     MONSTER_LIGHT = "[67588B]",
     MONSTER = "[352853]",
+    MINION = "[A10520]",
     COIN = "[AB9023]",
     LOOT = "[B9E9F0]",
     ROOM = "[5E4C3F]",
@@ -701,7 +1041,8 @@ ZONE_GUID_DECK = {
 ZONE_GUID_DISCARD = {
     TREASURE = "dae5d8",
     LOOT = "986a58",
-    MONSTER = "61e7b7"
+    MONSTER = "61e7b7",
+    ROOM = "8a48db"
 }
 
 ZONE_GUID_SHOP = {
@@ -729,10 +1070,10 @@ ZONE_GUID_MONSTER = {
 }
 
 ZONE_GUID_PLAYER = {
-    Yellow = "bb01dd",
-    Green = "19df91",
+    Red = "b35919",
     Blue = "60361f",
-    Red = "b35919"
+    Green = "19df91",
+    Yellow = "bb01dd"
 }
 
 ZONE_GUID_PILL = {
@@ -755,11 +1096,22 @@ ZONE_GUID_BONUSSOUL = {
     THREE = "5ffaca"
 }
 
+ZONE_INFO_MINION = {}
+
+ZONE_GUID_BOSS = nil
+
 COIN_COUNTER_GUID = {
     Yellow = "9d76db",
     Green = "c46653",
     Blue = "8edf63",
     Red = "965140"
+}
+
+SOUL_COUNTER_GUID = {
+    Red = "98de07",
+    Blue = "281235",
+    Green = "4e958e",
+    Yellow = "d340e6"
 }
 
 MONSTER_HP_COUNTER_GUID = {
@@ -776,14 +1128,17 @@ COUNTER_BAGS_GUID = {
     NORMAL = "bb7a32",
     GOLD = "a0915e",
     EGG = "71e1f7",
-    POOP = "9977a0"
+    POOP = "9977a0",
+    SPIDER = "abca4d",
+    GUT = "8abd1b"
 }
 
 --Initialised in onLoad
 DISCARD_PILE_POSITION = {
     TREASURE = {},
     LOOT = {},
-    MONSTER = {}
+    MONSTER = {},
+    ROOM = {}
 }
 
 DECK_POSITION = {
@@ -801,6 +1156,8 @@ DECK_POSITION = {
 }
 
 DEAD_END_POSITION = {}
+
+CHALLENGE_LEFTOVERS_POSITION = Vector(46.75, 1.7, -14)
 
 function printWarning(params)
     if params.text == nil then
@@ -845,15 +1202,16 @@ function setNewStartPlayer(params)
     if hasGameStarted() or (params.playerColor == startPlayerColor) then
         return false
     end
-    if not Player[params.playerColor].seated then
+    local zone = getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor])
+    if zone and Player[zone.getVar("owner_color")].seated then
+        startPlayerColor = params.playerColor
+        getObjectFromGUID("69a80d").call("selectStartTurn", {playerColor = params.playerColor})
+        broadcastToAll(REAL_PLAYER_COLOR[params.playerColor] .. Player[zone.getVar("owner_color")].steam_name .. "[-] has the starting turn now!")
+        return true
+    else
         printWarning({text = "" .. getPlayerString(params) .. " is not an active Player."})
-        return false
     end
-
-    startPlayerColor = params.playerColor
-    getObjectFromGUID("69a80d").call("selectStartTurn", {playerColor = params.playerColor})
-    broadcastToAll(getPlayerString(params) .. " has the starting turn now!")
-    return true
+    return false
 end
 
 function getPlayerString(params)
@@ -874,20 +1232,25 @@ end
 
 function isPlayerAuthorized(params)
     -- If there is no owner, all players have the permission to interact with something
-    if params.ownerPlayer == nil then
-        return true
+    local ownerColor = params.ownerColor
+    if ownerColor == nil then
+        if params.owner == nil then
+            return true
+        else
+            ownerColor = params.owner.color
+        end
     end
     -- Interacting player has to be the owner or has to be an admin
-    local player = nil
-    if params.playerColor ~= nil then
-        player = Player[params.playerColor]
-    elseif params.player ~= nil then
-        player = params.player
-    else
-        printWarning({text = "Wrong parameters in global function 'isPlayerAuthorized()'."})
-        return false
+    local playerColor = params.playerColor
+    if playerColor == nil then
+        if params.player == nil then
+            return true
+        else
+            playerColor = params.player.color
+        end
     end
-    return player == params.ownerPlayer or player.admin
+
+    return (ownerColor == playerColor) or Player[playerColor].admin or (getObjectFromGUID(ZONE_GUID_PLAYER[ownerColor]).getVar("owner_color") == playerColor)
 end
 
 function deactivateCharacter(params)
@@ -1043,6 +1406,17 @@ function getCardFromDeck(params)
     return card
 end
 
+function dealLootToColor(params)
+    if params.color == nil then
+        printWarning({text = "Wrong parameters in global function 'dealLootToColor()'."})
+        return
+    end
+    local amount = params.amount or 1
+    local lootDeck = getLootDeck()
+    local handInfo = HAND_INFO[params.color]
+    lootDeck.deal(amount, handInfo.owner, handInfo.index)
+end
+
 function placeSoulToken(params)
     if params.playerColor == nil then
         printWarning({text = "Wrong parameters in global function 'placeSoulToken()'."})
@@ -1096,5 +1470,83 @@ function placeObjectsInPlayerZone(params)
                 , index = params.index, replacing = params.replacing})
         end
     end
+end
+
+function placePlayerCounterInPlayerZone(params)
+    if (params.playerColor == nil) or ((params.counter == nil) and (params.type == nil)) then
+        printWarning({text = "Wrong parameters in global function 'placePlayerCounterInPlayerZone()'."})
+    else
+        local playerZone = getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor])
+        if playerZone then
+            playerZone.call("placeCounterInZone", params)
+        end
+    end
+end
+
+function placeCounter(params)
+    if (params.counter == nil) and (params.type == nil) or (params.position == nil) then
+        printWarning({text = "Wrong parameters in global function 'placeCounter()'."})
+        return
+    end
+    local rotation = params.rotation or Vector(0, 180, 0)
+
+    if params.counter then
+        params.counter.setPositionSmooth(params.position, false)
+        params.counter.setRotationSmooth(rotation)
+    else
+        local counterType = params.type
+        local counterBag = getObjectFromGUID(COUNTER_BAGS_GUID[counterType])
+        local amount = params.amount or 1
+
+        local position = params.position
+        for i = 1, amount do
+            local counter = counterBag.takeObject()
+            counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
+            counter.setRotationSmooth(rotation)
+        end
+    end
+end
+
+function placeCounterInZone(params)
+    if (params.counter == nil) and (params.type == nil) or (params.zone == nil) then
+        printWarning({text = "Wrong parameters in global function 'placeCounterInZone()'."})
+        return
+    end
+    local amount = params.amount or 1
+    local endAmount = amount
+    local rotation = params.rotation or Vector(0, 180, 0)
+
+    local typeTag = params.type
+    if typeTag == nil then
+        local counterTags =  params.counter.getTags()
+        if #counterTags >= 2 then
+            typeTag = counterTags[2]
+        end
+    end
+    if typeTag then
+        for _, obj in pairs(params.zone.getObjects()) do
+            if obj.hasTag(typeTag) then
+                if obj.getQuantity() == -1 then
+                    endAmount = endAmount + 1
+                else
+                    local counterObjectInZone = obj
+                    if params.counter then
+                        counterObjectInZone.putObject(params.counter)
+                    else
+                        local counterBag = getObjectFromGUID(COUNTER_BAGS_GUID[params.type])
+                        for i = 1, amount do
+                            local counter = counterBag.takeObject()
+                            Wait.frames(function() counterObjectInZone.putObject(counter) end)
+                        end
+                    end
+                    return obj.getQuantity() + amount
+                end
+            end
+        end
+    end
+
+    params["position"] = params.zone.getPosition():setAt('y', 3)
+    placeCounter(params)
+    return endAmount
 end
 ------------------------------------------------------------------------------------------------------------------------

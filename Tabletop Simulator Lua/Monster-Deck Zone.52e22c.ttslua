@@ -1,11 +1,13 @@
 --- Written by Ediforce44
 MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
+BOSS_ZONE_GUID = nil
+
+CHALLENGE_MODE = false
+
+ON_DIE_EVENTS = {}
+NEW_MONSTER_EVENTS = {}
+
 DISCARD_PILE_POSITION = {}
-CHOOSE_BUTTON_STATES = {
-    ATTACK      = "Attack",
-    CHOOSE      = "Cancel"
-}
-CHOOSE_BUTTON_INDEX = nil
 
 ATTACK_BUTTON_STATES = {
     INACTIVE    = "Inactive",
@@ -13,12 +15,22 @@ ATTACK_BUTTON_STATES = {
     CHOOSE      = "This Zone",
     ATTACKING   = "Cancel",
     DIED        = "Finish Him",
-    EVENT       = "Done!"
+    EVENT       = "Done!",
+    SELECT      = "Select"
 }
 ATTACK_BUTTON_COLORS = {
     INACTIVE    = {0.114, 0.063, 0.224},
     ACTIVE      = {0.2, 0.157, 0.325}
 }
+
+CHOOSE_BUTTON_STATES = {
+    ATTACK      = "Attack",
+    CHOOSE      = "Cancel",
+    SELECT      = ATTACK_BUTTON_STATES.SELECT
+}
+CHOOSE_BUTTON_INDEX = nil
+
+LAST_STATE = nil
 
 MONSTER_TAGS = {
     --The onReveal() function of this object will be called if it enters a Monster Zone.
@@ -37,12 +49,24 @@ EVENT_TYPES = {
     BAD     = "eventBad"
 }
 
+-- Used for states which will call functions from other objects if the player presses the button
+--  e.g. "SELECT" {function_owner : obj, call_function : string, onlyMonster : bool}
+STATE_PARAMS = nil
+
 local function getChooseButton()
     if CHOOSE_BUTTON_INDEX == nil then
         return nil
     end
 
     return self.getButtons()[CHOOSE_BUTTON_INDEX + 1]
+end
+
+function getState()
+    local chooseButton = getChooseButton()
+    if chooseButton == nil then
+        return nil
+    end
+    return chooseButton.label
 end
 
 local function getDoubleAltClickParameters(zone)
@@ -111,24 +135,47 @@ local function onNewMonsterReveal(card, zone)
 end
 
 local function getTopMostDeckOrCard(zone, except)
-    local blocked = false
+    local except = except or {}
     local zoneObjects = zone.getObjects()
     for index = #zoneObjects, 1, -1 do
         local object = zoneObjects[index]
         if object.tag == "Deck" or object.tag == "Card" then
-            blocked = false
-            for _ , blockedObject in pairs(except) do
-                if object.getGUID() == blockedObject.getGUID() then
-                    blocked = true
-                    break
-                end
-            end
-            if blocked == false then
+            if not except[object.getGUID()] then
                 return object
             end
         end
     end
     return nil
+end
+
+local function getFirstMonsterInZone(zone)
+    local monsterCard = nil
+    local searchedObjects = {}
+    local found = false
+    while not found do
+        local topMostObject = getTopMostDeckOrCard(zone, searchedObjects)
+        if topMostObject == nil then
+            break
+        end
+        if topMostObject.type == "Deck" then
+            local objectsInDeck = topMostObject.getObjects()
+            for i = #objectsInDeck, 1, -1 do
+                local card = objectsInDeck[i]
+                if not Global.call("findBoolInScript", {scriptString = card.lua_script, varName = "isEvent"}) then
+                    monsterCard = topMostObject.takeObject({guid = card.guid})
+                    found = true
+                    break
+                end
+            end
+        elseif topMostObject.type == "Card" then
+            if not topMostObject.getVar("isEvent") then
+                monsterCard = topMostObject
+                found = true
+            end
+        end
+        searchedObjects[topMostObject.getGUID()] = true
+    end
+    return monsterCard
 end
 
 local function objectContainsGUID(object, GUID)
@@ -158,6 +205,86 @@ local function isZoneChooseable(zone)
         return true
     end
     return false
+end
+
+function callMonsterDieEvents(params)
+    local eventFunctionParams = params or {}
+    for _, eventTable in ipairs(ON_DIE_EVENTS) do
+        if eventTable.valid then
+            for id, param in pairs(eventTable.function_params) do
+                eventFunctionParams[id] = param
+            end
+            if eventTable.function_owner == nil then
+                Global.call(eventTable.call_function, eventFunctionParams)
+            else
+                local functionOwner = getObjectFromGUID(eventTable.function_owner)
+                if functionOwner then
+                    functionOwner.call(eventTable.call_function, eventFunctionParams)
+                end
+            end
+        end
+    end
+end
+
+function addDieEvent(params)
+    if (params == nil) or (params.call_function == nil) then
+        return
+    end
+    local functionParams = params.function_params or {}
+    table.insert(ON_DIE_EVENTS, {call_function = params.call_function, function_params = functionParams
+        , function_owner = params.function_owner, valid = true})
+end
+
+function deactivateDieEvent(params)
+    if params.eventID then
+        ON_DIE_EVENTS[params.eventID].valid = false
+    end
+end
+
+function activateDieEvent(params)
+    if params.eventID then
+        ON_DIE_EVENTS[params.eventID].valid = true
+    end
+end
+
+function callNewMonsterEvents(params)
+    local eventFunctionParams = params or {}
+    for _, eventTable in ipairs(NEW_MONSTER_EVENTS) do
+        if eventTable.valid then
+            for id, param in pairs(eventTable.function_params) do
+                eventFunctionParams[id] = param
+            end
+            if eventTable.function_owner == nil then
+                Global.call(eventTable.call_function, eventFunctionParams)
+            else
+                local functionOwner = getObjectFromGUID(eventTable.function_owner)
+                if functionOwner then
+                    functionOwner.call(eventTable.call_function, eventFunctionParams)
+                end
+            end
+        end
+    end
+end
+
+function addNewMonsterEvent(params)
+    if (params == nil) or (params.call_function == nil) then
+        return
+    end
+    local functionParams = params.function_params or {}
+    table.insert(NEW_MONSTER_EVENTS, {call_function = params.call_function, function_params = functionParams
+        , function_owner = params.function_owner, valid = true})
+end
+
+function deactivateNewMonsterEvent(params)
+    if params.eventID then
+        NEW_MONSTER_EVENTS[params.eventID].valid = false
+    end
+end
+
+function activateNewMonsterEvent(params)
+    if params.eventID then
+        NEW_MONSTER_EVENTS[params.eventID].valid = true
+    end
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -194,6 +321,10 @@ local function altClickAttackButton(zone, color)
             else
                 changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
             end
+        elseif attackButtonState == ATTACK_BUTTON_STATES.SELECT then
+            zone.call("deactivateZone")
+            zone.call("deactivateAttackButton")
+            return
         end
         zone.call("deactivateZone")
     else
@@ -202,9 +333,15 @@ local function altClickAttackButton(zone, color)
     end
 end
 
-local function deactivateMonsterButtons(zone, ignoreOwnButton, exceptionStates)
+local function deactivateAllAttackButtons(zone, ignoreOwnButton, exceptionStates)
     ignoreOwnButton = ignoreOwnButton == true
     exceptionStates = exceptionStates or {}
+    if CHALLENGE_MODE then
+        getObjectFromGUID(BOSS_ZONE_GUID).call("deactivateAllAttackButtons"
+            , {zone = zone, ignoreOwnButton = ignoreOwnButton, exceptionStates = exceptionStates})
+        return
+    end
+
     for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
         local monsterZone = getObjectFromGUID(guid)
         if (not ignoreOwnButton) or (monsterZone.getGUID() ~= zone.guid) then
@@ -218,28 +355,43 @@ local function deactivateMonsterButtons(zone, ignoreOwnButton, exceptionStates)
         end
         ::continue::
     end
-    if not ignoreOwnButton then
-        zone.call("deactivateAttackButton")
-    end
     deactivateChooseButton()
 end
 
-local function activateAllMonsterButtons()
+local function activateAllAttackButtons()
+    if CHALLENGE_MODE then
+        getObjectFromGUID(BOSS_ZONE_GUID).call("activateAllAttackButtons")
+        return
+    end
+
     for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
         getObjectFromGUID(guid).call("activateAttackButton")
     end
     activateChooseButton()
 end
+
+local function resetAllAttackButtons()
+    if CHALLENGE_MODE then
+        getObjectFromGUID(BOSS_ZONE_GUID).call("resetAllAttackButtons")
+        return
+    end
+
+    for _, guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
+        getObjectFromGUID(guid).call("resetAttackButton")
+    end
+    resetChooseButton()
+end
 ------------------------------------------------------------------------------------------------------------------------
 
 function onLoad(saved_data)
+    BOSS_ZONE_GUID = Global.getVar("ZONE_GUID_BOSS")
     DISCARD_PILE_POSITION = Global.getTable("DISCARD_PILE_POSITION").MONSTER
     if saved_data == "" then
         return
     end
 
     local loaded_data = JSON.decode(saved_data)
-    if loaded_data[1] then
+    if loaded_data.currentLabel then
         activateChooseButton()
         for _ , state in pairs(CHOOSE_BUTTON_STATES) do
             if state == loaded_data[1] then
@@ -248,6 +400,15 @@ function onLoad(saved_data)
             end
         end
     end
+    if loaded_data.challengeMode == true then
+        CHALLENGE_MODE = true
+    end
+    if loaded_data.dieEvents then
+        ON_DIE_EVENTS = loaded_data.dieEvents
+    end
+    if loaded_data.newMonsterEvents then
+        NEW_MONSTER_EVENTS = loaded_data.newMonsterEvents
+    end
 end
 
 function onSave()
@@ -255,7 +416,7 @@ function onSave()
     if getChooseButton() then
         currentLabel = getChooseButton().label
     end
-    return JSON.encode({currentLabel})
+    return JSON.encode({currentLabel = currentLabel, challengeMode = CHALLENGE_MODE, dieEvents = ON_DIE_EVENTS, newMonsterEvents = NEW_MONSTER_EVENTS})
 end
 
 -------------------------------------------------- Monster Zone API ----------------------------------------------------
@@ -269,7 +430,8 @@ local function payOutLoot(playerColor, amount)
         Global.call("printWarning", {text = "Can't find the Loot deck."
             .. " Place the Loot deck on its starting position."})
     end
-    lootDeck.deal(amount, playerColor)
+    local handInfo = Global.getTable("HAND_INFO")[playerColor]
+    lootDeck.deal(amount, handInfo.owner, handInfo.index)
 end
 
 local function payOutTreasures(playerColor, amount)
@@ -277,6 +439,7 @@ local function payOutTreasures(playerColor, amount)
     if treasureDeck == nil then
         Global.call("printWarning", {text = "Can't find the Treasure deck."
             .. " Place the Treasure deck on its starting position."})
+        return
     end
     if amount > 1 then
         local cards = {}
@@ -319,6 +482,10 @@ function payOutRewards(params)
     return rewarded
 end
 
+function activateChallengeMode()
+    CHALLENGE_MODE = true
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 
 function containsDeckOrCard(params)
@@ -340,12 +507,20 @@ function discardMonsterObject(params)
     end
     params.object.addTag(MONSTER_TAGS.DEAD)
     params.object.setPositionSmooth(DISCARD_PILE_POSITION)
+    params.object.setRotationSmooth({0, 180, 0})
 end
 
 function resetAllMonsterZones()
     for _ , guid in pairs(MONSTER_ZONE_GUIDS) do
         getObjectFromGUID(guid).call("resetMonsterZone")
     end
+    for _, zoneInfo in pairs(Global.getTable("ZONE_INFO_MINION")) do
+        getObjectFromGUID(zoneInfo.guid).call("resetMinionZone")
+    end
+    if Global.getVar("ZONE_GUID_BOSS") then
+        getObjectFromGUID(Global.getVar("ZONE_GUID_BOSS")).call("resetBossZone")
+    end
+    getObjectFromGUID(Global.getTable("ZONE_GUID_DISCARD").MONSTER).call("resetDiscardZone")
     resetMonsterZone()
 end
 
@@ -370,13 +545,17 @@ function discardActiveMonsterCard(params)
     end
 end
 
-function resetMonsterZone()
+function resetChooseButton()
     if CHOOSE_BUTTON_INDEX == nil then
         activateChooseButton()
     else
         self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK
             , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.ATTACK})})
     end
+end
+
+function resetMonsterZone()
+    resetChooseButton()
 end
 
 function activateChooseButton()
@@ -466,27 +645,31 @@ end
 
 function changeZoneState(params)
     local zone = params.zone
-    local newState = params.newState
+    local newState = params.newState or zone.getVar("LAST_STATE")
     if zone == nil or newState == nil then
         return
     end
+    local currentState = zone.call("getState")
+    if currentState ~= nil then
+        zone.setVar("LAST_STATE", currentState)
+    end
     if newState == ATTACK_BUTTON_STATES.INACTIVE then
-        activateAllMonsterButtons()
+        activateAllAttackButtons()
         if zone.getVar("active") then
             zone.call("deactivateZone")
         end
     elseif newState == ATTACK_BUTTON_STATES.ATTACK then
-        activateAllMonsterButtons()
+        activateAllAttackButtons()
         if not zone.getVar("active") then
             zone.call("activateZone", {})
         else
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK
-                    , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACK})})
+                , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACK})})
         end
     elseif newState == ATTACK_BUTTON_STATES.CHOOSE then
         if isZoneChooseable(zone) then   --change button state
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.CHOOSE
-                    , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.CHOOSE})})
+                , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.CHOOSE})})
         else    --deactivate buttons for inactive zones
             zone.call("deactivateAttackButton")
         end
@@ -494,22 +677,70 @@ function changeZoneState(params)
         if zone.getVar("active") then
             zone.call("activateAttackButton")
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACKING
-                    , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACKING})})
-            deactivateMonsterButtons(zone, true)
+                , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACKING})})
+            deactivateAllAttackButtons(zone, true)
         end
     elseif newState == ATTACK_BUTTON_STATES.DIED then
         if zone.getVar("active") then
             zone.call("activateAttackButton")
-            zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.DIED
+            if (currentState ~= ATTACK_BUTTON_STATES.SELECT) or params.force then
+                zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.DIED
                     , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.DIED})})
-            deactivateMonsterButtons(zone, true)
+            else
+                zone.setVar("LAST_STATE", ATTACK_BUTTON_STATES.DIED)
+            end
+            deactivateAllAttackButtons(zone, true)
         end
     elseif newState == ATTACK_BUTTON_STATES.EVENT then
         if zone.getVar("active") then
             zone.call("activateAttackButton")
             zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.EVENT
-                    , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.EVENT})})
-            deactivateMonsterButtons(zone, true, {ATTACK_BUTTON_STATES.EVENT})
+                , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.EVENT})})
+            deactivateAllAttackButtons(zone, true, {ATTACK_BUTTON_STATES.EVENT})
+        end
+    elseif newState == ATTACK_BUTTON_STATES.SELECT then
+        if zone.getVar("active") then
+            if zone.call("getAttackButton") ~= nil then
+                if params.stateParams then
+                    STATE_PARAMS = params.stateParams
+                    zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.SELECT
+                        , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.SELECT})})
+                end
+            end
+        else
+            zone.call("deactivateAttackButton")
+        end
+    end
+end
+
+function changeChooseZoneState(params)
+    local newState = params.newState or LAST_STATE
+    if newState == nil then
+        return
+    end
+    local currentState = getState()
+    if currentState ~= nil then
+        LAST_STATE = currentState
+    end
+    if newState == CHOOSE_BUTTON_STATES.ATTACK then
+        self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK
+            , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.ATTACK})})
+    elseif newState == CHOOSE_BUTTON_STATES.CHOOSE then
+        self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE
+            , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.CHOOSE})})
+        for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
+            changeZoneState({zone = getObjectFromGUID(guid), newState = ATTACK_BUTTON_STATES.CHOOSE})
+        end
+        if CHALLENGE_MODE then
+            getObjectFromGUID(BOSS_ZONE_GUID).call("deactivateAllChallengeButtons")
+        end
+    elseif newState == CHOOSE_BUTTON_STATES.SELECT then
+        if CHOOSE_BUTTON_INDEX then
+            if params.stateParams then
+                STATE_PARAMS = params.stateParams
+            end
+            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.SELECT
+                , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.SELECT})})
         end
     end
 end
@@ -586,40 +817,46 @@ function onObjectEnterScriptingZone(zone, object)
                         card.addTag(MONSTER_TAGS.NEW)
                     end
                 elseif object.tag == "Card" then
-                    local isMonsterNew = false
-                    -- Tests if this card is the active monster of this zone
-                    if zone.getTable("active_monster_attrs").GUID ~= object.getGUID() then
-                        -- If monster card is new call onReveal() and update attributes and rewards
-                        if object.hasTag(MONSTER_TAGS.NEW) then
-                            isMonsterNew = true
-                        else
-                            -- Ignore this card if there is a object in the zone, which is NEW
-                            for _ , obj in pairs(zone.getObjects()) do
-                                if obj.hasTag(MONSTER_TAGS.NEW) then
-                                    return
+                    Wait.frames(function()
+                        if not object.hasTag(MONSTER_TAGS.DEAD) then
+                            local isMonsterNew = false
+                            -- Tests if this card is the active monster of this zone
+                            if zone.getTable("active_monster_attrs").GUID ~= object.getGUID() then
+                                -- If monster card is new call onReveal() and update attributes and rewards
+                                if object.hasTag(MONSTER_TAGS.NEW) then
+                                    isMonsterNew = true
+                                else
+                                    -- Ignore this card if there is a object in the zone, which is NEW
+                                    for _ , obj in pairs(zone.getObjects()) do
+                                        if obj.hasTag(MONSTER_TAGS.NEW) then
+                                            return
+                                        end
+                                    end
                                 end
                             end
+                            -- Attributes
+                            local newAttributes = {}
+                            newAttributes.GUID = object.getGUID()
+                            newAttributes.NAME = object.getName()
+                            newAttributes.HP = object.getVar("hp") or 0
+                            newAttributes.ATK = object.getVar("dice")
+                            newAttributes.DMG = object.getVar("atk")
+                            newAttributes.INDOMITABLE = object.hasTag(MONSTER_TAGS.INDOMITABLE)
+                            -- Rewards
+                            local rewards = object.getTable("rewards") or {}
+
+                            zone.call("updateAttributes", newAttributes)
+                            zone.call("updateRewards", rewards)
+
+                            callNewMonsterEvents({guid = object.getGUID(), zone = zone, isMinion = false})
+
+                            if isMonsterNew then
+                                onNewMonsterReveal(object, zone)
+                                -- The wait is need for other cards to check if there is an NEW card in the zone
+                                Wait.frames(function () object.removeTag(MONSTER_TAGS.NEW) end)
+                            end
                         end
-                    end
-                    -- Attributes
-                    local newAttributes = {}
-                    newAttributes.GUID = object.getGUID()
-                    newAttributes.NAME = object.getName()
-                    newAttributes.HP = object.getVar("hp") or 0
-                    newAttributes.ATK = object.getVar("dice")
-                    newAttributes.DMG = object.getVar("atk")
-                    newAttributes.INDOMITABLE = object.hasTag(MONSTER_TAGS.INDOMITABLE)
-                    -- Rewards
-                    local rewards = object.getTable("rewards") or {}
-
-                    zone.call("updateAttributes", newAttributes)
-                    zone.call("updateRewards", rewards)
-
-                    if isMonsterNew then
-                        onNewMonsterReveal(object, zone)
-                        -- The wait is need for other cards to check if there is an NEW card in the zone
-                        Wait.frames(function () object.removeTag(MONSTER_TAGS.NEW) end)
-                    end
+                    end)
                 else
                     return
                 end
@@ -633,7 +870,9 @@ function onObjectLeaveScriptingZone(zone, object)
         if guid == zone.getGUID() and zone.getVar("active") and isObjectReallyLeaving(object, zone) then
             if objectContainsGUID(object, zone.getTable("active_monster_attrs").GUID) then
                 local newAttributes = {}
-                local topObjectInZone = getTopMostDeckOrCard(zone, {object})
+                local exceptionTable = {}
+                exceptionTable[object.getGUID()] = true
+                local topObjectInZone = getTopMostDeckOrCard(zone, exceptionTable)
 
                 if topObjectInZone == nil then
                     newAttributes = {NAME = "", HP = 0}
@@ -656,6 +895,8 @@ function onObjectLeaveScriptingZone(zone, object)
 
                     zone.call("updateAttributes", newAttributes)
                     zone.call("updateRewards", rewards)
+
+                    callNewMonsterEvents({guid = topObjectInZone.getGUID(), zone = zone, isMinion = false})
                 else
                     return
                 end
@@ -684,21 +925,34 @@ function click_function_ChooseButton(_, color, alt_click)
     if Global.getVar("activePlayerColor") == color or Player[color].admin then
         local chooseButton = getChooseButton()
         if chooseButton.label == CHOOSE_BUTTON_STATES.ATTACK then
-            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.CHOOSE
-                        , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.CHOOSE})})
-            for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
-                changeZoneState({zone = getObjectFromGUID(guid), newState = ATTACK_BUTTON_STATES.CHOOSE})
-            end
+            changeChooseZoneState({newState = CHOOSE_BUTTON_STATES.CHOOSE})
         elseif chooseButton.label == CHOOSE_BUTTON_STATES.CHOOSE then
-            self.editButton({index = CHOOSE_BUTTON_INDEX, label = CHOOSE_BUTTON_STATES.ATTACK
-                        , tooltip = getChooseButtonTooltip({newState = CHOOSE_BUTTON_STATES.ATTACK})})
-            activateAllMonsterButtons()
+            changeChooseZoneState({newState = CHOOSE_BUTTON_STATES.ATTACK})
+            activateAllAttackButtons()
             for _ , guid in pairs(Global.getTable("ZONE_GUID_MONSTER")) do
                 local zone = getObjectFromGUID(guid)
                 if zone.getVar("active") then
                     zone.editButton({index = zone.getVar("ATTACK_BUTTON_INDEX"), label = ATTACK_BUTTON_STATES.ATTACK
                                 , tooltip = getAttackButtonTooltip({newState = ATTACK_BUTTON_STATES.ATTACK})})
                 end
+            end
+        elseif chooseButton.label == CHOOSE_BUTTON_STATES.SELECT then
+            local selectedCard = nil
+            local monsterDeck = Global.call("getMonsterDeck")
+            if STATE_PARAMS.onlyMonster then
+                for _, card in pairs(monsterDeck.getObjects()) do
+                    if not Global.call("findBoolInScript", {scriptString = card.lua_script, varName = "isEvent"}) then
+                        selectedCard = monsterDeck.takeObject({guid = card.guid})
+                        break
+                    end
+                end
+            else
+                selectedCard = Global.call("getCardFromDeck", {deck = monsterDeck})
+            end
+            if selectedCard == nil then
+                Global.call("printWarning", {text = "Can't find a real monster card in the Monster Deck: " .. zone.getGUID() .. "."})
+            else
+                STATE_PARAMS.function_owner.call(STATE_PARAMS.call_function, {card = selectedCard})
             end
         else
             Global.call("printWarning", {text = "Unknown monster button state: " .. tostring(attackButton.label) .. "."})
@@ -724,6 +978,9 @@ function click_function_AttackButton(zone, color, alt_click)
             if placedZone ~= nil then
                 changeZoneState({zone = placedZone, newState = ATTACK_BUTTON_STATES.ATTACKING})
             end
+            if CHALLENGE_MODE then
+                getObjectFromGUID(BOSS_ZONE_GUID).call("activateResurrectButton")
+            end
         elseif attackButtonState == ATTACK_BUTTON_STATES.ATTACKING then
             local monsterName = zone.getTable("active_monster_attrs").NAME
             if monsterName == "" then
@@ -738,6 +995,28 @@ function click_function_AttackButton(zone, color, alt_click)
             changeZoneState({zone = zone, newState = ATTACK_BUTTON_STATES.ATTACK})
         elseif attackButtonState == ATTACK_BUTTON_STATES.EVENT then
             discardActiveMonsterCard({zone = zone})
+        elseif attackButtonState == ATTACK_BUTTON_STATES.SELECT then
+            local lastState = zone.getVar("LAST_STATE")
+            local selectedCard = nil
+            if lastState == ATTACK_BUTTON_STATES.DIED then
+                selectedCard = zone.call("finishMonster", {selected = true})
+            end
+            if selectedCard ~= nil then
+                STATE_PARAMS.function_owner.call(STATE_PARAMS.call_function, {card = selectedCard})
+                resetAllAttackButtons()
+            else
+                if STATE_PARAMS.onlyMonster then
+                    selectedCard = getFirstMonsterInZone(zone)
+                else
+                    selectedCard = zone.call("getActiveMonsterCard")
+                end
+                if selectedCard == nil then
+                    Global.call("printWarning", {text = "Can't find a real monster card in this monster zone: " .. zone.getGUID() .. "."})
+                else
+                    STATE_PARAMS.function_owner.call(STATE_PARAMS.call_function, {card = selectedCard})
+                    zone.call("placeNewMonsterIfEmpty")
+                end
+            end
         else
             Global.call("printWarning", {text = "Unknown monster button state: " .. tostring(attackButton.label) .. "."})
         end

@@ -1,0 +1,49 @@
+link = "https://steamcommunity.com/sharedfiles/filedetails/?id=2526757138"
+
+function onLoad()
+    self.createInput({
+        value = "Workshop Link",
+        input_function = "dummy",
+        function_owner = self,
+        alignment = 3,
+        position = {0,0.5,0},
+        width = 2000,
+        height = 340,
+        font_size = 300,
+        scale={x=1, y=1, z=1},
+        font_color= {255,255,255,100},
+        color = {0,0,0,0}
+        })
+    self.createInput({
+        value = link,
+        input_function = "dummy",
+        label = link,
+        function_owner = self,
+        alignment = 3,
+        position = {0,0.5,0.7},
+        width = 7000,
+        height = 320,
+        font_size = 220,
+        scale={x=1, y=1, z=1},
+        font_color= {255,255,255,100},
+        color = {0,0,0,0}
+        })
+    --[[self.createButton({
+        click_function = "click_function_copyModLink",
+        function_owner = self,
+        label          = "Copy Link",
+        position       = {0, 0.5, 1.2},
+        width          = 1000,
+        height         = 300,
+        font_size      = 200,
+        color          = "White",
+        font_color     = "Black"
+    })]]
+end
+
+function click_function_copyModLink()
+    --TODO
+end
+
+function dummy()
+end

@@ -268,6 +268,7 @@ function placeObjectInZone(params)
             end)
         placeObject(params.object, position)
     else
-        params.object.deal(1, owner_color)
+        local handInfo = Global.getTable("HAND_INFO")[owner_color]
+        params.object.deal(1, handInfo.owner, handInfo.index)
     end
 end

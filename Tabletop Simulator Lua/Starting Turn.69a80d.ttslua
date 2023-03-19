@@ -6,6 +6,7 @@ TURN_BUTTON_INDICES = {
     Green = {3,7},
     Yellow = {4,8}
 }
+TURN_INPUT_INDICES = {1, 2}
 
 local function createTurnButtons()
     self.createButton({
@@ -93,6 +94,32 @@ local function createTurnButtons()
       color          = {0.9, 0.89, 0.17},
       tooltip        = "Yellow Turn"
     })
+    self.createInput({
+        input_function = "dummy",
+        function_owner = self,
+        value          = "Starting Turn",
+        alignment      = 3,
+        position       = {0, 1, 4.50},
+        rotation       = {0, 0, 0},
+        width          = 2000,
+        height         = 400,
+        font_size      = 250,
+        color          = {0, 0, 0, 0},
+        font_color     = {1, 1, 1, 100}
+    })
+    self.createInput({
+        input_function = "dummy",
+        function_owner = self,
+        value          = "Starting Turn",
+        alignment      = 3,
+        position       = {0, 1, -4.50},
+        rotation       = {0, 180, 0},
+        width          = 2000,
+        height         = 400,
+        font_size      = 250,
+        color          = {0, 0, 0, 0},
+        font_color     = {1, 1, 1, 100}
+    })
 end
 
 function onLoad(saved_data)
@@ -117,6 +144,15 @@ function onSave()
         end
     end
     return JSON.encode({selectedButtonIndices})
+end
+
+function deactivateSecondTurnButtons()
+    local buttons = self.getButtons()
+    for _, indexTable in pairs(TURN_BUTTON_INDICES) do
+        self.editButton({index = indexTable[2] - 1, position = buttons[indexTable[2]].position:setAt('y', -2)})
+    end
+    local inputs = self.getInputs()
+    self.editInput({index = TURN_INPUT_INDICES[2] - 1, position = inputs[TURN_INPUT_INDICES[2]].position:setAt('y', -2)})
 end
 
 function onClickRedBtn()

@@ -309,7 +309,7 @@ end
     return objClone
 end
 
-local function cloneCharacterCards(playerClickerColor, languagePrefix)
+local function cloneCharacterCards(zoneColorToPlace, languagePrefix)
     local spawnedObj = {}
     local characterPlaced = false
     local content = self.getObjects()
@@ -321,21 +321,21 @@ local function cloneCharacterCards(playerClickerColor, languagePrefix)
 
         if nextObjDescription == languagePrefix .. "_character" then
             objClone = cloneByGUID(nextObj.guid)
-            Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}
+            Global.call("placeObjectsInPlayerZone", {playerColor = zoneColorToPlace, objects = {objClone}
                 , index = 1, replacing = true})
             characterPlaced = true
         elseif nextObjDescription == languagePrefix .. "_character-item" then
             objClone = cloneByGUID(nextObj.guid)
-            Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}
+            Global.call("placeObjectsInPlayerZone", {playerColor = zoneColorToPlace, objects = {objClone}
                 , index = 2 + characterItemCounter, replacing = true})
             characterItemCounter = characterItemCounter + 1
         elseif nextObjDescription == "character-item-counter" then
             objClone = cloneByGUID(nextObj.guid)
-            Global.call("placeObjectsInPlayerZone", {playerColor = playerClickerColor, objects = {objClone}
+            Global.call("placeObjectsInPlayerZone", {playerColor = zoneColorToPlace, objects = {objClone}
                 , index = 2, replacing = true})
         elseif nextObjDescription == languagePrefix .. "_character-soul" then
             objClone = cloneByGUID(nextObj.guid)
-            Global.call("placeObjectInSoulZone", {playerColor = playerClickerColor, object = objClone})
+            Global.call("placeObjectInSoulZone", {playerColor = zoneColorToPlace, object = objClone})
         else
             goto continue
         end
@@ -350,7 +350,11 @@ local function cloneCharacterCards(playerClickerColor, languagePrefix)
         ::continue::
     end
     if characterPlaced then
-        updatePlayerSpawnedObj(playerClickerColor, spawnedObj)
+        updatePlayerSpawnedObj(zoneColorToPlace, spawnedObj)
+        local playerZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[zoneColorToPlace])
+        if playerZone then
+            playerZone.setVar("active", true)
+        end
         return true
     else
         return false
@@ -375,41 +379,31 @@ function selectCharacter(_, playerClickerColor)
     return
   end
 
-  getObjectFromGUID(CHARACTER_MANAGER_GUID).call("cleanupSpawnedObj", {playerColor = playerClickerColor})
+  local zoneColorForCharacter = nil
+  for color, charPacks in pairs(waitForSelectCharacters) do
+      for _, charPack in pairs(charPacks) do
+          if charPack.getGUID() == self.getGUID() then
+              zoneColorForCharacter = color
+              break
+          end
+      end
+  end
+  if zoneColorForCharacter == nil then
+      zoneColorForCharacter = playerClickerColor
+  end
+
+  getObjectFromGUID(CHARACTER_MANAGER_GUID).call("cleanupSpawnedObj", {playerColor = zoneColorForCharacter})
 
   local language = Global.getVar('gameLanguage')
-  local characterFound = cloneCharacterCards(playerClickerColor, language)
+  local characterFound = cloneCharacterCards(zoneColorForCharacter, language)
 
   if not characterFound then
     Global.call("printWarning", {text = "No character cards for the selected language found in this pack: " .. self.getName()})
-    if not cloneCharacterCards(playerClickerColor, Global.getTable('GAME_LANGUAGE').US) then
+    if not cloneCharacterCards(zoneColorForCharacter, Global.getTable('GAME_LANGUAGE').US) then
         Global.call("printWarning", {text = "No standard (English) character cards found in this pack: " .. self.getName()})
         return
     end
   end
-end
-
-function isCharacterInPullToSelect(waitForSelectCharacters)
-  local isInPull = false
-  for _, pull in pairs(waitForSelectCharacters) do
-    for _, obj in pairs(pull) do
-      if obj.guid == self.guid then
-        isInPull = true
-      end
-    end
-  end
-  return isInPull
-end
-
-function isCharacterInAnotherPlayerPullToSelect(clickedPlayerColor, waitForSelectCharacters)
-    local inAnotherPull = false
-    for _, color in pairs(PLAYER_COLORS) do
-        if (color != clickedPlayerColor) then
-            inAnotherPull = isCharacterInPlayerPullToSelect(color, waitForSelectCharacters)
-            if (inAnotherPull == true) then break end
-        end
-    end
-    return inAnotherPull
 end
 
 function isCharacterInPlayerPullToSelect(playerColor, waitForSelectCharacters)
@@ -420,6 +414,29 @@ function isCharacterInPlayerPullToSelect(playerColor, waitForSelectCharacters)
     end
   end
   return isInPull
+end
+
+function isCharacterInPullToSelect(waitForSelectCharacters)
+  for color, _ in pairs(waitForSelectCharacters) do
+      if isCharacterInPlayerPullToSelect(color, waitForSelectCharacters) then
+          return true
+      end
+  end
+  return false
+end
+
+function isCharacterInAnotherPlayerPullToSelect(clickedPlayerColor, waitForSelectCharacters)
+    for zoneColor, zoneGuid in pairs(Global.getTable("ZONE_GUID_PLAYER")) do
+        if (zoneColor != clickedPlayerColor) then
+            local playerZone = getObjectFromGUID(zoneGuid)
+            if playerZone and (playerZone.getVar("owner_color") != clickedPlayerColor) then
+                if isCharacterInPlayerPullToSelect(zoneColor, waitForSelectCharacters) then
+                    return true
+                end
+            end
+        end
+    end
+    return false
 end
 
 function updatePlayerSpawnedObj(playerColor, spawnedObj)

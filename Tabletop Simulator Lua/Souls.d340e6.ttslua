@@ -3,7 +3,7 @@ owner_color = "Yellow"
 zone_guid = Global.getTable("ZONE_GUID_SOUL")[owner_color]       --EbyE44
 
 function deal_soul_token(object, color)         --EbyE44
-    if not Global.call("isPlayerAuthorized", {playerColor = color, ownerPlayer = Player[owner_color]}) then
+    if not Global.call("isPlayerAuthorized", {playerColor = color, ownerColor = owner_color}) then
         return
     end
     Global.call("placeSoulToken", {playerColor = owner_color})
@@ -82,12 +82,12 @@ function createAll()
       click_function="deal_soul_token",
       tooltip=ttText,
       function_owner=self,
-      position={0,0.05,-0.2},
-      height=600,
+      position={0,0.05,0},
+      height=1000,
       width=1000,
       alignment = 3,
-      scale={x=1.5, y=1.5, z=1.5},
-      font_size=600,
+      scale={x=1, y=1, z=1},
+      font_size=820,
       font_color=f_color,
       color={0,0,0,0}
       })
@@ -99,10 +99,10 @@ function createAll()
         label = "Counter",
         function_owner = self,
         alignment = 3,
-        position = {0,0.05,1.5},
-        width = 1200,
-        height = 1000,
-        font_size = 400,
+        position = {0,0.05,1.7},
+        width = 1000,
+        height = 350,
+        font_size = 310,
         scale={x=1, y=1, z=1},
         font_color= f_color,
         color = {0,0,0,0}

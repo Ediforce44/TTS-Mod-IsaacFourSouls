@@ -2,7 +2,7 @@
 owner_color = "Green"
 HEARTS_GUID = Global.getTable("HEART_TOKENS_GUID")[owner_color]
 INACTIVE_HEART_COLOR = {0, 0, 0}
-ACTIVE_HEART_COLOR = {219/255, 26/255, 24/255}
+ACTIVE_HEART_COLOR = Global.getTable("REAL_PLAYER_COLOR_RGB")[owner_color]
 
 function getSelfIndex()
   for i, guid in pairs(HEARTS_GUID) do

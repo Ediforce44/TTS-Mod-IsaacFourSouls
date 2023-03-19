@@ -1,11 +1,14 @@
 -- Written by Ediforce44
 ROOM_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").ROOM)
+ROOM_TAGS = ROOM_DECK_ZONE.getTable("ROOM_TAGS")
 
 altClickCounter = 0
 
 room_attrs = {
     NAME    = ""
 }
+
+discardButtonBlocked = false
 
 ROOM_BUTTON_STATES = {}
 ROOM_BUTTON_COLORS = {}
@@ -56,13 +59,64 @@ function updateAttributes(params)
     room_attrs.NAME = params.NAME or "Unkown"
 end
 
-function containsDeckOrCard()
+function containsDeckOrCard(params)
     for _ , obj in pairs(self.getObjects()) do
         if obj.tag == "Deck" or obj.tag == "Card" then
-            return true
+            if not obj.hasTag(ROOM_TAGS.DEAD) then
+                return true
+            end
         end
     end
     return false
+end
+
+local function getTopMostDeckOrCard()
+    local zoneObjects = self.getObjects()
+    for index = #zoneObjects, 1, -1 do
+        local object = zoneObjects[index]
+        if object.tag == "Deck" or object.tag == "Card" then
+            return object
+        end
+    end
+    return nil
+end
+
+function placeNewRoomIfEmpty()
+    if not containsDeckOrCard() then
+        discardButtonBlocked = true
+        local newRoomCard = ROOM_DECK_ZONE.call("placeNewRoomCard", {zone = self})
+        Timer.create({identifier = "RoomDiscardDelay" .. self.guid .. newRoomCard.getGUID(), function_name = "resetTempDiscardBlock", delay = 5})
+    end
+end
+
+function resetTempDiscardBlock()
+    discardButtonBlocked = false
+end
+
+function discardRoomObject(object)
+    object.setPositionSmooth(Global.getTable("DISCARD_PILE_POSITION").ROOM, false)
+    object.setRotationSmooth({0, 180, 180}, false)
+    object.addTag(ROOM_TAGS.DEAD)
+    Wait.condition(function() object.removeTag(ROOM_TAGS.DEAD) end, function() return not object.isSmoothMoving() end)
+end
+
+function discardRoom()
+    local deckOrCard = getTopMostDeckOrCard()
+    if deckOrCard then
+        local card = nil
+        if deckOrCard.type == "Deck" then
+            card = deckOrCard.takeObject()
+        elseif deckOrCard.type == "Card" then
+            card = deckOrCard
+        end
+        discardRoomObject(card)
+
+        placeNewRoomIfEmpty()
+    else
+        if not discardButtonBlocked then
+            placeNewRoomIfEmpty()
+        end
+    end
 end
 
 function resetRoomZone()
@@ -80,16 +134,11 @@ function activateZone()
     if active then
         Global.call("printWarning", {text = "Can't activate Room Zone: " .. self.guid .. ". This Zone is already active."})
     else
-        for _ , obj in pairs(self.getObjects()) do
-            if obj.tag == "Deck" or obj.tag == "Card" then
-                obj.flip()
-            end
-        end
-        --if containsDeckOrCard() then
+        if not containsDeckOrCard() then
             if ROOM_DECK_ZONE.call("placeNewRoomCard", {zone = self}) == false then
                 return
             end
-        --end
+        end
         self.editButton({index = ROOM_BUTTON_INDEX, label = ROOM_BUTTON_STATES.CHANGE
             , tooltip = ROOM_DECK_ZONE.call("getRoomButtonTooltip", {newState = ROOM_BUTTON_STATES.CHANGE})
             , color = ROOM_BUTTON_COLORS.ACTIVE})
@@ -101,9 +150,9 @@ function deactivateZone()
     if ROOM_BUTTON_INDEX == nil then
         activateRoomButton()
     end
-    for _ , obj in pairs(self.getObjects()) do
-        if obj.tag == "Deck" or obj.tag == "Card" then
-            obj.flip()
+    for _, obj in pairs(self.getObjects()) do
+        if (obj.type == "Deck") or (obj.type == "Card") then
+            discardRoomObject(obj)
         end
     end
     self.editButton({index = ROOM_BUTTON_INDEX, label = ROOM_BUTTON_STATES.INACTIVE
@@ -121,7 +170,7 @@ function activateRoomButton()
             click_function = "click_function_RoomButton",
             function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").ROOM),
             label          = state,
-            position       = {0, -0.5, 2.2},
+            position       = {-1.1, -0.5, 2.2},
             width          = 1000,
             height         = 300,
             font_size      = 200,
@@ -129,7 +178,20 @@ function activateRoomButton()
             font_color     = {1, 1, 1},
             tooltip        = ROOM_DECK_ZONE.call("getRoomButtonTooltip", {newState = state})
         })
+        self.createButton({
+            click_function = "click_function_RoomButtonDiscard",
+            function_owner = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").ROOM),
+            label          = ROOM_BUTTON_STATES.DISCARD,
+            position       = {1.1, -0.5, 2.2},
+            width          = 1000,
+            height         = 300,
+            font_size      = 200,
+            color          = ROOM_BUTTON_COLORS.INACTIVE,
+            font_color     = {1, 1, 1},
+            tooltip        = ROOM_DECK_ZONE.call("getRoomButtonTooltip", {newState = ROOM_BUTTON_STATES.DISCARD})
+        })
     end
+
 end
 
 function deactivateRoomButton()

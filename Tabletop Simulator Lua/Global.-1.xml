@@ -4,6 +4,7 @@
     <Panel class="isaacBackground" image="background" color="rgba(1,1,1,0.98)" />
     <VerticalLayout class="isaacBackground" image="background" color="rgba(1,1,1,0.98)" />
     <HorizontalLayout class="isaacBackground" image="background" color="rgba(1,1,1,0.98)" />
+    <Panel class="turnBackground" image="test" color="rgba(1,1,1,0.98)" preserveAspect="true"/>
 
     <Toggle class="isaacColor" colors="#EAE5DE|#F6F2ED|#C8C3BD|#8E8A86" textColor="#EAE5DE" />
     <Text class="isaacColor" color="#EAE5DE" />
@@ -26,14 +27,20 @@
     <Toggle class="confBuildingMode" onValueChanged="UI_selectBuildingMode" />
     <Toggle class="confSpecialDeck" onValueChanged="UI_toggleSpecialDeck" />
     <Toggle class="confSeedDecks" onValueChanged="UI_toggleSeedDeck" />
+    <Toggle class="multiChar" onValueChanged="UI_multiCharChanged"/>
 
     <InputField class="confRatios" onEndEdit="UI_setRatio" lineType="SingleLine" placeholder="?"
         characterValidation="Integer" characterLimit="2"
         fontStyle="bold" fontSize="15" preferredWidth="30" preferredHeight="30"/>
     <Text class="confRatios" fontSize="15" preferredWidth="140" alignment="MiddleLeft"/>
 
+    <Cell class="confChallengeDif" onClick="UI_selectChallengeDifficulty"/>
+    <Text class="confChallengeDif" fontSize="15" preferredWidth="120" alignment="MiddleLeft"/>
+
     <Text class="reminder" fontSize="13" alignment="UpperLeft" horizontalOverflow="Wrap"/>
     <Text class="reminderTitle" fontSize="15" alignment="UpperLeft" fontStyle="bold" horizontalOverflow="Wrap" color="red"/>
+
+    <Button class="trickOrTreat" colors="#D1CDC6|#F6F2ED|#C8C3BD|#8E8A86" textColor="black" onClick="60cccb/UI_voted"/>
 </Defaults>
 
 <Panel
@@ -47,7 +54,7 @@
     allowDragging="true"
     returnToOriginalPositionWhenReleased="false">
     <VerticalLayout childAlignment="UpperCenter" offsetXY="0 5" padding="10 10 10 10" spacing="5" childForceExpandWidth="false" childForceExpandHeight="false">
-        <Text class="isaacColor" fontSize="30" fontStyle="bold" alignment="UpperCenter">Pick Player:</Text>
+        <Text class="isaacColor" fontSize="30" fontStyle="bold" alignment="UpperCenter">Pick Color</Text>
         <HorizontalLayout
             id="colorButtons"
             minHeight="35"
@@ -80,8 +87,8 @@
     <Row preferredHeight="200">
         <Cell></Cell>
         <Cell><Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false">
-            <Image minHeight="50%" image="logo" preserveAspect="true" offsetXY="0 5" onClick="UI_hiddenButton"></Image>
-            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="50%" offsetXY="0 -105">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
                 <Text class="isaacColor">Build your own configuration for the game, then press 'Done'!</Text>
                 <Text class="isaacColor">For advanced settings click the arrow buttons.</Text>
             </VerticalLayout>
@@ -148,7 +155,7 @@
                     tooltipOffset="-200">
                 </Button>
                 <VerticalLayout childForceExpandHeight="false" childAlignment="UpperCenter" padding="10 10 20 20">
-                    <HorizontalLayout childForceExpandHeight="false" preferredHeight="100">
+                    <HorizontalLayout childForceExpandHeight="false" preferredHeight="100" padding="10 10 0 0" spacing="20">
                         <ToggleGroup minWidth="150">
                             <VerticalLayout spacing="10">
                                 <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Deck Building</Text>
@@ -170,14 +177,17 @@
                         </ToggleGroup>
                         <VerticalLayout spacing="10">
                             <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Game Options</Text>
-                            <GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="130 25">
+                            <GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="180 25">
                                 <Toggle id="bonusSouls" isOn="true" class="isaacColor" onValueChanged="UI_toggleBonusSouls">Bonus Souls</Toggle>
                                 <Toggle id="rooms" isOn="true" class="isaacColor" onValueChanged="UI_toggleRooms">Rooms</Toggle>
+                                <Cell><Toggle id="multiChar" class="isaacColor" preferredWidth="135" onValueChanged="UI_toggleMultiChar">Multi Char. Player</Toggle>
+                                <Button active="false" showAnimation="FadeIn" animationDuration="0.2"
+                                    id="multiCharButton" icon="gear" preferredWidth="7" class="isaacColor" onClick="UI_openMultiCharSettings"></Button></Cell>
                                 <Toggle id="challenges" class="isaacColor" onValueChanged="UI_toggleChallenges">Challenges</Toggle>
                             </GridLayout>
                         </VerticalLayout>
                     </HorizontalLayout>
-                    <Panel preferredHeight="220" preferredWidth="300" padding="0 0 40 40">
+                    <Panel preferredHeight="220" preferredWidth="300" padding="0 0 20 40">
                         <VerticalLayout id="challenges" active="false" showAnimation="FadeIn" hideAnimation="FadeOut" animationDuration="0.3" childForceExpandHeight="false" spacing="10">
                             <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Challenges</Text>
                             <ToggleGroup>
@@ -242,8 +252,7 @@
                     <Toggle isOn="true" class="isaacColor confSpecialDeck" id="UNBOXING_OF_ISAAC">Unboxing of Isaac</Toggle>
                     <Toggle isOn="true" class="isaacColor confSpecialDeck" id="PROMO">Promo</Toggle>
                 </GridLayout>
-                <Text color="red" fontSize="20">COMMING SOON!</Text>
-                <!--<Text color="red">The Seed function will use the officil algorithm, but freeze the Game for a few seconds after you hit the Start button!</Text>-->
+                <Text color="red">The Seed function will use the official algorithm, but freeze the Game for a few seconds after you hit the Start button!</Text>
                 <HorizontalLayout childForceExpandWidth="false" childForceExpandHeight="false" spacing="10" childAlignment="MiddleLeft">
                     <HorizontalLayout childForceExpandHeight="false">
                     <Text class="isaacColor" fontSize="20" minHeight="30" preferredWidth="55">Seed:</Text>
@@ -309,8 +318,8 @@
     visibility="Host">
     <VerticalLayout>
         <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
-            <Image minHeight="50%" image="logo" preserveAspect="true" offsetXY="0 5" onClick="UI_hiddenButton"></Image>
-            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="50%" offsetXY="0 -105">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
                 <Text class="isaacColor">Type in your own deck ratios, then press 'Done'!</Text>
             </VerticalLayout>
         </Panel>
@@ -398,6 +407,150 @@
 </Panel>
 
 <Panel
+    id="challengeSettings"
+    active="false"
+    height="520"
+    width="500"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.5"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="Host">
+    <VerticalLayout>
+        <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
+                <Text class="isaacColor">Configure your challenge settings, then press 'Done'!</Text>
+                <Text class="isaacColor">The rulebook of the challenge is inside its Challenge-Bag!</Text>
+            </VerticalLayout>
+        </Panel>
+        <Panel class="isaacBackground" preferredHeight="320">
+            <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
+                <GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="250 25" padding="0 0 0 20">
+                    <Text class="isaacColor" fontSize="20" fontStyle="bold">Challenge Automation</Text>
+                    <Toggle isOn="true" class="isaacColor" preferredHeight="50" preferredWidth="300" onValueChanged="UI_toggleChallengeAuto">Use Auto-Features of this challenge</Toggle>
+                </GridLayout>
+                <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold" alignment="UpperCenter">Difficulty</Text>
+                <HorizontalLayout padding="30 30 0 0" alignment="UpperCenter">
+                <GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="150 45" childFourceExpandWidth="false" spacing="2">
+                    <Cell class="confChallengeDif" id="DIF_NORMAL"><Image image="DIF_NORMAL_SELECT" preserveAspect="true" id="DIF_NORMAL_IMAGE"></Image>
+                        <Text class="isaacColor confChallengeDif" id="DIF_NORMAL_TEXT">Normal</Text></Cell>
+                    <Cell class="confChallengeDif" id="DIF_HARD"><Image image="DIF_HARD" preserveAspect="true" id="DIF_HARD_IMAGE"></Image>
+                        <Text class="isaacColor confChallengeDif" id="DIF_HARD_TEXT">Hard</Text></Cell>
+                </GridLayout>
+                <GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="150 45" childFourceExpandWidth="false" spacing="2">
+                    <Cell class="confChallengeDif" id="DIF_ULTRA"><Image image="DIF_ULTRA" preserveAspect="true" id="DIF_ULTRA_IMAGE"></Image>
+                        <Text class="isaacColor confChallengeDif" id="DIF_ULTRA_TEXT">Ultra Hard</Text></Cell>
+                    <Cell class="confChallengeDif" id="DIF_COMP"><Image image="DIF_COMP" preserveAspect="true" id="DIF_COMP_IMAGE"></Image>
+                        <Text class="isaacColor confChallengeDif" id="DIF_COMP_TEXT">Competitive</Text></Cell>
+                </GridLayout>
+                </HorizontalLayout>
+                <Panel minHeight="50" preferredWidth="400"><Text active="false" id="DIF_WARNING" color="red" minHeight="45" showAnimation="FadeIn">
+                    There is no seperate competitive version for this Challenge.&#10;You can play this Challenge competitive in every difficulty Level!
+                </Text></Panel>
+                <Button
+                    minHeight="40"
+                    preferredWidth="400"
+                    alignment="LowerCenter"
+                    text="Done" fontSize="30"
+                    onClick="UI_challengeDone"
+                    class="isaacColor"
+                    textColor="black"
+                    fontStyle="Bold">
+                </Button>
+            </VerticalLayout>
+        </Panel>
+    </VerticalLayout>
+</Panel>
+
+
+<Panel
+    id="multiCharSettings"
+    active="false"
+    height="460"
+    width="500"
+    rectAlignment="UpperCenter"
+    offsetXY="600 -80"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.3"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="Host">
+    <VerticalLayout>
+        <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
+                <Text class="isaacColor">Assign Character-Zones to Players, then press 'Done'!</Text>
+                <Text class="isaacColor">The Green and Yellow Player-Zones don't exist in Challenge Mode!</Text>
+            </VerticalLayout>
+        </Panel>
+        <Panel class="isaacBackground" preferredHeight="260" childAlignment="UpperCenter">
+            <VerticalLayout childForceExpandHeight="true" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
+                <TableLayout
+                    cellBackgroundColor="rgba(0, 0, 0, 0)"
+                    columnWidths="90 70 70 70 70"
+                    preferredWidth="370"
+                    preferredHeight="240">
+                    <Row preferredHeight="40">
+                        <Cell></Cell>
+                        <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">Red</Text></Cell>
+                        <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">Blue</Text></Cell>
+                        <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">Green</Text></Cell>
+                        <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">Yellow</Text></Cell>
+                    </Row>
+                    <Row preferredHeight="200">
+                        <Cell><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                            <Text class="isaacColor" fontSize="15" fontStyle="Bold">Player 1</Text>
+                            <Text class="isaacColor" fontSize="15" fontStyle="Bold">Player 2</Text>
+                            <Text class="isaacColor" fontSize="15" fontStyle="Bold">Player 3</Text>
+                            <Text class="isaacColor" fontSize="15" fontStyle="Bold">Player 4</Text>
+                        </GridLayout></Cell>
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                            <Toggle isOn="true" class="isaacColor multiChar" id="Red_1"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Red_2"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Red_3"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Red_4"></Toggle>
+                        </GridLayout></ToggleGroup></Cell>
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                            <Toggle class="isaacColor multiChar" id="Blue_1"></Toggle>
+                            <Toggle isOn="true" class="isaacColor multiChar" id="Blue_2"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Blue_3"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Blue_4"></Toggle>
+                        </GridLayout></ToggleGroup></Cell>
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                            <Toggle class="isaacColor multiChar" id="Green_1"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Green_2"></Toggle>
+                            <Toggle isOn="true" class="isaacColor multiChar" id="Green_3"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Green_4"></Toggle>
+                        </GridLayout></ToggleGroup></Cell>
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                            <Toggle class="isaacColor multiChar" id="Yellow_1"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Yellow_2"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Yellow_3"></Toggle>
+                            <Toggle isOn="true" class="isaacColor multiChar" id="Yellow_4"></Toggle>
+                        </GridLayout></ToggleGroup></Cell>
+                    </Row>
+                </TableLayout>
+                <Button
+                    minHeight="40"
+                    preferredWidth="400"
+                    alignment="LowerCenter"
+                    text="Done" fontSize="30"
+                    onClick="UI_multiCharDone"
+                    class="isaacColor"
+                    textColor="black"
+                    fontStyle="Bold">
+                </Button>
+            </VerticalLayout>
+        </Panel>
+    </VerticalLayout>
+</Panel>
+
+<Panel
     id="debug"
     active="false"
     class="isaacBackground"
@@ -459,5 +612,60 @@
             onClick="UI_hideReminder"
             text="Exit">
         </Button>
+    </VerticalLayout>
+</Panel>
+
+<Panel
+    id="turnInfo"
+    active="false"
+    height="60"
+    width="220"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    allowDragging="false"
+    returnToOriginalPositionWhenReleased="true">
+    <Button id="passButton" image="turn_red" colors="White|#CCCCCC|#AAAAAA|Grey" fontSize="30" textColor="White" fontStyle="bold" onClick="UI_passTurn">End Turn</Button>
+</Panel>
+
+<Panel
+    id="skipTurn"
+    active="false"
+    height="60"
+    width="220"
+    showAnimation="FadeIn"
+    animationDuration="0.3"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    allowDragging="false"
+    visibility="Host"
+    returnToOriginalPositionWhenReleased="true">
+    <Button id="skipButton" image="turn_white" colors="White|#CCCCCC|#AAAAAA|Grey" fontSize="20" textColor="#EAE5DE" fontStyle="bold" onClick="UI_skipTurn">Skip Turn?</Button>
+</Panel>
+
+<Panel
+    id="voteTrickOrTreat"
+    active="false"
+    class="isaacBackground"
+    height="180"
+    width="210"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.3"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -200"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false">
+    <VerticalLayout childAlignment="UpperCenter" offsetXY="0 5" padding="20 20 10 10" spacing="5" childForceExpandWidth="false" childForceExpandHeight="false">
+        <Text class="isaacColor" fontSize="30" fontStyle="bold" alignment="UpperCenter">Vote</Text>
+        <HorizontalLayout minHeight="35" spacing="5" childAlignment="UpperCenter" padding="10 10 0 0" childForceExpandWidth="false">
+            <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false" preferredWidth="50">
+                <Text class="isaacColor" preferredHeight="20">Trick</Text>
+                <Button class="trickOrTreat" id="TRICK" icon="trick" preferredHeight="50"></Button></VerticalLayout>
+            <Text class="isaacColor" preferredWidth="30">or</Text>
+            <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false" preferredWidth="50">
+                <Text class="isaacColor" preferredHeight="20">Treat</Text>
+                <Button class="trickOrTreat" id="TREAT" icon="treat" preferredHeight="50"></Button></VerticalLayout>
+        </HorizontalLayout>
+        <Button class="trickOrTreat" id="RANDOM" preferredWidth="150" minHeight="35" text="Random" fontSize="20" fontStyle="bold"></Button>
     </VerticalLayout>
 </Panel>
