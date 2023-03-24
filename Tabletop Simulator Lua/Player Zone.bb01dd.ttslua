@@ -428,7 +428,7 @@ function placeCounterInZone(params)
     local characterExist = false
     for _, obj in pairs(self.getObjects()) do
         if string.match(obj.getDescription(), "%w*_character$") then
-            characterExsit = true
+            characterExist = true
         end
     end
     if characterExist then

@@ -2,8 +2,8 @@ TABLE_BASE_GUID = "f5c4fe"
 BOARD_MANAGER_GUID = "bd69bd"
 MONSTER_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").MONSTER
 
-CHALLENGE_BOARD_URL = "http://cloud-3.steamusercontent.com/ugc/2055368860755257718/A0AC4C0AF2E351E748F80DB5CB53D55FB8DCCFE2/"
-CHALLENGE_BOARD_EXPANDED_URL = "http://cloud-3.steamusercontent.com/ugc/2055368860755257906/C6CB458D94A01CCF50216363FF89234817272A42/"
+CHALLENGE_BOARD_URL = "http://cloud-3.steamusercontent.com/ugc/2074509887578491016/5095F18DED91C046CD615C10DD1EE666B5F7B168/"
+CHALLENGE_BOARD_EXPANDED_URL = "http://cloud-3.steamusercontent.com/ugc/2074509887578491115/E01D560CE9E830A8E2D4393433F54A6345EC84FD/"
 
 local areaToDeleteEdges = {x1 =-45, z1 =18, x2 =38, z2 =5}
 
@@ -12,7 +12,6 @@ local yellowPlayerStuff = {
     ZONE_PILL = "53dd4c",
     ZONE_PLAYER = "bb01dd",
     ZONE_LOOT = "a81bbf",
-    ZONE_HAND = "e2e2d1",
     DICE = "9069fa",
     HEART_ONE = "c02908",
     HEART_TWO = "3f81b7",
@@ -32,7 +31,6 @@ local greenPlayerStuff = {
     ZONE_PILL = "e3361a",
     ZONE_PLAYER = "19df91",
     ZONE_LOOT = "7831c7",
-    ZONE_HAND = "489f26",
     DICE = "4dce5a",
     HEART_ONE = "12326f",
     HEART_TWO = "c326f1",
@@ -45,6 +43,11 @@ local greenPlayerStuff = {
     COUNTER_SOUL = "4e958e",
     COUNTER_COIN = "c46653",
     COUNTER_LOOT = "48162b"
+}
+
+local handZones = {
+    Yellow = "e2e2d1",
+    Green = "489f26"
 }
 
 local restStuff = {
@@ -2437,6 +2440,18 @@ local function deleteObjectsAndSnappoints()
         local playerObj = getObjectFromGUID(guid)
         if playerObj then
             destroyObject(playerObj)
+        end
+    end
+
+    local handInfos = Global.getTable("HAND_INFO")
+    for originalOwnerColor, guid in pairs(handZones) do
+        local handZone = getObjectFromGUID(guid)
+        if handZone then
+            if handInfos[originalOwnerColor].owner == originalOwnerColor then
+                destroyObject(handZone)
+            else
+                handZone.setPosition(handZone.getPosition() - Vector(0, 20, 0))
+            end
         end
     end
 

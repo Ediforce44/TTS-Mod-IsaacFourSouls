@@ -115,10 +115,8 @@ local voteColorsVote = {}
 local function getVisibilityString()
     local visibilityString = nil
     for owner, voteColors in pairs(voteColorsOwner) do
-        --TODO delete
-        log(owner)
         for _, voteColor in pairs(voteColors) do
-            if not voteColorsVote[voteColor] then
+            if voteColorsVote[voteColor] == "WAIT_FOR_VOTE" then
                 if visibilityString == nil then
                     visibilityString = owner
                 else
@@ -194,9 +192,6 @@ function UI_voted(player, _, voteID)
         return
     end
 
-    --TODO delete
-    log(voteColorsVote)
-
     local voteIdAssigned = false
     for _, zoneColor in ipairs(voteColorsOwner[player.color]) do
         if voteColorsVote[zoneColor] == "WAIT_FOR_VOTE" then
@@ -214,10 +209,6 @@ function UI_voted(player, _, voteID)
             end
         end
     end
-
-    --TODO TEST and delete
-    log(voteColorsOwner)
-    log(voteColorsVote)
     UI.setAttribute("voteTrickOrTreat", "visibility", getVisibilityString())
 
     local result = evaluateVote()
