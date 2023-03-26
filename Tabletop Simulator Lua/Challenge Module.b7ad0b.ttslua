@@ -5,6 +5,9 @@ MONSTER_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").MONSTER
 CHALLENGE_BOARD_URL = "http://cloud-3.steamusercontent.com/ugc/2074509887578491016/5095F18DED91C046CD615C10DD1EE666B5F7B168/"
 CHALLENGE_BOARD_EXPANDED_URL = "http://cloud-3.steamusercontent.com/ugc/2074509887578491115/E01D560CE9E830A8E2D4393433F54A6345EC84FD/"
 
+local isChallengeModeActive = false
+local isBoardExpanded = false
+
 local areaToDeleteEdges = {x1 =-45, z1 =18, x2 =38, z2 =5}
 
 local yellowPlayerStuff = {
@@ -181,6 +184,7 @@ function onLoad(saved_data)
     end
     if loaded_data.hpCounterGuid then
         HP_COUNTER_GUID = loaded_data.hpCounterGuid
+        getObjectFromGUID(HP_COUNTER_GUID).call("setZone", {zoneGuid = self.getGUID()})
     end
     if loaded_data.lastState then
         LAST_STATE = loaded_data.lastState
@@ -251,7 +255,11 @@ function editHP(params)
 end
 
 function resetMinionZone()
-    if ATTACK_BUTTON_INDEX ~= nil then
+    if ATTACK_BUTTON_INDEX == nil then
+        if active then
+            activateAttackButton()
+        end
+    else
         local state = active and ATTACK_BUTTON_STATES.ATTACK or ATTACK_BUTTON_STATES.INACTIVE
         self.editButton({index = ATTACK_BUTTON_INDEX, label = state
                 , tooltip = BOSS_ZONE.call("getAttackButtonTooltip", {newState = state})})
@@ -849,14 +857,16 @@ function deactivateAllAttackButtons(params)
     end
     for _ , zoneInfo in pairs(MINION_ZONE_INFO) do
         local minionZone = getObjectFromGUID(zoneInfo.guid)
-        if (not ignoreOwnButton) or (minionZone.getGUID() ~= zone.guid) then
-            local zoneState = minionZone.call("getState")
-            for _ , state in pairs(exceptionStates) do
-                if zoneState == state then
-                    goto nextMinionZone
+        if (not ignoreOwnButton) or (zoneInfo.guid ~= zone.guid) then
+            if minionZone then
+                local zoneState = minionZone.call("getState")
+                for _ , state in pairs(exceptionStates) do
+                    if zoneState == state then
+                        goto nextMinionZone
+                    end
                 end
+                minionZone.call("deactivateAttackButton")
             end
-            minionZone.call("deactivateAttackButton")
         end
         ::nextMinionZone::
     end
@@ -881,7 +891,7 @@ function activateAllAttackButtons()
     end
     for _ , zoneInfo in pairs(MINION_ZONE_INFO) do
         local minionZone = getObjectFromGUID(zoneInfo.guid)
-        if minionZone.getVar("active") then
+        if minionZone and minionZone.getVar("active") then
             minionZone.call("activateAttackButton")
         end
     end
@@ -1050,7 +1060,7 @@ function onLoad(saved_data)
     if Global.call("hasGameStarted") then
         createResurrectButton()
         for _, zoneInfo in pairs(MINION_ZONE_INFO) do
-            if zoneInfo.color ~= nil then
+            if zoneInfo.owner then
                 createPlayerResurrectButtons()
                 break
             end
@@ -1092,6 +1102,7 @@ function onLoad(saved_data)
     end
     if loaded_data.hpCounterGuid then
         HP_COUNTER_GUID = loaded_data.hpCounterGuid
+        getObjectFromGUID(HP_COUNTER_GUID).call("setZone", {zoneGuid = self.getGUID()})
     end
     if loaded_data.minionSlotGuids then
         MINION_SLOT_GUIDS = loaded_data.minionSlotGuids
@@ -2258,11 +2269,23 @@ function click_function_SlotButton(_, color, alt_click)
     local slotButton = getSlotButton()
     if slotButton.label == SLOT_BUTTON_STATES.INACTIVE then
         activateZone()
+        if slotButtonParams.call_function_inactive then
+            local function_owner = getObjectFromGUID(slotButtonParams.function_owner)
+            if function_owner then
+                local function_params = slotButtonParams.function_params or {}
+                function_params["deckOrCard"] = getDeckOrCard()
+                function_params["playerColor"] = color
+                function_params["slotZone"] = self
+                function_owner.call(slotButtonParams.call_function_inactive, function_params)
+            end
+        end
     elseif slotButton.label == SLOT_BUTTON_STATES.GAIN then
         local function_owner = getObjectFromGUID(slotButtonParams.function_owner)
         if function_owner then
             local function_params = slotButtonParams.function_params or {}
             function_params["deckOrCard"] = getDeckOrCard()
+            function_params["playerColor"] = color
+            function_params["slotZone"] = self
             function_owner.call(slotButtonParams.call_function, function_params)
         end
     else
@@ -2328,7 +2351,7 @@ local function setupMinionProps(startPosition, rows, minionsPerRow, reversed)
             newHpCounter.setPosition(position:setAt('y', 1.54))
             newHpCounter.setLock(true)
             newHpCounter.setScale({0.35, 1, 0.35})
-            table.insert(propTable.HP_COUNTER_MINION, newHpCounter)
+            table.insert(propTable.HP_COUNTER_MINION, newHpCounter.getGUID())
         end
     end
     challengeBag.putObject(hpCounter)
@@ -2336,8 +2359,8 @@ end
 
 local function createMinionZones(startPosition, rows, minionsPerRow, reversed)
     local minionGuidTable = {}
-    for _, zone in ipairs(zoneTable.MINION) do
-        table.insert(minionGuidTable, {guid = zone.getGUID(), owner = nil})
+    for _, zoneGuid in ipairs(zoneTable.MINION) do
+        table.insert(minionGuidTable, {guid = zoneGuid, owner = nil})
     end
 
     local newSnapPointList = Global.getSnapPoints()
@@ -2355,7 +2378,7 @@ local function createMinionZones(startPosition, rows, minionsPerRow, reversed)
                 scale = {1, 0.9, 1}})
             minionZone.setLuaScript(SCRIPT_MINION_ZONE)
             minionZone.setName("Minion Zone")
-            table.insert(zoneTable.MINION, minionZone)
+            table.insert(zoneTable.MINION, minionZone.getGUID())
             table.insert(minionGuidTable, {guid = minionZone.getGUID(), owner = nil})
         end
     end
@@ -2377,7 +2400,7 @@ local function createChallengeZones(startPosition, rows, zonesPerRow, reversed)
                 position = startPosition + Vector(offsetX * i, 0, CSLOT_POS_OFFSET_Z * row),
                 rotation = {0, 180, 0},
                 scale = {1, 0.9, 1}})
-            table.insert(zoneTable.CSLOT, challengeZone)
+            table.insert(zoneTable.CSLOT, challengeZone.getGUID())
         end
     end
     Global.setSnapPoints(newSnapPointList)
@@ -2392,7 +2415,7 @@ local function setupChallengeProps()
     bossHpCounter.setPosition((BOSS_POS + Vector(0, 0, BOSS_COUNTER_OFFSET)):setAt('y', 1.54))
     bossHpCounter.setRotation({0, 180, 0})
     bossHpCounter.setLock(true)
-    propTable.HP_COUNTER_BOSS = bossHpCounter
+    propTable.HP_COUNTER_BOSS = bossHpCounter.getGUID()
     challengeBag.putObject(hpCounter)
 end
 
@@ -2400,7 +2423,7 @@ local function createZones()
     local bossZone = spawnObject({type = "ScriptingTrigger", position = BOSS_POS, rotation = {0, 180, 0}, scale = {1, 0.9, 1}})
     bossZone.setLuaScript(SCRIPT_BOSS_ZONE)
     bossZone.setName("Boss Zone")
-    zoneTable.BOSS = bossZone
+    zoneTable.BOSS = bossZone.getGUID()
     Global.setVar("ZONE_GUID_BOSS", bossZone.getGUID())
     getObjectFromGUID(MONSTER_DECK_ZONE_GUID).setVar("BOSS_ZONE_GUID", bossZone.getGUID())
 
@@ -2412,19 +2435,31 @@ local function createZones()
 end
 
 local function setupZoneScripts()
-    zoneTable.BOSS.setVar("HP_COUNTER_GUID", propTable.HP_COUNTER_BOSS.getGUID())
-    zoneTable.BOSS.setTable("MINION_ZONE_INFO", Global.getTable("ZONE_INFO_MINION"))
+    local bossZone = getObjectFromGUID(zoneTable.BOSS)
+    if bossZone then
+        bossZone.setVar("HP_COUNTER_GUID", propTable.HP_COUNTER_BOSS)
+        bossZone.setTable("MINION_ZONE_INFO", Global.getTable("ZONE_INFO_MINION"))
+    end
 
-    for index, minionZone in pairs(zoneTable.MINION) do
-        minionZone.setVar("HP_COUNTER_GUID", propTable.HP_COUNTER_MINION[index].getGUID())
+    for index, minionZoneGuid in pairs(zoneTable.MINION) do
+        local minionZone = getObjectFromGUID(minionZoneGuid)
+        if minionZone then
+            minionZone.setVar("HP_COUNTER_GUID", propTable.HP_COUNTER_MINION[index])
+        end
     end
 end
 
 local function setupPropScripts()
-    propTable.HP_COUNTER_BOSS.setVar("zone", zoneTable.BOSS)
+    local hpCounterBoss = getObjectFromGUID(propTable.HP_COUNTER_BOSS)
+    if hpCounterBoss then
+        hpCounterBoss.call("setZone", {zoneGuid = zoneTable.BOSS})
+    end
 
-    for index, hpCounter in pairs(propTable.HP_COUNTER_MINION) do
-        hpCounter.setVar("zone", zoneTable.MINION[index])
+    for index, counterGuid in pairs(propTable.HP_COUNTER_MINION) do
+        local hpCounter = getObjectFromGUID(counterGuid)
+        if hpCounter then
+            hpCounter.call("setZone", {zoneGuid = zoneTable.MINION[index]})
+        end
     end
 end
 
@@ -2479,15 +2514,7 @@ local function deleteObjectsAndSnappoints()
     Global.setSnapPoints(newSnapPointList)
 end
 
-local function createChallengeLayout()
-    getObjectFromGUID(BOARD_MANAGER_GUID).call("changeBoard", {url = CHALLENGE_BOARD_URL, name = "Challenge Board (by Ediforce44)"})
-    createSpecialSnapPoints()
-    setupChallengeProps()
-    createZones()
-    Wait.frames(function()
-        setupZoneScripts()
-        setupPropScripts()
-    end)
+local function createExpansionButton()
     self.createButton({
         click_function = "click_function_expandChallengeZone",
         function_owner = self,
@@ -2502,9 +2529,22 @@ local function createChallengeLayout()
     })
 end
 
+local function createChallengeLayout()
+    getObjectFromGUID(BOARD_MANAGER_GUID).call("changeBoard", {url = CHALLENGE_BOARD_URL, name = "Challenge Board (by Ediforce44)"})
+    createSpecialSnapPoints()
+    setupChallengeProps()
+    createZones()
+    Wait.frames(function()
+        setupZoneScripts()
+        setupPropScripts()
+    end)
+    createExpansionButton()
+end
+
 function setupTableForChallenge()
     deleteObjectsAndSnappoints()
     createChallengeLayout()
+    isChallengeModeActive = true
 end
 
 function presetupChallenge(setupInfo)
@@ -2527,9 +2567,10 @@ function setupChallenge(params)
         local setupParams = {preDeckGUIDs = params.preDeckGUIDs, filterTags = filterTags
             , difficulty = setupInfoTable.difficulty, compMode = setupInfoTable.compMode, automation = setupInfoTable.automation}
         challengeBag.call("setupChallengeZones", setupParams)
-        for _, zone in pairs(zoneTable.CSLOT) do
-            if zone.getVar("USE_SLOT_BUTTON") then
-                zone.call("activateSlotButton")
+        for _, zoneGuid in pairs(zoneTable.CSLOT) do
+            local slotZone = getObjectFromGUID(zoneGuid)
+            if slotZone and slotZone.getVar("USE_SLOT_BUTTON") then
+                slotZone.call("activateSlotButton")
             end
         end
         if setupInfoTable.automation and (Global.getVar("gameLanguage") ~= "FR") then                    --TODO delete the france exclusion
@@ -2538,20 +2579,16 @@ function setupChallenge(params)
     end
 end
 
-function getMinionZones()
-    return zoneTable.MINION
-end
-
-function getBossZone()
-    return zoneTable.BOSS
-end
-
 function click_function_expandChallengeZone(_, playerColor)
     if (playerColor ~= "Black") and (not Player[playerColor].admin) then
         printToColor(Global.getTable("PRINT_COLOR_SPECIAL").WARNING .. "You need admin rights to expand the challenge zone!", playerColor)
         return
     end
+    if isBoardExpanded then
+        return
+    end
     self.removeButton(0)
+    isBoardExpanded = true
     getObjectFromGUID(BOARD_MANAGER_GUID).call("changeBoard", {url = CHALLENGE_BOARD_EXPANDED_URL, name = "Challenge Board Expanded (by Ediforce44)"})
     setupMinionProps(MINIONE_POS_START, 2, MINION_POS_AMOUNT_PER_ROW, true)
     local newMinionZoneTable = createMinionZones(MINIONE_POS_START, 2, MINION_POS_AMOUNT_PER_ROW, true)
@@ -2580,10 +2617,35 @@ function hasCompetitiveMode(params)
     return true
 end
 
+function onLoad(saved_data)
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+
+        if loaded_data.isChallengeModeActive then
+            if loaded_data.isBoardExpanded == false then
+                createExpansionButton()
+            end
+            if loaded_data.propTable then
+                propTable = loaded_data.propTable
+            end
+            if loaded_data.zoneTable then
+                zoneTable = loaded_data.zoneTable
+            end
+        end
+    end
+end
+
+function onSave()
+    return JSON.encode({isBoardExpanded = isBoardExpanded, isChallengeModeActive = isChallengeModeActive, propTable = propTable, zoneTable = zoneTable})
+end
 ------------------------------------- Function for Challenge Packs -----------------------------------------------------
 local MANUAL_POS = Vector(0.5, 5, 0)
 local HUGE_CARD_SCALE = Vector(1.55, 1, 1.55)
 local rule
+
+function getBossZone()
+    return getObjectFromGUID(zoneTable.BOSS)
+end
 
 function placeChallengeContent(params)
     if params.COUNTER then
@@ -2606,11 +2668,17 @@ function placeChallengeContent(params)
 end
 
 function allowEventMinions()
-    zoneTable.BOSS.setVar("ONLY_MONSTER_MINIONS", false)
+    local bossZone = getObjectFromGUID(zoneTable.BOSS)
+    if bossZone then
+        bossZone.setVar("ONLY_MONSTER_MINIONS", false)
+    end
 end
 
 function disableMinionRewards()
-    zoneTable.BOSS.setVar("NO_MINION_REWARDS", true)
+    local bossZone = getObjectFromGUID(zoneTable.BOSS)
+    if bossZone then
+        bossZone.setVar("NO_MINION_REWARDS", true)
+    end
 end
 
 function expandChallengeZone()
@@ -2633,15 +2701,24 @@ function activatePlayerMinionZones(params)
         table.insert(playerMinionZoneGuids.Blue, i)
     end
     for _, indexID in pairs(playerMinionZoneGuids.Red) do
-        propTable.HP_COUNTER_MINION[indexID].setColorTint({1, 0, 0})
+        local hpCounter = getObjectFromGUID(propTable.HP_COUNTER_MINION[indexID])
+        if hpCounter then
+            hpCounter.setColorTint({1, 0, 0})
+        end
     end
     for _, indexID in pairs(playerMinionZoneGuids.Blue) do
-        propTable.HP_COUNTER_MINION[indexID].setColorTint({0, 0, 1})
+        local hpCounter = getObjectFromGUID(propTable.HP_COUNTER_MINION[indexID])
+        if hpCounter then
+            hpCounter.setColorTint({0, 0, 1})
+        end
     end
 
     Wait.frames(function()
-            zoneTable.BOSS.call("activatePlayerMinionZones", {zoneIDs = playerMinionZoneGuids})
-        end, 2)
+        local bossZone = getObjectFromGUID(zoneTable.BOSS)
+        if bossZone then
+            bossZone.call("activatePlayerMinionZones", {zoneIDs = playerMinionZoneGuids})
+        end
+    end, 2)
 end
 
 function addMinionSlot(params)
@@ -2653,14 +2730,19 @@ function addMinionSlot(params)
     if params and params.name then
         zoneName = params.name
     end
-    local newSlotZone = zoneTable.CSLOT[nextFreeChallengeSlot]
-    newSlotZone.setLuaScript(SCRIPT_MINION_SLOT)
-    newSlotZone.setName(zoneName)
-    Wait.frames(function() newSlotZone.call("createTitle") end)
+    local newSlotZone = getObjectFromGUID(zoneTable.CSLOT[nextFreeChallengeSlot])
+    if newSlotZone then
+        newSlotZone.setLuaScript(SCRIPT_MINION_SLOT)
+        newSlotZone.setName(zoneName)
+        Wait.frames(function() newSlotZone.call("createTitle") end)
 
-    table.insert(minionSlotGuids, newSlotZone.getGUID())
-    zoneTable.BOSS.setTable("MINION_SLOT_GUIDS", minionSlotGuids)
-    nextFreeChallengeSlot = nextFreeChallengeSlot + 1
+        table.insert(minionSlotGuids, newSlotZone.getGUID())
+        local bossZone = getObjectFromGUID(zoneTable.BOSS)
+        if bossZone then
+            bossZone.setTable("MINION_SLOT_GUIDS", minionSlotGuids)
+        end
+        nextFreeChallengeSlot = nextFreeChallengeSlot + 1
+    end
     return newSlotZone
 end
 
@@ -2673,19 +2755,21 @@ function addTreasureSlot(params)
     if params and params.name then
         zoneName = params.name
     end
-    local newSlotZone = zoneTable.CSLOT[nextFreeChallengeSlot]
-    newSlotZone.setLuaScript(SCRIPT_TREASURE_SLOT)
-    newSlotZone.setName(zoneName)
-    Wait.frames(function()
-        newSlotZone.call("createTitle")
-        if params.buttonParams then
-            newSlotZone.setVar("USE_SLOT_BUTTON", true)
-            newSlotZone.setTable("slotButtonParams", params.buttonParams)
-        end
-    end)
+    local newSlotZone = getObjectFromGUID(zoneTable.CSLOT[nextFreeChallengeSlot])
+    if newSlotZone then
+        newSlotZone.setLuaScript(SCRIPT_TREASURE_SLOT)
+        newSlotZone.setName(zoneName)
+        Wait.frames(function()
+            newSlotZone.call("createTitle")
+            if params.buttonParams then
+                newSlotZone.setVar("USE_SLOT_BUTTON", true)
+                newSlotZone.setTable("slotButtonParams", params.buttonParams)
+            end
+        end)
 
-    table.insert(treasureSlotGuids, newSlotZone.getGUID())
-    nextFreeChallengeSlot = nextFreeChallengeSlot + 1
+        table.insert(treasureSlotGuids, newSlotZone.getGUID())
+        nextFreeChallengeSlot = nextFreeChallengeSlot + 1
+    end
     return newSlotZone
 end
 

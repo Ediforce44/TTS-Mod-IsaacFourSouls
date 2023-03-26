@@ -1018,7 +1018,7 @@ function click_function_AttackButton(zone, color, alt_click)
                 end
             end
         else
-            Global.call("printWarning", {text = "Unknown monster button state: " .. tostring(attackButton.label) .. "."})
+            Global.call("printWarning", {text = "Unknown monster button state: " .. tostring(attackButtonState) .. "."})
         end
     end
 end

@@ -59,12 +59,15 @@ function onLoad(saved_data)
     end
     local loaded_data = JSON.decode(saved_data)
     if loaded_data.bossMaxHP then
-        bossMaxHP = getObjectFromGUID(loaded_data.bossMaxHP)
+        bossMaxHP = loaded_data.bossMaxHP
+    end
+    if loaded_data.bossHP then
+        bossHP = loaded_data.bossHP
     end
 end
 
 function onSave()
-    return JSON.encode({bossMaxHP = bossMaxHP})
+    return JSON.encode({bossMaxHP = bossMaxHP, bossHP = bossHP})
 end
 
 local function extractContent(difficulty)

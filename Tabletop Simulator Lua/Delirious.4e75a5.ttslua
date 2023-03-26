@@ -50,7 +50,7 @@ function onLoad(saved_data)
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         if loaded_data.lut then
-            nonBossLUT = lut
+            nonBossLUT = loaded_data.lut
         end
     end
 end

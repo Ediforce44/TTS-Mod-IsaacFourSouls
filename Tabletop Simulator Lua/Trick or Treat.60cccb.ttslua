@@ -40,7 +40,7 @@ function onLoad(saved_data)
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         if loaded_data.ruleCardGuid then
-            RULE_CARD = getObjectFromGUID(ruleCardGuid)
+            RULE_CARD_GUID = loaded_data.ruleCardGuid
         end
     end
 end

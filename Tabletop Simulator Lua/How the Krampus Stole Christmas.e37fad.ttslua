@@ -27,12 +27,14 @@ local DIF_TO_COUNTER_VALUES = {
     DIF_NORMAL = {CENT = 8, LOOT = 2, TREASURE = 3, SOUL = 3},
     DIF_HARD = {CENT = 12, LOOT = 4, TREASURE = 3, SOUL = 3},
     DIF_ULTRA = {CENT = 16, LOOT = 4, TREASURE = 3, SOUL = 3},
-    DIF_COMP = {CENT = 6, LOOT = 2, TREASURE = 2, SOUL = 2}
+    DIF_COMP = {CENT = 6, LOOT = 2, TREASURE = 2, SOUL = 2,
+        CENT_TWO = 6, LOOT_TWO = 2, TREASURE_TWO = 2, SOUL_TWO = 2}
 }
 
 local SLOT_BUTTON_PARAMS = {
     function_owner = self.getGUID(),
-    call_function = "call_dealTreasure"
+    call_function = "call_dealTreasure",
+    call_function_inactive = "call_revealPresent"
 }
 
 TREASURE_SLOTS_PRESENT = {CENT = nil, LOOT = nil, TREASURE = nil, SOUL = nil}
@@ -78,18 +80,22 @@ function presetupChallenge(params)
         , {name = "Present Cent", buttonParams = SLOT_BUTTON_PARAMS})
     TREASURE_SLOTS_PRESENT["LOOT"] = CHALLENGE_MODULE.call("addTreasureSlot"
         , {name = "Present Loot", buttonParams = SLOT_BUTTON_PARAMS})
-
-    if params.difficulty == "DIF_COMP" then
-        CHALLENGE_MODULE.call("activatePlayerMinionZones")
-
-        CHALLENGE_MODULE.call("skipSlot")
-        CHALLENGE_MODULE.call("skipSlot")
-    end
-
     TREASURE_SLOTS_PRESENT["TREASURE"] = CHALLENGE_MODULE.call("addTreasureSlot"
         , {name = "Present Treasure", buttonParams = SLOT_BUTTON_PARAMS})
     TREASURE_SLOTS_PRESENT["SOUL"] = CHALLENGE_MODULE.call("addTreasureSlot"
         , {name = "Present Soul", buttonParams = SLOT_BUTTON_PARAMS})
+
+    if params.difficulty == "DIF_COMP" then
+        CHALLENGE_MODULE.call("activatePlayerMinionZones")
+        TREASURE_SLOTS_PRESENT["CENT_TWO"] = CHALLENGE_MODULE.call("addTreasureSlot"
+            , {name = "Present Cent 2", buttonParams = SLOT_BUTTON_PARAMS})
+        TREASURE_SLOTS_PRESENT["LOOT_TWO"] = CHALLENGE_MODULE.call("addTreasureSlot"
+            , {name = "Present Loot 2", buttonParams = SLOT_BUTTON_PARAMS})
+        TREASURE_SLOTS_PRESENT["TREASURE_TWO"] = CHALLENGE_MODULE.call("addTreasureSlot"
+            , {name = "Present Treasure 2", buttonParams = SLOT_BUTTON_PARAMS})
+        TREASURE_SLOTS_PRESENT["SOUL_TWO"] = CHALLENGE_MODULE.call("addTreasureSlot"
+            , {name = "Present Soul 2", buttonParams = SLOT_BUTTON_PARAMS})
+    end
 end
 
 function setupChallengeZones(params)
@@ -126,6 +132,31 @@ function setupChallenge(params)
     end
 end
 
+function call_revealPresent(params)
+    if Player[params.playerColor].admin or (Global.getTable("PLAYER_OWNER")[Global.getVar("activePlayerColor")] == params.playerColor) then
+        for _, obj in pairs(params.slotZone.getObjects()) do
+            if (obj.type ~= "Card") and (obj.type ~= "Deck") and (obj.type ~= "Board") then
+                destroyObject(obj)
+            end
+        end
+        if params.deckOrCard and (params.deckOrCard.type == "Card") then
+            if params.deckOrCard.is_face_down then
+                params.deckOrCard.flip()
+            end
+        end
+    end
+end
+
 function call_dealTreasure(params)
-    --TODO
+    if params.deckOrCard then
+        local card = nil
+        if params.deckOrCard.type == "Card" then
+            card = params.deckOrCard
+        elseif params.deckOrCard.type == "Deck" then
+            card = params.deckOrCard.takeObject()
+        end
+        if card then
+            Global.call("placeObjectsInPlayerZone", {objects = {card}, playerColor = params.playerColor})
+        end
+    end
 end

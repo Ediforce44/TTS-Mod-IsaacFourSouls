@@ -310,5 +310,17 @@ function call_newMonsterFunction_HARD_ULTRA(params)
 end
 
 function call_dealTreasure(params)
-    --TODO
+    if Player[params.playerColor].admin or (Global.getTable("PLAYER_OWNER")[Global.getVar("activePlayerColor")] == params.playerColor) then
+        if params.deckOrCard then
+            local card = nil
+            if params.deckOrCard.type == "Card" then
+                card = params.deckOrCard
+            elseif params.deckOrCard.type == "Deck" then
+                card = params.deckOrCard.takeObject()
+            end
+            if card then
+                Global.call("placeObjectsInPlayerZone", {objects = {card}, playerColor = Global.getVar("activePlayerColor")})
+            end
+        end
+    end
 end

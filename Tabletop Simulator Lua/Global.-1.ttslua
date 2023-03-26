@@ -71,7 +71,6 @@ function onLoad(saved_data)         --EbyE44
         end
         if loaded_data.bossZoneGuid then
             ZONE_GUID_BOSS = loaded_data.bossZoneGuid
-            getObjectFromGUID("69a80d").call("deactivateSecondTurnButtons")
         end
         if loaded_data.customCounterBagGuids then
             COUNTER_BAGS_GUID = loaded_data.customCounterBagGuids
@@ -81,6 +80,9 @@ function onLoad(saved_data)         --EbyE44
         end
         if loaded_data.handInfo then
             HAND_INFO = loaded_data.handInfo
+        end
+        if loaded_data.playerOwner then
+            PLAYER_OWNER = loaded_data.playerOwner
         end
     end
     if not hasGameStarted() then
@@ -97,7 +99,7 @@ end
 function onSave()                   --EbyE44
     return JSON.encode({activePlayerColor = activePlayerColor, startPlayerColor = startPlayerColor
         , automaticRewarding = automaticRewarding, minionZoneInfo = ZONE_INFO_MINION, bossZoneGuid = ZONE_GUID_BOSS
-        , customCounterBagGuids = COUNTER_BAGS_GUID, onTurnEvents = ON_TURN_EVENTS, handInfo = HAND_INFO})
+        , customCounterBagGuids = COUNTER_BAGS_GUID, onTurnEvents = ON_TURN_EVENTS, handInfo = HAND_INFO, playerOwner = PLAYER_OWNER})
 end
 
 HEART_TOKENS_GUID = {
@@ -1240,7 +1242,7 @@ function isPlayerAuthorized(params)
             ownerColor = params.owner.color
         end
     end
-    -- Interacting player has to be the owner or has to be an admin
+
     local playerColor = params.playerColor
     if playerColor == nil then
         if params.player == nil then
@@ -1250,7 +1252,8 @@ function isPlayerAuthorized(params)
         end
     end
 
-    return (ownerColor == playerColor) or Player[playerColor].admin or (getObjectFromGUID(ZONE_GUID_PLAYER[ownerColor]).getVar("owner_color") == playerColor)
+    -- Interacting player has to be the owner or has to be an admin
+    return (ownerColor == playerColor) or Player[playerColor].admin or (PLAYER_OWNER[ownerColor] == playerColor)
 end
 
 function deactivateCharacter(params)

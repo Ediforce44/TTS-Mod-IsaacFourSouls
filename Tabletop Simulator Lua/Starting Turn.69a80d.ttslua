@@ -8,6 +8,8 @@ TURN_BUTTON_INDICES = {
 }
 TURN_INPUT_INDICES = {1, 2}
 
+local secondTurnButtonsDisabled = false
+
 local function createTurnButtons()
     self.createButton({
       click_function = "onClickRedBtn",
@@ -127,10 +129,13 @@ function onLoad(saved_data)
 
   if saved_data ~= "" then
       local loaded_data = JSON.decode(saved_data)
-      if loaded_data[1] then
-          for _ , index in ipairs(loaded_data[1]) do
+      if loaded_data.selectedButtonIndices then
+          for _ , index in ipairs(loaded_data.selectedButtonIndices) do
               self.editButton({index=index, label="✓", font_color={0, 0, 0}, font_size=200})
           end
+      end
+      if loaded_data.secondTurnButtonsDisabled then
+          deactivateSecondTurnButtons()
       end
   end
 end
@@ -143,7 +148,7 @@ function onSave()
             table.insert(selectedButtonIndices, index-1)
         end
     end
-    return JSON.encode({selectedButtonIndices})
+    return JSON.encode({selectedButtonIndices = selectedButtonIndices, secondTurnButtonsDisabled = secondTurnButtonsDisabled})
 end
 
 function deactivateSecondTurnButtons()
@@ -153,6 +158,7 @@ function deactivateSecondTurnButtons()
     end
     local inputs = self.getInputs()
     self.editInput({index = TURN_INPUT_INDICES[2] - 1, position = inputs[TURN_INPUT_INDICES[2]].position:setAt('y', -2)})
+    secondTurnButtonsDisabled = true
 end
 
 function onClickRedBtn()
