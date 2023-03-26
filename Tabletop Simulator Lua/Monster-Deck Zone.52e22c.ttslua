@@ -207,6 +207,14 @@ local function isZoneChooseable(zone)
     return false
 end
 
+local function deleteExtrasInZone(zone)
+    for _, obj in pairs(zone.getObjects()) do
+        if (obj.type ~= "Card") and (obj.type ~= "Deck") and (obj.type ~= "Board") then
+            destroyObject(obj)
+        end
+    end
+end
+
 function callMonsterDieEvents(params)
     local eventFunctionParams = params or {}
     for _, eventTable in ipairs(ON_DIE_EVENTS) do
@@ -615,6 +623,7 @@ function placeNewMonsterCard(params)
                 placingZone = nextInactiveZone
             end
         end
+        deleteExtrasInZone(placingZone)
         newMonsterCard.setPositionSmooth(placingZone.getPosition():setAt('y', 5), false)
         Wait.frames(function ()
                 if newMonsterCard.getVar("isEvent") then
