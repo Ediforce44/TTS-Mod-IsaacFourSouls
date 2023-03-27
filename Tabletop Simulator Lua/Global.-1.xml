@@ -40,7 +40,7 @@
     <Text class="reminder" fontSize="13" alignment="UpperLeft" horizontalOverflow="Wrap"/>
     <Text class="reminderTitle" fontSize="15" alignment="UpperLeft" fontStyle="bold" horizontalOverflow="Wrap" color="red"/>
 
-    <Button class="trickOrTreat" colors="#D1CDC6|#F6F2ED|#C8C3BD|#8E8A86" textColor="black" onClick="60cccb/UI_voted"/>
+    <Button class="trickOrTreat" colors="#D1CDC6|#F6F2ED|#C8C3BD|#8E8A86" textColor="black" onClick="cd7620/UI_voted"/>
 </Defaults>
 
 <Panel
@@ -187,11 +187,11 @@
                             </GridLayout>
                         </VerticalLayout>
                     </HorizontalLayout>
-                    <Panel preferredHeight="220" preferredWidth="300" padding="0 0 20 40">
+                    <Panel preferredHeight="250" preferredWidth="300" padding="0 0 10 20">
                         <VerticalLayout id="challenges" active="false" showAnimation="FadeIn" hideAnimation="FadeOut" animationDuration="0.3" childForceExpandHeight="false" spacing="10">
                             <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Challenges</Text>
                             <ToggleGroup>
-                                <GridLayout constraint="FixedColumnCount" constraintCount="3" cellSize="125 25">
+                                <GridLayout constraint="FixedColumnCount" constraintCount="3" cellSize="135 25">
                                         <Toggle class="isaacColor confChalToggle" id="Resurrection Day">Resurrection Day</Toggle>
                                         <Toggle class="isaacColor confChalToggle" id="Delirious">Delirious</Toggle>
                                         <Toggle class="isaacColor confChalToggle" id="Masquerade">Masquerade</Toggle>
@@ -200,7 +200,9 @@
                                         <Toggle class="isaacColor confChalToggle" id="Greed's Gamble">Greed's Gamble</Toggle>
                                         <Toggle class="isaacColor confChalToggle" id="Fatty's Feast">Fatty's Feast</Toggle>
                                         <Toggle class="isaacColor confChalToggle" id="Motherly Love">Motherly Love</Toggle>
-                                        <Toggle class="isaacColor confChalToggle" id="How the Krampus Stole Christmas">Krampus</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="How the Krampus Stole Christmas">Merry Krampus</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="Day of the Doodler">The Doodler</Toggle>
+                                        <Toggle class="isaacColor confChalToggle" id="Live Laugh Lust">Live, Laugh, Lust</Toggle>
                                 </GridLayout>
                             </ToggleGroup>
                         </VerticalLayout>

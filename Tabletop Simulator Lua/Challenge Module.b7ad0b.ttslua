@@ -2555,7 +2555,10 @@ function presetupChallenge(setupInfo)
             break
         end
     end
-    challengeBag.call("presetupChallenge", {difficulty = setupInfoTable.difficulty, compMode = setupInfoTable.compMode, automation = setupInfoTable.automation})
+    if challengeBag then
+        challengeBag.call("presetupChallenge", {difficulty = setupInfoTable.difficulty
+            , compMode = setupInfoTable.compMode, automation = setupInfoTable.automation})
+    end
 end
 
 function setupChallenge(params)

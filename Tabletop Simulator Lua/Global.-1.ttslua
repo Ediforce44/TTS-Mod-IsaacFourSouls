@@ -238,14 +238,23 @@ function onPlayerChangeColor(playerColor)
         local activeZone = getObjectFromGUID(ZONE_GUID_PLAYER[activePlayerColor])
 
         if not activeZone or not activeZone.getVar("active") or not Player[activeZone.getVar("owner_color")].seated then
-            local nextPlayerColor = getNextPlayerColor(activePlayerColor)
 
-            if nextPlayerColor ~= activePlayerColor then
-                UI.setAttribute("skipTurn", "visibility", "Host")
-                UI.setAttribute("skipButton", "text", "Skip Turn of " .. activePlayerColor)
-                UI.setAttribute("skipButton", "textColor", "#EAE5DE")
-                UI.show("skipTurn")
-            end
+            local nextPlayerConditionID = Wait.condition(
+                function()
+                    UI.setAttribute("skipButton", "text", "Skip Turn of " .. activePlayerColor)
+                    UI.setAttribute("skipButton", "textColor", "#EAE5DE")
+                    UI.setAttribute("skipTurn", "visibility", "Host")
+                    UI.show("skipTurn")
+                end, function()
+                    return activePlayerColor ~= getNextPlayerColor(activePlayerColor)
+                end)
+            Wait.condition(
+                function()
+                    UI.hide("skipTurn")
+                    Wait.stop(nextPlayerConditionID)
+                end, function()
+                    return Player[PLAYER_OWNER[activePlayerColor]].seated
+                end, 60)
         end
     end
 end
