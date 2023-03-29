@@ -13,20 +13,6 @@ INDEX_MAX = 4
 attachedObjects = {}
 indexTable = {}
 
-BACK_SCALING = {0.225, 1, 0.078}
-
-autoRewarding = true
-rewardingButtonLocked = true
-REWARDING_BUTTON_OFFSET = {x=-0.85, y=-0.4, z=-0.415}
-REWARDING_BUTTON_COLOR = {
-    ON  = Global.getTable("REAL_PLAYER_COLOR_RGB")[owner_color],
-    OFF = {0, 0, 0}
-}
-REWARDING_BUTTON_TEXT = {
-    ON = "Auto Rewarding:\n>>> ON <<<",
-    OFF = "Auto Rewarding:\n>>> OFF <<<"
-}
-
 local function calculateZoneEdges()
     local scale = self.getScale()
     local xOffset = scale.x / 2
@@ -50,11 +36,6 @@ end
 
 function resetBlockedIndex(params)
     indexTable[params.index].tempBlocked = false
-end
-
-local function getTooltipStringRB()
-    return "      Auto. Rewarding Button\n------------" .. (rewardingButtonLocked and " (Locked) " or "-----------")
-            .. "------------\n\n - Right-Click: (Un-)lock Button\n - Left-Click: Switch mode\n"
 end
 
 local function attachObject(object)
@@ -144,19 +125,11 @@ function onLoad(saved_data)
     initIndexTable()
     calculateIndexTable()
 
-    local autoRewardingON = true
-
     if saved_data ~= "" and false then
         local loaded_data = JSON.decode(saved_data)
-        if loaded_data[2] == false then
-            autoRewardingON = loaded_data[2]
-        end
-        if loaded_data[3] == false then
-            rewardingButtonLocked = loaded_data[3]
-        end
         if loaded_data[1] then
             attachedObjects = loaded_data[1]
-            goto skip
+            return
         end
     end
     for _ , obj in pairs(self.getObjects()) do
@@ -164,25 +137,10 @@ function onLoad(saved_data)
             attachObject(obj)
         end
     end
-
-    ::skip::
-    self.createButton({
-        click_function = "click_function_SwitchRewardingMode",
-        function_owner = self,
-        label          = autoRewardingON and REWARDING_BUTTON_TEXT.ON or REWARDING_BUTTON_TEXT.OFF,
-        position       = REWARDING_BUTTON_OFFSET,
-        scale          = BACK_SCALING,
-        width          = 1400,
-        height         = 420,
-        font_size      = 180,
-        color          = autoRewardingON and REWARDING_BUTTON_COLOR.ON or REWARDING_BUTTON_COLOR.OFF,
-        font_color     = {1, 1, 1},
-        tooltip        = getTooltipStringRB()
-    })
 end
 
 function onSave()
-    return JSON.encode({attachedObjects, Global.getTable("automaticRewarding")[owner_color], rewardingButtonLocked})
+    return JSON.encode({attachedObjects})
 end
 
 function onObjectEnterZone(zone, enteringObject)
@@ -198,42 +156,6 @@ function onObjectLeaveZone(zone, leavingObject)
         if leavingObject.tag == "Card" then
             detachObject(leavingObject)
         end
-    end
-end
-
-function click_function_SwitchRewardingMode(_, color, alt_click)
-    if Global.call("isPlayerAuthorized", {playerColor = color, ownerColor = owner_color}) then
-        -- Locks and unlocks rewarding button
-        if alt_click then
-            rewardingButtonLocked = not rewardingButtonLocked
-            self.editButton({index = 0, tooltip = getTooltipStringRB()})
-            return
-        elseif rewardingButtonLocked then
-            return
-        end
-
-        Global.call("switchRewardingMode", {playerColor = owner_color})
-    end
-end
-
--- Called by the global function switchRewardingMode()
-function onSwitchingRewardingMode(params)
-    if params.newState == nil then
-        Global.call("printWarning", {text = "Wrong parameters in 'soul zone' function 'onSwitchingRewardingMode()'."})
-    end
-
-    local msg = "Your Auto Rewarding has been "
-    if params.newState then
-        self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.ON, color = REWARDING_BUTTON_COLOR.ON})
-        msg = msg .. "turned ON !!!"
-    else
-        self.editButton({index = 0, label = REWARDING_BUTTON_TEXT.OFF, color = REWARDING_BUTTON_COLOR.OFF})
-        msg = msg .."turned OFF !!!"
-    end
-    print(Global.getTable("REAL_PLAYER_COLOR")[owner_color] .. owner_color
-            .. "s[-] auto rewarding mode has changed.")
-    if Player[owner_color].seated then
-        broadcastToColor(msg, owner_color)
     end
 end
 

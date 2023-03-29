@@ -671,3 +671,275 @@
         <Button class="trickOrTreat" id="RANDOM" preferredWidth="150" minHeight="35" text="Random" fontSize="20" fontStyle="bold"></Button>
     </VerticalLayout>
 </Panel>
+
+<Panel
+    id="options_Red"
+    active="false"
+    height="600"
+    width="500"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.3"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="Red">
+    <VerticalLayout>
+        <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
+                <Text class="isaacColor">Change your personal Player-Options, then press 'Done'!</Text>
+                <Text class="isaacColor">This options will only affect you and your own player zone!</Text>
+            </VerticalLayout>
+        </Panel>
+        <Panel class="isaacBackground" preferredHeight="400">
+            <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
+                <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Red_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Red_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Red_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Red_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                    </VerticalLayout>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
+                        <Toggle class="isaacColor" interactable="false" id="Red_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
+                        <Toggle class="isaacColor" interactable="false" id="Red_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                    </VerticalLayout>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Graphics of Buttons</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Red_DARK" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Dark</Toggle>
+                        <Toggle class="isaacColor" id="Red_LIGHT" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Light</Toggle>
+                        <Toggle class="isaacColor" id="Red_FANCY" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Fancy</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Spy-Zone position</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Red_SIDE" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">Next to Hand-Zone</Toggle>
+                        <Toggle class="isaacColor" id="Red_FRONT" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">In front of Hand-Zone</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                </GridLayout>
+                <Button
+                    id="Red_OpitionsDone"
+                    minHeight="40"
+                    preferredWidth="400"
+                    alignment="LowerCenter"
+                    text="Done" fontSize="30"
+                    onClick="78c676/UI_optionsDone"
+                    class="isaacColor"
+                    textColor="black"
+                    fontStyle="Bold">
+                </Button>
+            </VerticalLayout>
+        </Panel>
+    </VerticalLayout>
+</Panel>
+
+<Panel
+    id="options_Blue"
+    active="false"
+    height="600"
+    width="500"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.3"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="Blue">
+    <VerticalLayout>
+        <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
+                <Text class="isaacColor">Change your personal Player-Options, then press 'Done'!</Text>
+                <Text class="isaacColor">This options will only affect you and your own player zone!</Text>
+            </VerticalLayout>
+        </Panel>
+        <Panel class="isaacBackground" preferredHeight="400">
+            <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
+                <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Blue_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Blue_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Blue_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Blue_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                    </VerticalLayout>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
+                        <Toggle class="isaacColor" interactable="false" id="Blue_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
+                        <Toggle class="isaacColor" interactable="false" id="Blue_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                    </VerticalLayout>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Graphics of Buttons</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Blue_DARK" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Dark</Toggle>
+                        <Toggle class="isaacColor" id="Blue_LIGHT" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Light</Toggle>
+                        <Toggle class="isaacColor" id="Blue_FANCY" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Fancy</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Spy-Zone position</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Blue_SIDE" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">Next to Hand-Zone</Toggle>
+                        <Toggle class="isaacColor" id="Blue_FRONT" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">In front of Hand-Zone</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                </GridLayout>
+                <Button
+                    id="Blue_OpitionsDone"
+                    minHeight="40"
+                    preferredWidth="400"
+                    alignment="LowerCenter"
+                    text="Done" fontSize="30"
+                    onClick="78c676/UI_optionsDone"
+                    class="isaacColor"
+                    textColor="black"
+                    fontStyle="Bold">
+                </Button>
+            </VerticalLayout>
+        </Panel>
+    </VerticalLayout>
+</Panel>
+
+<Panel
+    id="options_Green"
+    active="false"
+    height="600"
+    width="500"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.3"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="Green">
+    <VerticalLayout>
+        <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
+                <Text class="isaacColor">Change your personal Player-Options, then press 'Done'!</Text>
+                <Text class="isaacColor">This options will only affect you and your own player zone!</Text>
+            </VerticalLayout>
+        </Panel>
+        <Panel class="isaacBackground" preferredHeight="400">
+            <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
+                <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Green_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Green_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Green_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Green_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                    </VerticalLayout>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
+                        <Toggle class="isaacColor" interactable="false" id="Green_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
+                        <Toggle class="isaacColor" interactable="false" id="Green_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                    </VerticalLayout>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Graphics of Buttons</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Green_DARK" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Dark</Toggle>
+                        <Toggle class="isaacColor" id="Green_LIGHT" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Light</Toggle>
+                        <Toggle class="isaacColor" id="Green_FANCY" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Fancy</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Spy-Zone position</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Green_SIDE" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">Next to Hand-Zone</Toggle>
+                        <Toggle class="isaacColor" id="Green_FRONT" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">In front of Hand-Zone</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                </GridLayout>
+                <Button
+                    id="Green_OpitionsDone"
+                    minHeight="40"
+                    preferredWidth="400"
+                    alignment="LowerCenter"
+                    text="Done" fontSize="30"
+                    onClick="78c676/UI_optionsDone"
+                    class="isaacColor"
+                    textColor="black"
+                    fontStyle="Bold">
+                </Button>
+            </VerticalLayout>
+        </Panel>
+    </VerticalLayout>
+</Panel>
+
+<Panel
+    id="options_Yellow"
+    active="false"
+    height="600"
+    width="500"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.3"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="Yellow">
+    <VerticalLayout>
+        <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
+                <Text class="isaacColor">Change your personal Player-Options, then press 'Done'!</Text>
+                <Text class="isaacColor">This options will only affect you and your own player zone!</Text>
+            </VerticalLayout>
+        </Panel>
+        <Panel class="isaacBackground" preferredHeight="400">
+            <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
+                <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Yellow_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Yellow_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Yellow_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Yellow_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                    </VerticalLayout>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
+                        <Toggle class="isaacColor" interactable="false" id="Yellow_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
+                        <Toggle class="isaacColor" interactable="false" id="Yellow_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                    </VerticalLayout>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Graphics of Buttons</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Yellow_DARK" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Dark</Toggle>
+                        <Toggle class="isaacColor" id="Yellow_LIGHT" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Light</Toggle>
+                        <Toggle class="isaacColor" id="Yellow_FANCY" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Fancy</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Spy-Zone position</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Yellow_SIDE" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">Next to Hand-Zone</Toggle>
+                        <Toggle class="isaacColor" id="Yellow_FRONT" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">In front of Hand-Zone</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                </GridLayout>
+                <Button
+                    id="Yellow_OpitionsDone"
+                    minHeight="40"
+                    preferredWidth="400"
+                    alignment="LowerCenter"
+                    text="Done" fontSize="30"
+                    onClick="78c676/UI_optionsDone"
+                    class="isaacColor"
+                    textColor="black"
+                    fontStyle="Bold">
+                </Button>
+            </VerticalLayout>
+        </Panel>
+    </VerticalLayout>
+</Panel>

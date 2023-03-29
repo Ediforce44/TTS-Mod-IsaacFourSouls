@@ -81,6 +81,9 @@ function onLoad(saved_data)         --EbyE44
         if loaded_data.handInfo then
             HAND_INFO = loaded_data.handInfo
         end
+        if loaded_data.spyInfo then
+            SPY_INFO = loaded_data.spyInfo
+        end
         if loaded_data.playerOwner then
             PLAYER_OWNER = loaded_data.playerOwner
         end
@@ -99,7 +102,8 @@ end
 function onSave()                   --EbyE44
     return JSON.encode({activePlayerColor = activePlayerColor, startPlayerColor = startPlayerColor
         , automaticRewarding = automaticRewarding, minionZoneInfo = ZONE_INFO_MINION, bossZoneGuid = ZONE_GUID_BOSS
-        , customCounterBagGuids = COUNTER_BAGS_GUID, onTurnEvents = ON_TURN_EVENTS, handInfo = HAND_INFO, playerOwner = PLAYER_OWNER})
+        , customCounterBagGuids = COUNTER_BAGS_GUID, onTurnEvents = ON_TURN_EVENTS, handInfo = HAND_INFO
+        , playerOwner = PLAYER_OWNER, spyInfo = SPY_INFO})
 end
 
 HEART_TOKENS_GUID = {
@@ -409,7 +413,7 @@ local function placeExpansions()
     end
 end
 
-local function setPlayerZoneOwner(ownerTable)
+local function setPlayerZoneOwners(ownerTable)
     for _, colorTable  in pairs(ownerTable) do
         local ownerColor = colorTable[1]
         local nextHandIndex = HAND_INFO[ownerColor].index
@@ -424,6 +428,13 @@ local function setPlayerZoneOwner(ownerTable)
                 PLAYER_OWNER[color] = ownerColor
                 nextHandIndex = nextHandIndex + 1
             end
+        end
+        for _, color in ipairs(colorTable) do
+            local spyZone = getObjectFromGUID(SPY_INFO[color].guid)
+            spyZone.setValue(ownerColor)
+            SPY_INFO[color].index = nextHandIndex
+            SPY_INFO[color].owner = ownerColor
+            nextHandIndex = nextHandIndex + 1
         end
         local playerString = ""
         for _, color in pairs(colorTable) do
@@ -635,7 +646,7 @@ function UI_configurationDone(player)
                 ownerTable[playerID] = {color}
             end
         end
-        setPlayerZoneOwner(ownerTable)
+        setPlayerZoneOwners(ownerTable)
     end
     if confTable.CHALLENGES_ACTIVE then
         getObjectFromGUID(ZONE_GUID_DECK.MONSTER).call("activateChallengeMode")
@@ -986,6 +997,13 @@ HAND_INFO = {
     Yellow = {index = 1, owner = "Yellow", guid = "e2e2d1"}
 }
 
+SPY_INFO = {
+    Red = {index = 2, owner = "Red", guid = "744c42"},
+    Blue = {index = 2, owner = "Blue", guid = "32da79"},
+    Green = {index = 2, owner = "Green", guid = "69a792"},
+    Yellow = {index = 2, owner = "Yellow", guid = "ad4169"}
+}
+
 TURN_ORDER = {
     Red = "Blue",
     Blue = "Green",
@@ -1273,7 +1291,7 @@ function deactivateCharacter(params)
     getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("deactivateCharacter")
 end
 
-function switchRewardingMode(params)
+function changeRewardingMode(params)
     local color = ""
     if params.playerColor == nil then
         if params.player == nil then
@@ -1285,9 +1303,20 @@ function switchRewardingMode(params)
     else
         color = params.playerColor
     end
-    local newValue = not automaticRewarding[color]
-    automaticRewarding[color] = newValue
-    getObjectFromGUID(ZONE_GUID_SOUL[color]).call("onSwitchingRewardingMode", {newState = newValue})
+    local newValue = (params.active == true)
+    if newValue ~= automaticRewarding[color] then
+        automaticRewarding[color] = newValue
+        getObjectFromGUID(ZONE_GUID_SOUL[color]).call("onSwitchingRewardingMode", {newState = newValue})
+        local msg = "Your Auto Rewarding has been "
+        if newValue == true then
+            msg = msg .. "turned ON !!!"
+        else
+            msg = msg .."turned OFF !!!"
+        end
+        if Player[PLAYER_OWNER[color]].seated then
+            broadcastToColor(msg, PLAYER_OWNER[color])
+        end
+    end
 end
 
 function getCounterInZone(params)

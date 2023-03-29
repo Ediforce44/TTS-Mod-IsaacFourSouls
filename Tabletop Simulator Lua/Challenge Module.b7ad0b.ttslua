@@ -1,5 +1,6 @@
 TABLE_BASE_GUID = "f5c4fe"
 BOARD_MANAGER_GUID = "bd69bd"
+CUSTOM_BUTTON_MODULE_GUID = "78c676"
 MONSTER_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").MONSTER
 
 CHALLENGE_BOARD_URL = "http://cloud-3.steamusercontent.com/ugc/2074509887578491016/5095F18DED91C046CD615C10DD1EE666B5F7B168/"
@@ -51,6 +52,11 @@ local greenPlayerStuff = {
 local handZones = {
     Yellow = "e2e2d1",
     Green = "489f26"
+}
+
+local spyZones = {
+    Yellow = "ad4169",
+    Green = "69a792"
 }
 
 local restStuff = {
@@ -2463,7 +2469,8 @@ local function setupPropScripts()
     end
 end
 
-local function deleteObjectsAndSnappoints()
+local function deletePlayerStuff()
+    local customButtons = getObjectFromGUID(CUSTOM_BUTTON_MODULE_GUID).getTable("CUSTOM_BUTTONS")
     for _, guid in pairs(yellowPlayerStuff) do
         local playerObj = getObjectFromGUID(guid)
         if playerObj then
@@ -2478,6 +2485,21 @@ local function deleteObjectsAndSnappoints()
         end
     end
 
+    for _, infoTable in pairs(customButtons) do
+        local greenButton = getObjectFromGUID(infoTable.Green)
+        if greenButton then
+            destroyObject(greenButton)
+        end
+        local yellowButton = getObjectFromGUID(infoTable.Yellow)
+        if yellowButton then
+            destroyObject(yellowButton)
+        end
+    end
+end
+
+local function deleteObjectsAndSnappoints()
+    deletePlayerStuff()
+
     local handInfos = Global.getTable("HAND_INFO")
     for originalOwnerColor, guid in pairs(handZones) do
         local handZone = getObjectFromGUID(guid)
@@ -2486,6 +2508,18 @@ local function deleteObjectsAndSnappoints()
                 destroyObject(handZone)
             else
                 handZone.setPosition(handZone.getPosition() - Vector(0, 20, 0))
+            end
+        end
+    end
+
+    local spyInfos = Global.getTable("SPY_INFO")
+    for originalOwnerColor, guid in pairs(spyZones) do
+        local spyZone = getObjectFromGUID(guid)
+        if spyZone then
+            if spyInfos[originalOwnerColor].owner == originalOwnerColor then
+                destroyObject(spyZone)
+            else
+                spyZone.setPosition(spyZone.getPosition() - Vector(0, 20, 0))
             end
         end
     end
