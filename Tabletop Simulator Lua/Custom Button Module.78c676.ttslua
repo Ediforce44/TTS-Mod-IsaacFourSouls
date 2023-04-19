@@ -239,9 +239,10 @@ local function createUrlInput(buttonObj, url)
             input_function = "dummy",
             function_owner = self,
             position = {0,0.2,-1.5},
-            width = 4000,
+            width = 4200,
             height = 180,
             font_size = 140,
+            alignment = 3,
             scale={x=2, y=2, z=2},
             font_color= {1,1,1},
             tooltip="[b]Select and press:[/b]\n[i]CTRL + C[/i]",
@@ -438,8 +439,8 @@ function click_ShowPlayerOptions(buttonObj, playerColor, _)
 
     blockedButtons[buttonObj.getGUID()] = true
     buttonAnimation(buttonObj)
-    UI.setAttribute("options_" .. zoneColor, "visibility", playerColor)
     UI.show("options_" .. zoneColor)
+    UI.setAttribute("options_" .. zoneColor, "visibility", playerColor)
 end
 
 local OPTION_TABLE = {

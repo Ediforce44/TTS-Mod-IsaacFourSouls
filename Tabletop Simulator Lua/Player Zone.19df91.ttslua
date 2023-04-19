@@ -377,10 +377,14 @@ function placeObjectInZone(params)
     end
     if position ~= nil then
         placeObject(params.object, position)
-    elseif params.object.getQuantity() < 0 then
+    elseif params.object.use_hands then
         local handInfo = Global.getTable("HAND_INFO")[zone_color]
         params.object.deal(1, handInfo.owner, handInfo.index)
+    else
+        return false
     end
+
+    return true
 end
 
 -- More efficent for multi card placing
@@ -406,18 +410,19 @@ function placeMultipleObjectsInZone(params)
                 placeObject(params.objects[nextObjectIndex], indexTable[row][column].position)
                 nextObjectIndex = nextObjectIndex + 1
                 if nextObjectIndex > maxObjectIndex then
-                    return
+                    return true
                 end
             end
         end
     end
     -- Not enough free fields for cards
     for index = nextObjectIndex , maxObjectIndex do
-        if params.objects[index].getQuantity() < 0 then
+        if params.object.use_hands then
             local handInfo = Global.getTable("HAND_INFO")[zone_color]
             params.objects[index].deal(1, handInfo.owner, handInfo.index)
         end
     end
+    return false
 end
 
 function placeCounterInZone(params)

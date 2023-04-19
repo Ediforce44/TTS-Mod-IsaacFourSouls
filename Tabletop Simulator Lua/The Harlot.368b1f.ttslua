@@ -41,7 +41,8 @@ function initButtons()
     color          = {239/225, 83/255, 80/255}
   })
 end
-    local function cloneByGUID(cloneGUID)
+
+local function cloneByGUID(cloneGUID)
     local obj = self.takeObject({guid = cloneGUID})
     local objClone = obj.clone()
     Wait.frames(function() self.putObject(obj) end, 5)

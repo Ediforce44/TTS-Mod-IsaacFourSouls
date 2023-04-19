@@ -90,11 +90,12 @@ function onLoad(saved_data)         --EbyE44
     end
     if not hasGameStarted() then
         UI.show("config")
+        UI.setAttribute("config", "visibility", "Host")
     else
         UI.setAttribute("passButton", "image", "turn_" .. string.lower(activePlayerColor))
         UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[activePlayerColor])
-        UI.setAttribute("turnInfo", "visibility", activePlayerColor .. "|Black")
         UI.show("turnInfo")
+        UI.setAttribute("turnInfo", "visibility", activePlayerColor .. "|Black")
     end
     broadcastToAll("The Binding of Isaac: Four Souls - FULL loaded.", {1,1,1})
 end
@@ -247,8 +248,8 @@ function onPlayerChangeColor(playerColor)
                 function()
                     UI.setAttribute("skipButton", "text", "Skip Turn of " .. activePlayerColor)
                     UI.setAttribute("skipButton", "textColor", "#EAE5DE")
-                    UI.setAttribute("skipTurn", "visibility", "Host")
                     UI.show("skipTurn")
+                    UI.setAttribute("skipTurn", "visibility", "Host")
                 end, function()
                     return activePlayerColor ~= getNextPlayerColor(activePlayerColor)
                 end)
@@ -826,8 +827,8 @@ function startTurnSystem()
     callTurnStartEvents(nil, activePlayerColor)
     UI.setAttribute("passButton", "image", "turn_" .. string.lower(activePlayerColor))
     UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[activePlayerColor])
-    UI.setAttribute("turnInfo", "visibility", activePlayerColor .. "|Black")
     UI.show("turnInfo")
+    UI.setAttribute("turnInfo", "visibility", activePlayerColor .. "|Black")
 end
 
 function UI_passTurn(clickerPlayer)
@@ -889,8 +890,8 @@ function pickColor(falseInput)
     end
 
     local nextEntry = colorPickerAttachment[1]
-    UI.setAttribute("colorPicker", "visibility", nextEntry.picker)
     UI.show("colorPicker")
+    UI.setAttribute("colorPicker", "visibility", nextEntry.picker)
     if (not falseInput) then
         broadcastToAll(getPlayerString({playerColor = nextEntry.picker}) .. " picks a Player Color for "
             .. nextEntry.reason .. ".")
@@ -1187,6 +1188,7 @@ DECK_POSITION = {
 DEAD_END_POSITION = {}
 
 CHALLENGE_LEFTOVERS_POSITION = Vector(46.75, 1.7, -14)
+EVEN_MORE_CHARS_POSITION = Vector(86, 1.7, 0)
 
 function printWarning(params)
     if params.text == nil then
@@ -1501,15 +1503,16 @@ end
 function placeObjectsInPlayerZone(params)
     if (params.playerColor == nil) or (params.objects == nil) then
         printWarning({text = "Wrong parameters in global function 'placeObjectsInPlayerZone()'."})
-    else
-        local objects = params.objects
+        return false
+    end
 
-        if #objects > 1 then
-            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeMultipleObjectsInZone", params)
-        elseif #objects == 1 then
-            getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeObjectInZone", {object = objects[1]
+    local objects = params.objects
+
+    if #objects > 1 then
+        return getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeMultipleObjectsInZone", params)
+    elseif #objects == 1 then
+        return getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("placeObjectInZone", {object = objects[1]
                 , index = params.index, replacing = params.replacing})
-        end
     end
 end
 
