@@ -2,7 +2,6 @@ CHARACTER_PLACER_GUID = "d2c68a"
 
 inputCharCount = 2
 characterPull = {}
-charactersInBag = {}
 waitForSelectCharacters = {
   Red = {},
   Blue = {},
@@ -19,6 +18,12 @@ playersSpawnedCharacterObj = {
 
 originalPositionTable = {}
 
+STORE_BUTTON_INDEX = nil
+
+STORE_BUTTON_LABEL = {
+    STORE = "Store away",
+    EXTRACT = "Extract"
+}
 math.randomseed(os.time())
 
 local buttonsBlocked = false
@@ -202,6 +207,7 @@ function initButtons()
     tooltip        = "Store or extract surplus Character Packs",
     font_size      = 230
   })
+  STORE_BUTTON_INDEX = 3
 end
 
 function updateCharactersCount(obj, _, value)
@@ -416,8 +422,14 @@ function click_storeOrExtract()
                         end
                     end
                 end
-                characterPlacer.call("storeSurplusCharacterPacks", {charPacks = surplusCharacterPacks})
+                if #surplusCharacterPacks > 0 then
+                    self.editButton({index = STORE_BUTTON_INDEX, label = STORE_BUTTON_LABEL.EXTRACT})
+                    characterPlacer.call("storeSurplusCharacterPacks", {charPacks = surplusCharacterPacks})
+                else
+                    Global.call("printWarning", {text = "There are no surplus Character Packs to store away."})
+                end
             else
+                self.editButton({index = STORE_BUTTON_INDEX, label = STORE_BUTTON_LABEL.STORE})
                 characterPlacer.call("extractSurplusCharacterPacks")
             end
         end

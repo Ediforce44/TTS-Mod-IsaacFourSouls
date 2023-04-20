@@ -12,9 +12,16 @@ end
 function onObjectEnterScriptingZone(zone, object)
     if zone ~= getObjectFromGUID(zone_guid) then return end
     Wait.frames(function()
-      val = getSoulsCountInZone()
-      updateVal()
-      updateSave()
+        local soulCount = getSoulsCountInZone()
+        if soulCount > val then
+            local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
+            if sfxCube then
+                sfxCube.call("playHoly")
+            end
+        end
+        val = soulCount
+        updateVal()
+        updateSave()
     end, 5)
 end
 

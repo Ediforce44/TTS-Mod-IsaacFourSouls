@@ -303,6 +303,11 @@ local function setupOfficialContent(gameLanguage)
 
             Global.call("startTurnSystem")
 
+            local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
+            if sfxCube then
+                sfxCube.call("playLaugh")
+            end
+
             self.destroy()
         end,
         function()
@@ -388,7 +393,7 @@ function onStart()
     local startPlayerColor = Global.getVar("startPlayerColor")
     if startPlayerColor == "None" then
         for _, color in pairs(getSeatedPlayers()) do
-            if (color == "Red") or (color == "Blue") or (color == "Green") or (color == "Yellow") then
+            if Global.getTable("PLAYER")[color] then
                 startPlayerColor = color
                 break
             end

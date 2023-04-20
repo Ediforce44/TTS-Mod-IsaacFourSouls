@@ -110,7 +110,8 @@ local function distributeCharacters(characterCards)
     local charPacks = getCharPacks(characterCards)
 
     for _, playerColor in pairs(Global.getTable("PLAYER")) do
-        if Player[playerColor].seated then
+        local playerOwner = Global.getTable("PLAYER_OWNER")
+        if Player[playerOwner[playerColor]].seated then
             if #charPacks == 0 then
                 return
             end

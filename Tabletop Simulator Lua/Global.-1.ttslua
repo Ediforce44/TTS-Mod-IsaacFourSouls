@@ -228,6 +228,23 @@ local function passTurn(nextPlayerColor)
     local previousPlayerColor = activePlayerColor
     activePlayerColor = nextPlayerColor
 
+    local sfxCube = getObjectFromGUID(SFX_CUBE_GUID)
+    if sfxCube then
+        sfxCube.call("playSwoosh")
+    end
+
+    local playerZoneOverlay_active = getObjectFromGUID(PLAYER_ZONE_OVERLAY_GUID[previousPlayerColor])
+    if playerZoneOverlay_active then
+        local playerOverlayPosition = playerZoneOverlay_active.getPosition():setAt('y', 0)
+        playerZoneOverlay_active.setPosition(playerOverlayPosition)
+    end
+
+    local playerZoneOverlay_next = getObjectFromGUID(PLAYER_ZONE_OVERLAY_GUID[nextPlayerColor])
+    if playerZoneOverlay_next then
+        local playerOverlayPosition = playerZoneOverlay_next.getPosition():setAt('y', 1.49)
+        playerZoneOverlay_next.setPosition(playerOverlayPosition)
+    end
+
     callTurnEndEvents(previousPlayerColor, activePlayerColor)
     print(getPlayerString({playerColor = previousPlayerColor}) .. "'s turn is over. It's now "
         .. getPlayerString({playerColor = activePlayerColor}) .. "'s turn.")
@@ -828,7 +845,26 @@ function startTurnSystem()
     UI.setAttribute("passButton", "image", "turn_" .. string.lower(activePlayerColor))
     UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[activePlayerColor])
     UI.show("turnInfo")
-    UI.setAttribute("turnInfo", "visibility", activePlayerColor .. "|Black")
+    UI.setAttribute("turnInfo", "visibility", PLAYER_OWNER[activePlayerColor] .. "|Black")
+
+    local sfxCube = getObjectFromGUID(SFX_CUBE_GUID)
+    if sfxCube then
+        sfxCube.call("playSwoosh")
+    end
+
+    for playerZoneOverlayGuid in pairs(PLAYER_ZONE_OVERLAY_GUID) do
+        local playerZoneOverlay = getObjectFromGUID(playerZoneOverlayGuid)
+        if playerZoneOverlay then
+            local playerOverlayPosition = playerZoneOverlay.getPosition():setAt('y', 0)
+            playerZoneOverlay.setPosition(playerOverlayPosition)
+        end
+    end
+
+    local playerZoneOverlay_start = getObjectFromGUID(PLAYER_ZONE_OVERLAY_GUID[activePlayerColor])
+    if playerZoneOverlay_start then
+        local playerOverlayPosition = playerZoneOverlay_start.getPosition():setAt('y', 1.49)
+        playerZoneOverlay_start.setPosition(playerOverlayPosition)
+    end
 end
 
 function UI_passTurn(clickerPlayer)
@@ -1163,6 +1199,15 @@ COUNTER_BAGS_GUID = {
     GUT = "8abd1b"
 }
 
+SFX_CUBE_GUID = "f0b300"
+
+PLAYER_ZONE_OVERLAY_GUID = {
+    Red = "956a87",
+    Blue = "690e90",
+    Green = "2d3a54",
+    Yellow = "0342ed"
+}
+
 --Initialised in onLoad
 DISCARD_PILE_POSITION = {
     TREASURE = {},
@@ -1193,6 +1238,11 @@ EVEN_MORE_CHARS_POSITION = Vector(86, 1.7, 0)
 function printWarning(params)
     if params.text == nil then
         return
+    end
+
+    local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
+    if sfxCube then
+        sfxCube.call("playWrong")
     end
     printToAll(PRINT_COLOR_SPECIAL.GRAY_LIGHT .. PRINT_COLOR_SPECIAL.WARNING .. "[WARNING][-] " .. tostring(params.text) .. "[-]")
 end

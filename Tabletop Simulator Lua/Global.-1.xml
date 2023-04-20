@@ -4,7 +4,6 @@
     <Panel class="isaacBackground" image="background" color="rgba(1,1,1,0.98)" />
     <VerticalLayout class="isaacBackground" image="background" color="rgba(1,1,1,0.98)" />
     <HorizontalLayout class="isaacBackground" image="background" color="rgba(1,1,1,0.98)" />
-    <Panel class="turnBackground" image="test" color="rgba(1,1,1,0.98)" preserveAspect="true"/>
 
     <Toggle class="isaacColor" colors="#EAE5DE|#F6F2ED|#C8C3BD|#8E8A86" textColor="#EAE5DE" />
     <Text class="isaacColor" color="#EAE5DE" />

@@ -17,6 +17,8 @@ local LINK_BUTTONS = {
     LINK_XL = "68661c"
 }
 
+local MUTE_BUTTON = "d625a5"
+
 local CUSTOM_BUTTON_THEME = {
     DARK = {state = 1, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Green = {0, 0, 180}, Yellow = {0, 0, 180}}},
     LIGHT = {state = 2, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Green = {0, 0, 180}, Yellow = {0, 0, 180}}},
@@ -31,7 +33,8 @@ local BUTTON_TOOLTIPS = {
     OPTION = "[i]Open Player-Options",
     LINK_SLIM = "[b]Workshop Link to the simple version of this Mod",
     LINK_NORMAL = "[b]Workshop Link to this Mod",
-    LINK_XL = "[b]Workshop Link to the 6 Player version of this Mod"
+    LINK_XL = "[b]Workshop Link to the 6 Player version of this Mod",
+    MUTE = "[b]Mute or unmute Sound Effects"
 }
 
 local SPY_ZONE_GUIDS = {Red = nil, Blue = nil, Green = nil, Yellow = nil}
@@ -46,7 +49,8 @@ local BUTTON_FUNCTIONS = {
     OPTION = "click_ShowPlayerOptions",
     LINK_SLIM = "click_ShowLinkSlim",
     LINK_NORMAL = "click_ShowLinkNormal",
-    LINK_XL = "click_ShowLinkXL"
+    LINK_XL = "click_ShowLinkXL",
+    MUTE = "click_MuteSFX"
 }
 
 local function buttonAnimation(buttonObj)
@@ -137,6 +141,7 @@ function onLoad(saved_data)
         local buttonObj = getObjectFromGUID(buttonGUID)
         createButtonsOnCustomButton(buttonObj, buttonType)
     end
+    createButtonsOnCustomButton(getObjectFromGUID(MUTE_BUTTON), "MUTE")
 end
 
 function onSave()
@@ -217,8 +222,6 @@ local url_slim = "https://steamcommunity.com/sharedfiles/filedetails/?id=2545137
 local url_normal = "https://steamcommunity.com/sharedfiles/filedetails/?id=2526757138"
 local url_xl = "https://steamcommunity.com/sharedfiles/filedetails/?id=2908808487"
 
-
-
 local function removeOtherLinkInputs(linkButton)
     for _, guid in pairs(LINK_BUTTONS) do
         if guid ~= linkButton.getGUID() then
@@ -267,6 +270,17 @@ function click_ShowLinkXL(buttonObj)
     buttonAnimation(buttonObj)
     removeOtherLinkInputs(buttonObj)
     createUrlInput(buttonObj, url_xl)
+end
+
+function click_MuteSFX(buttonObj, playerColor)
+    if Player[playerColor].admin then
+        buttonObj.setRotation(buttonObj.getRotation() + Vector(0, 0, 180))
+        buttonAnimation(buttonObj)
+        local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
+        if sfxCube then
+            sfxCube.call("switchMute")
+        end
+    end
 end
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------- Spy Zone -----------------------------------------------------------
