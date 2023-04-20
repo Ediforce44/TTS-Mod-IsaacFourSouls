@@ -56,7 +56,7 @@ end
 
 function prepareForManualDeckBuilding()
     if Global.call("hasGameStarted") or GAMEMODE_CHANGE_BLOCKED then
-        return
+        return false
     end
 
     disableDeckBuilder()
@@ -67,6 +67,7 @@ function prepareForManualDeckBuilding()
     local preDeckGUIDs = tableBase.call("getPreDeckGUIDs", {language = gameLanguage})
 
     buildAllDecks({preDecks = preDeckGUIDs})
+    return true
 end
 
 function isDeckBuilderON()
@@ -396,23 +397,7 @@ function gmCustom(params)
 end
 
 -------------------------------------------------- Load and Save -------------------------------------------------------
-local function createButtons()
-    self.createButton({
-        click_function = "prepareForManualDeckBuilding",
-        function_owner = self,
-        label          = "Manual\nDeckbuilding",
-        font_size      = 300,
-        position       = {6, 1, 0},
-        width          = 2000,
-        height         = 700,
-        color          = {1, 1, 1},
-        tooltip        = "If you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks."
-    })
-end
-
 function onLoad(saved_data)
-    createButtons()
-
     for deckType, _ in pairs(DECK_INFOS) do
         DECK_INFOS[deckType].DECK_POSITION = Global.getTable("DECK_POSITION")[deckType] or Vector(0, 5, 0)
         DECK_INFOS[deckType].LEFTOVERS_POSITION = Global.getTable("DECK_POSITION")["LO_" .. deckType] or Vector(0, 5, 0)

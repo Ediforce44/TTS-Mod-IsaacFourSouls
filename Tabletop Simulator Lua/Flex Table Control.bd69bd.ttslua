@@ -1,7 +1,8 @@
 tableHeightOffset = -9
+controlActive = false
 
 function onSave()
-    saved_data = JSON.encode({tid=tableImageData, cd=checkData})
+    saved_data = JSON.encode({tid=tableImageData, cd=checkData, controlActive = controlActive})
     --saved_data = ""
     return saved_data
 end
@@ -12,6 +13,9 @@ function onload(saved_data)
          local loaded_data = JSON.decode(saved_data)
          tableImageData = loaded_data.tid
          checkData = loaded_data.cd
+         if loaded_data.controlActive then
+             controlActive = loaded_data.controlActive
+         end
     else
         tableImageData = {}
         checkData = {move=false, scale=false}
@@ -34,7 +38,6 @@ function onload(saved_data)
     --obj_overlay = getObjectFromGUID("4ee1f3")
 
     controlActive = false
-    createOpenCloseButton()
 end
 
 
@@ -65,25 +68,20 @@ end
 
 
 --Activated by clicking on
-function click_toggleControl(_, color)
-    if permissionCheck(color) then
-        if not controlActive then
-            --Activate control panel
-            controlActive = true
-            self.clearButtons()
-            createOpenCloseButton()
-            createSurfaceInput()
-            createSurfaceButtons()
-            createScaleInput()
-            createScaleButtons()
-        else
-            --Deactivate control panel
-            controlActive = false
-            self.clearButtons()
-            self.clearInputs()
-            createOpenCloseButton()
-
-        end
+function click_toggleControl()
+    if not controlActive then
+        --Activate control panel
+        controlActive = true
+        self.clearButtons()
+        createSurfaceInput()
+        createSurfaceButtons()
+        --createScaleInput()
+        --createScaleButtons()
+    else
+        --Deactivate control panel
+        controlActive = false
+        self.clearButtons()
+        self.clearInputs()
     end
 end
 
@@ -120,7 +118,6 @@ function click_saveSurface(_, color)
                 broadcastToAll("Image URL saved to memory.", {0.2,0.9,0.2})
                 --Refresh buttons
                 self.clearButtons()
-                createOpenCloseButton()
                 createSurfaceButtons()
                 createScaleButtons()
             else
@@ -147,7 +144,6 @@ function click_deleteMemory(_, color, index)
     if permissionCheck(color) then
         table.remove(tableImageData, index)
         self.clearButtons()
-        createOpenCloseButton()
         createSurfaceButtons()
         createScaleButtons()
         broadcastToAll("Element Removed from Memory", {0.2,0.9,0.2})
@@ -379,20 +375,6 @@ end
 
 --Creation of buttons/inputs
 
-
-
-function createOpenCloseButton()
-    local tooltip = ""
-    if controlActive then
-        tooltip = "Close Table Control Panel"
-    end
-    self.createButton({
-        click_function="click_toggleControl", function_owner=self,
-        position={0,0,0}, rotation={-45,0,0}, height=400, width=400,
-        color={1,1,1,0}, tooltip=tooltip
-    })
-end
-
 function createSurfaceInput()
     local currentURL = obj_surface.getCustomObject().diffuse
     local nickname = ""
@@ -401,15 +383,15 @@ function createSurfaceInput()
     end
     self.createInput({
         label="Nickname", input_function="none", function_owner=self,
-        alignment=3, position={0,0,2}, height=224, width=4000,
+        alignment=3, position={0,0,3}, height=224, width=4000,
         font_size=200, tooltip="Enter nickname for table image (only used for save)",
-        value=nickname
+        value=nickname, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     self.createInput({
         label="URL", input_function="none", function_owner=self,
-        alignment=3, position={0,0,3}, height=224, width=4000,
+        alignment=3, position={0,0,4}, height=224, width=4000,
         font_size=200, tooltip="Enter URL for tabletop image",
-        value=currentURL
+        value=currentURL, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
 end
 
@@ -417,23 +399,23 @@ function createSurfaceButtons()
     --Label
     self.createButton({
         label="Tabletop Surface Image", click_function="none",
-        position={0,0,1}, height=0, width=0, font_size=300, font_color={1,1,1}
+        position={0,0,2}, height=0, width=0, font_size=300, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     --Functional
     self.createButton({
         label="Apply Image\nTo Table", click_function="click_applySurface",
         function_owner=self, tooltip="Apply URL as table image",
-        position={2,0,4}, height=440, width=1400, font_size=200,
+        position={2,0,5}, height=440, width=1400, font_size=200, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     self.createButton({
         label="Save Image\nTo Memory", click_function="click_saveSurface",
         function_owner=self, tooltip="Record URL into memory (requires nickname)",
-        position={-2,0,4}, height=440, width=1400, font_size=200,
+        position={-2,0,5}, height=440, width=1400, font_size=200, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     --Label
     self.createButton({
         label="Load From Memory", click_function="none",
-        position={0,0,5.5}, height=0, width=0, font_size=300, font_color={1,1,1}
+        position={0,0,6.5}, height=0, width=0, font_size=300, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     --Saves, created dynamically from memory file
     for i, memoryEntry in ipairs(tableImageData) do
@@ -444,7 +426,7 @@ function createSurfaceButtons()
         self.createButton({
             label=memoryEntry.name, click_function=funcName,
             function_owner=self, tooltip=memoryEntry.url, font_size=200,
-            position={-0.6,0,6.5+0.5*(i-1)}, height=240, width=3300,
+            position={-0.6,0,7.5+0.5*(i-1)}, height=240, width=3300, font_color= {1,1,1}, color = {0.1,0.1,0.1}
         })
         --Delete
         local funcName = i.."deleteMemory"
@@ -453,8 +435,8 @@ function createSurfaceButtons()
         self.createButton({
             label="DELETE", click_function=funcName,
             function_owner=self, tooltip="",
-            position={3.6,0,6.5+0.5*(i-1)}, height=240, width=600,
-            font_size=160, font_color={1,0,0}, color={0.8,0.8,0.8}
+            position={3.6,0,7.5+0.5*(i-1)}, height=240, width=600,
+            font_size=160, font_color={1,0,0}, color={0.1,0.1,0.1}
         })
     end
 end
@@ -462,15 +444,15 @@ end
 function createScaleInput()
     self.createInput({
         label=string.char(8644), input_function="none", function_owner=self,
-        alignment=3, position={-8.5,0,2}, height=224, width=400,
+        alignment=3, position={-8.5,0,3}, height=224, width=400,
         font_size=200, tooltip="Table Width",
-        value=round(obj_side_top.getScale().x, 1)
+        value=round(obj_side_top.getScale().x, 1), font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     self.createInput({
         label=string.char(8645), input_function="none", function_owner=self,
-        alignment=3, position={-7.5,0,2}, height=224, width=400,
+        alignment=3, position={-7.5,0,3}, height=224, width=400,
         font_size=200, tooltip="Table Depth",
-        value=round(obj_side_lef.getScale().x, 1)
+        value=round(obj_side_lef.getScale().x, 1), font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
 end
 
@@ -478,16 +460,16 @@ function createScaleButtons()
     --Labels
     self.createButton({
         label="Table Scale", click_function="none",
-        position={-8,0,1}, height=0, width=0, font_size=300, font_color={1,1,1}
+        position={-8,0,2}, height=0, width=0, font_size=300, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     self.createButton({
         label=string.char(8644).."            "..string.char(8645),
         click_function="none",
-        position={-8,0,2}, height=0, width=0, font_size=300, font_color={1,1,1}
+        position={-8,0,3}, height=0, width=0, font_size=300, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     self.createButton({
         label="Move Hands:", click_function="none",
-        position={-8.3,0,3}, height=0, width=0, font_size=200, font_color={1,1,1}
+        position={-8.3,0,4}, height=0, width=0, font_size=200, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     --Disabled due to me removing the feature for technical reasons
     --[[
@@ -502,7 +484,7 @@ function createScaleButtons()
     self.createButton({
         label=label, click_function="click_checkMove",
         function_owner=self, tooltip="Check to move hands when table is rescaled",
-        position={-6.8,0,3}, height=224, width=224, font_size=200,
+        position={-6.8,0,4}, height=224, width=224, font_size=200, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     --[[
     local label = ""
@@ -517,7 +499,7 @@ function createScaleButtons()
     self.createButton({
         label="Apply Scale", click_function="click_applyScale",
         function_owner=self, tooltip="Apply width/depth to table",
-        position={-8,0,4}, height=440, width=1400, font_size=200,
+        position={-8,0,5}, height=440, width=1400, font_size=200, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
 end
 

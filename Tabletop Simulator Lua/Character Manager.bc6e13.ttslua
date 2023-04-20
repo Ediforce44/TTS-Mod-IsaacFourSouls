@@ -177,7 +177,9 @@ function initButtons()
     font_size      = 300,
     value          = inputCharCount,
     validation     = 2,
-    tab            = 1
+    tab            = 1,
+    font_color= {1,1,1},
+    color = {0.1,0.1,0.1}
   })
   self.createButton({
     click_function = "randomizeToAll",
@@ -186,7 +188,9 @@ function initButtons()
     position       = {-2.9, 1, 0},
     width          = 2000,
     height         = 350,
-    font_size      = 230
+    font_size      = 230,
+    font_color= {1,1,1},
+    color = {0.1,0.1,0.1}
   })
   self.createButton({
     click_function = "randomizeToMe",
@@ -195,7 +199,9 @@ function initButtons()
     position       = {1.4, 1, 0},
     width          = 2000,
     height         = 350,
-    font_size      = 230
+    font_size      = 230,
+    font_color= {1,1,1},
+    color = {0.1,0.1,0.1}
   })
   self.createButton({
     click_function = "click_storeOrExtract",
@@ -205,7 +211,9 @@ function initButtons()
     width          = 1800,
     height         = 350,
     tooltip        = "Store or extract surplus Character Packs",
-    font_size      = 230
+    font_size      = 230,
+    font_color= {1,1,1},
+    color = {0.1,0.1,0.1}
   })
   STORE_BUTTON_INDEX = 3
 end

@@ -2,6 +2,8 @@ local BUTTON_RELEASE_TIME = 0.075
 local BUTTON_BLOCK_TIME = 0.5
 local BUTTON_HIGHT = 1.6
 local blockedButtons = {}
+local DECK_BUILDER_GUID = "69a80e"
+local FLEX_TABLE_CONTROL_GUID = "bd69bd"
 
 CUSTOM_BUTTONS = {
     ROOM = {Red = "9db50a", Blue = "7bd88f", Green = "a20779", Yellow = "262f7e"},
@@ -17,7 +19,11 @@ local LINK_BUTTONS = {
     LINK_XL = "68661c"
 }
 
-local MUTE_BUTTON = "d625a5"
+local GENERAL_BUTTONS = {
+    MUTE = "d625a5",
+    DECKBUILDING = "e16ce7",
+    TABLE_CHANGE = "a58e57"
+}
 
 local CUSTOM_BUTTON_THEME = {
     DARK = {state = 1, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Green = {0, 0, 180}, Yellow = {0, 0, 180}}},
@@ -34,7 +40,9 @@ local BUTTON_TOOLTIPS = {
     LINK_SLIM = "[b]Workshop Link to the simple version of this Mod",
     LINK_NORMAL = "[b]Workshop Link to this Mod",
     LINK_XL = "[b]Workshop Link to the 6 Player version of this Mod",
-    MUTE = "[b]Mute or unmute Sound Effects"
+    MUTE = "[b]Mute or unmute Sound Effects",
+    DECKBUILDING = "[b]Manual Deckbuilding[/b][i]\nIf you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks.",
+    TABLE_CHANGE = "[b]Change Table Mat[/b][i]\nYou can change the Table Mat or load custom images as Table Mat."
 }
 
 local SPY_ZONE_GUIDS = {Red = nil, Blue = nil, Green = nil, Yellow = nil}
@@ -50,7 +58,9 @@ local BUTTON_FUNCTIONS = {
     LINK_SLIM = "click_ShowLinkSlim",
     LINK_NORMAL = "click_ShowLinkNormal",
     LINK_XL = "click_ShowLinkXL",
-    MUTE = "click_MuteSFX"
+    MUTE = "click_MuteSFX",
+    DECKBUILDING = "click_ManualDeckbuilding",
+    TABLE_CHANGE = "click_ChangeTableMat"
 }
 
 local function buttonAnimation(buttonObj)
@@ -126,7 +136,7 @@ function onLoad(saved_data)
     for guid, infoTable in pairs(cardsInSpyZones) do
         local card = getObjectFromGUID(guid)
         if card then
-            card.UI.setXml(getButtonXML(playerOwner[infoTable.owner], guid))
+            card.UI.setXml(getButtonXML(playerOwner[infoTable.owner], card))
         end
     end
 
@@ -141,7 +151,11 @@ function onLoad(saved_data)
         local buttonObj = getObjectFromGUID(buttonGUID)
         createButtonsOnCustomButton(buttonObj, buttonType)
     end
-    createButtonsOnCustomButton(getObjectFromGUID(MUTE_BUTTON), "MUTE")
+
+    for buttonType, buttonGUID in pairs(GENERAL_BUTTONS) do
+        local buttonObj = getObjectFromGUID(buttonGUID)
+        createButtonsOnCustomButton(buttonObj, buttonType)
+    end
 end
 
 function onSave()
@@ -272,6 +286,9 @@ function click_ShowLinkXL(buttonObj)
     createUrlInput(buttonObj, url_xl)
 end
 
+------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------- General Buttons --------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 function click_MuteSFX(buttonObj, playerColor)
     if Player[playerColor].admin then
         buttonObj.setRotation(buttonObj.getRotation() + Vector(0, 0, 180))
@@ -280,6 +297,26 @@ function click_MuteSFX(buttonObj, playerColor)
         if sfxCube then
             sfxCube.call("switchMute")
         end
+    end
+end
+
+function click_ManualDeckbuilding(buttonObj, playerColor)
+    if Player[playerColor].admin then
+        local deckBuilder = getObjectFromGUID(DECK_BUILDER_GUID)
+        if deckBuilder then
+            if deckBuilder.call("prepareForManualDeckBuilding") then
+                buttonObj.setRotation(buttonObj.getRotation():setAt('z', 0))
+                buttonAnimation(buttonObj)
+            end
+        end
+    end
+end
+
+function click_ChangeTableMat(buttonObj)
+    buttonAnimation(buttonObj)
+    local flexTable = getObjectFromGUID(FLEX_TABLE_CONTROL_GUID)
+    if flexTable then
+        flexTable.call("click_toggleControl")
     end
 end
 ------------------------------------------------------------------------------------------------------------------------
@@ -292,8 +329,40 @@ local SPY_ZONE_POSITIONS = {
     Yellow = {SIDE = {1.71, 4, 20.5}, FRONT = {18.5, 4, 12}}
 }
 
-function getButtonXML(spyZoneOwnerColor, objectGUID)
+function getButtonXML(spyZoneOwnerColor, object)
     local selfGuid = self.getGUID()
+    local objectGUID = object.getGUID()
+    local height = 50
+    local width = 50
+    if object.getVar("type") == "room" then
+return [[<Button visibility="]] .. spyZoneOwnerColor .. [["
+    active="true"
+    image="spy_bottom"
+    height="67"
+    width="35"
+    offsetXY="80 -182"
+    rotation="0 0 180"
+    onClick="]] .. selfGuid .. [[/UI_bottom(]] .. objectGUID .. [[">
+</Button>
+<Button visibility="]] .. spyZoneOwnerColor .. [["
+    active="true"
+    image="spy_top"
+    height="67"
+    width="35"
+    offsetXY="80 -231"
+    rotation="0 0 180"
+    onClick="]] .. selfGuid .. [[/UI_top(]] .. objectGUID .. [[">
+</Button>
+<Button visibility="]] .. spyZoneOwnerColor .. [["
+    active="true"
+    image="spy_delete"
+    height="67"
+    width="35"
+    offsetXY="80 182"
+    rotation="0 0 180"
+    onClick="]] .. selfGuid .. [[/UI_discard(]] .. objectGUID .. [[">
+ </Button>]]
+    else
 return [[<Button visibility="]] .. spyZoneOwnerColor .. [["
     active="true"
     image="spy_bottom"
@@ -320,7 +389,8 @@ return [[<Button visibility="]] .. spyZoneOwnerColor .. [["
     offsetXY="80 175"
     rotation="0 0 180"
     onClick="]] .. selfGuid .. [[/UI_discard(]] .. objectGUID .. [[">
- </Button>]]
+</Button>]]
+     end
 end
 
 local function hideCard(card, playerColor)
@@ -362,7 +432,7 @@ end
 function onObjectEnterZone(zone, object)
     for _, guid in pairs(SPY_ZONE_GUIDS) do
         if zone.getGUID() == guid then
-            object.UI.setXml(getButtonXML(zone.getValue(), object.getGUID()))
+            object.UI.setXml(getButtonXML(zone.getValue(), object))
         end
     end
 end

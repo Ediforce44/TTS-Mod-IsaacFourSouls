@@ -338,10 +338,11 @@ function onLoad()
     function_owner = self,
     position = {0, 0.11, -1},
     rotation = {0, 0, 0},
-    color = {1, 1, 1},
     width = 1100,
     height = 500,
-    font_size = 400
+    font_size = 400,
+    font_color= {1,1,1},
+    color = {0.1,0.1,0.1}
 })
 end
 
