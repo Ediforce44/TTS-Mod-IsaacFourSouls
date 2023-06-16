@@ -457,7 +457,7 @@ function isAllPlayersSelectCharacter()
         end
     end
 
-    return selectedCharacterCount == getPlayersCount()
+    return (selectedCharacterCount == getPlayersCount()) and (selectedCharacterCount ~= 0)
 end
 
 function getPlayersCount()

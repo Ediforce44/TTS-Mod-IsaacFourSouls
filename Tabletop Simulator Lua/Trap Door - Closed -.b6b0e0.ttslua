@@ -1,16 +1,15 @@
 function onLoad()
     self.createButton({
-    click_function = "cerca",
+    click_function = "openTrapDoor",
     function_owner = self,
     position = {0, 0.11,0},
     rotation = {0, 90, 0},
-    width = 900,
-    height = 900,
+    width = 2000,
+    height = 2000,
     color = {69, 69, 69, 0},})
-    params = {Assetbundle="http://cloud-3.steamusercontent.com/ugc/1880829818136455075/2FD504F931E6AFD16522C296FF28C8386C999989/"}
 end
 
-function cerca()
+function openTrapDoor()
     nextState = self.getStateId()+1
     numberOfStates = self.getStatesCount()
     if nextState > numberOfStates then
