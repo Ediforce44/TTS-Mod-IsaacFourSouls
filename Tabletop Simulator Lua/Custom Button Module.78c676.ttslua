@@ -562,6 +562,11 @@ local OPTION_TABLE = {
     }
 }
 
+function UI_toggleCameraMovement(_, checked, id)
+    local zoneColor = string.match(id, "%w+")
+    OPTION_TABLE[zoneColor].CAMERA_MOVEMENT = (checked == "True")
+end
+
 function UI_toggleAutoRewarding(_, checked, id)
     local zoneColor = string.match(id, "%w+")
     OPTION_TABLE[zoneColor].AUTO_REWARDING = (checked == "True")
@@ -602,6 +607,7 @@ function UI_optionsDone(clickPlayer, _, id)
     UI.hide("options_" .. zoneColor)
 
     local playerOptionTable = OPTION_TABLE[zoneColor]
+    Global.call("changeCameraMovementAtTurnPassing", {playerColor = zoneColor, active = playerOptionTable.CAMERA_MOVEMENT})
     Global.call("changeRewardingMode", {playerColor = zoneColor, active = playerOptionTable.AUTO_REWARDING})
     --TODO auto looting
     --TODO auto healing

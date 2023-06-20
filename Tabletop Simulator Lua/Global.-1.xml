@@ -27,6 +27,7 @@
     <Toggle class="confSpecialDeck" onValueChanged="UI_toggleSpecialDeck" />
     <Toggle class="confSeedDecks" onValueChanged="UI_toggleSeedDeck" />
     <Toggle class="multiChar" onValueChanged="UI_multiCharChanged"/>
+    <Button class="hotSeat" onClick="UI_toggleHotSeat" tooltip="Activate Hot Seat Mode for this Player" tooltipPosition="Above"/>
 
     <InputField class="confRatios" onEndEdit="UI_setRatio" lineType="SingleLine" placeholder="?"
         characterValidation="Integer" characterLimit="2"
@@ -493,8 +494,8 @@
             <VerticalLayout childForceExpandHeight="true" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
                 <TableLayout
                     cellBackgroundColor="rgba(0, 0, 0, 0)"
-                    columnWidths="90 70 70 70 70"
-                    preferredWidth="370"
+                    columnWidths="75 65 65 65 65 50"
+                    preferredWidth="380"
                     preferredHeight="240">
                     <Row preferredHeight="40">
                         <Cell></Cell>
@@ -505,10 +506,10 @@
                     </Row>
                     <Row preferredHeight="200">
                         <Cell><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
-                            <Text class="isaacColor" fontSize="15" fontStyle="Bold">Player 1</Text>
-                            <Text class="isaacColor" fontSize="15" fontStyle="Bold">Player 2</Text>
-                            <Text class="isaacColor" fontSize="15" fontStyle="Bold">Player 3</Text>
-                            <Text class="isaacColor" fontSize="15" fontStyle="Bold">Player 4</Text>
+                            <Text class="isaacColor" id="Player_1" fontSize="15" fontStyle="Bold">Player 1</Text>
+                            <Text class="isaacColor" id="Player_2" fontSize="15" fontStyle="Bold">Player 2</Text>
+                            <Text class="isaacColor" id="Player_3" fontSize="15" fontStyle="Bold">Player 3</Text>
+                            <Text class="isaacColor" id="Player_4" fontSize="15" fontStyle="Bold">Player 4</Text>
                         </GridLayout></Cell>
                         <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
                             <Toggle isOn="true" class="isaacColor multiChar" id="Red_1"></Toggle>
@@ -534,6 +535,12 @@
                             <Toggle class="isaacColor multiChar" id="Yellow_3"></Toggle>
                             <Toggle isOn="true" class="isaacColor multiChar" id="Yellow_4"></Toggle>
                         </GridLayout></ToggleGroup></Cell>
+                        <Cell><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="24 24" childAlignment="UpperCenter" padding="0 0 3 0" childFourceExpandHight="false" spacing="8">
+                            <Button id="HS_1" icon="hot_seat" class="isaacColor hotSeat"></Button>
+                            <Button id="HS_2" icon="hot_seat" class="isaacColor hotSeat"></Button>
+                            <Button id="HS_3" icon="hot_seat" class="isaacColor hotSeat"></Button>
+                            <Button id="HS_4" icon="hot_seat" class="isaacColor hotSeat"></Button>
+                        </GridLayout></Cell>
                     </Row>
                 </TableLayout>
                 <Button
@@ -697,15 +704,17 @@
                 <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Red_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
                         <Toggle isOn="true" class="isaacColor" id="Red_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Red_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Red_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Red_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
                         <Toggle class="isaacColor" interactable="false" id="Red_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Red_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Red_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
@@ -765,15 +774,17 @@
                 <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Blue_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
                         <Toggle isOn="true" class="isaacColor" id="Blue_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Blue_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Blue_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Blue_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
                         <Toggle class="isaacColor" interactable="false" id="Blue_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Blue_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Blue_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
@@ -833,15 +844,17 @@
                 <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Green_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
                         <Toggle isOn="true" class="isaacColor" id="Green_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Green_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Green_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Green_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
                         <Toggle class="isaacColor" interactable="false" id="Green_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Green_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Green_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
@@ -901,15 +914,17 @@
                 <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Yellow_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
                         <Toggle isOn="true" class="isaacColor" id="Yellow_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Yellow_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Yellow_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Yellow_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
                         <Toggle class="isaacColor" interactable="false" id="Yellow_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Yellow_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                        <Toggle interactable="false" class="isaacColor" id="Yellow_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">

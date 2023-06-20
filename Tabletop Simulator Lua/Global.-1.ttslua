@@ -87,6 +87,9 @@ function onLoad(saved_data)         --EbyE44
         if loaded_data.playerOwner then
             PLAYER_OWNER = loaded_data.playerOwner
         end
+        if loaded_data.turnSettings then
+            TURN_SETTINGS = loaded_data.turnSettings
+        end
     end
     if not hasGameStarted() then
         UI.show("config")
@@ -104,7 +107,7 @@ function onSave()                   --EbyE44
     return JSON.encode({activePlayerColor = activePlayerColor, startPlayerColor = startPlayerColor
         , automaticRewarding = automaticRewarding, minionZoneInfo = ZONE_INFO_MINION, bossZoneGuid = ZONE_GUID_BOSS
         , customCounterBagGuids = COUNTER_BAGS_GUID, onTurnEvents = ON_TURN_EVENTS, handInfo = HAND_INFO
-        , playerOwner = PLAYER_OWNER, spyInfo = SPY_INFO})
+        , playerOwner = PLAYER_OWNER, spyInfo = SPY_INFO, turnSettings = TURN_SETTINGS})
 end
 
 HEART_TOKENS_GUID = {
@@ -224,10 +227,25 @@ local function getNextPlayerColor(currentPlayerColor)
     return nextColor
 end
 
-local function passTurn(nextPlayerColor)
-    local previousPlayerColor = activePlayerColor
-    activePlayerColor = nextPlayerColor
+local function getCameraParamsForTurnPassing(nextPlayerColor)
+    local handZone = getObjectFromGUID(HAND_INFO[nextPlayerColor].guid)
+    local cameraParams = nil
+    if handZone then
+        cameraParams = {}
+        local cameraPosition = handZone.getPosition()
+        local translation = Vector(0, 0, 10)
+        if cameraPosition.z > 0 then
+            translation = translation * -1
+        end
+        cameraParams.position = cameraPosition + translation
+        cameraParams.yaw = handZone.getRotation().y
+        cameraParams.pitch = 65
+        cameraParams.distance = 35
+    end
+    return cameraParams
+end
 
+local function transferTurn(previousPlayerColor, nextPlayerColor)
     local sfxCube = getObjectFromGUID(SFX_CUBE_GUID)
     if sfxCube then
         sfxCube.call("playSwoosh")
@@ -245,14 +263,106 @@ local function passTurn(nextPlayerColor)
         playerZoneOverlay_next.setPosition(playerOverlayPosition)
     end
 
-    callTurnEndEvents(previousPlayerColor, activePlayerColor)
+    callTurnEndEvents(previousPlayerColor, nextPlayerColor)
     print(getPlayerString({playerColor = previousPlayerColor}) .. "'s turn is over. It's now "
-        .. getPlayerString({playerColor = activePlayerColor}) .. "'s turn.")
-    callTurnStartEvents(previousPlayerColor, activePlayerColor)
+        .. getPlayerString({playerColor = nextPlayerColor}) .. "'s turn.")
+    callTurnStartEvents(previousPlayerColor, nextPlayerColor)
 
-    UI.setAttribute("passButton", "image", "turn_" .. string.lower(activePlayerColor))
-    UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[activePlayerColor])
-    UI.setAttribute("turnInfo", "visibility", activeZone.getVar("owner_color") .. "|Black")
+    if TURN_SETTINGS[nextPlayerColor].camera then
+        local cameraParams = getCameraParamsForTurnPassing(nextPlayerColor)
+        if cameraParams then
+            Player[PLAYER_OWNER[nextPlayerColor]].lookAt(cameraParams)
+        end
+    end
+
+    UI.setAttribute("passButton", "image", "turn_" .. string.lower(nextPlayerColor))
+    UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[nextPlayerColor])
+    UI.setAttribute("turnInfo", "visibility", HAND_INFO[nextPlayerColor].owner .. "|Black")
+end
+
+local function flipHand(playerColor, faceUp)
+    local handInfo = HAND_INFO[playerColor]
+    local handZone = getObjectFromGUID(handInfo.guid)
+    if handZone then
+        for _, obj in pairs(Player[handInfo.owner].getHandObjects(handInfo.index)) do
+            if obj.is_face_down == faceUp then
+                obj.flip()
+            end
+        end
+    end
+    local spyInfo = SPY_INFO[playerColor]
+    local spyZone = getObjectFromGUID(spyInfo.guid)
+    if spyZone then
+        for _, obj in pairs(Player[spyInfo.owner].getHandObjects(spyInfo.index)) do
+            if obj.is_face_down == faceUp then
+                obj.flip()
+            end
+        end
+    end
+end
+
+local function passTurn(nextPlayerColor)
+    local previousPlayerColor = activePlayerColor
+    activePlayerColor = nextPlayerColor
+
+    local preHandInfo = HAND_INFO[previousPlayerColor]
+    if preHandInfo.hotseat then
+
+        local nextHotSeatColor = nextPlayerColor
+        while (nextHotSeatColor ~= previousPlayerColor) do
+            if HAND_INFO[nextHotSeatColor].owner == preHandInfo.owner then
+                break
+            end
+            nextHotSeatColor = getNextPlayerColor(nextHotSeatColor)
+        end
+
+        if nextHotSeatColor ~= previousPlayerColor then
+            flipHand(previousPlayerColor, false)
+
+            if HAND_INFO[nextPlayerColor].owner == preHandInfo.owner then
+                UI.setAttribute("turnInfo", "visibility", "Black")
+                for i = 3, 1, -1 do
+                    Wait.time(function() broadcastToColor(i, preHandInfo.owner, {r=1, g=0, b=0}) end, 3-i)
+                end
+                Wait.time(function() flipHand(nextHotSeatColor, true); transferTurn(previousPlayerColor, nextPlayerColor) end, 3)
+                return
+            end
+        end
+    end
+
+    if HAND_INFO[nextPlayerColor].hotseat then
+        flipHand(nextPlayerColor, true)
+    end
+    transferTurn(previousPlayerColor, nextPlayerColor)
+end
+
+local function getHandInfo(zone)
+    for handOwner, handInfo in pairs(HAND_INFO) do
+        if zone.guid == handInfo.guid then
+            return handInfo
+        end
+    end
+
+    for handOwner, spyInfo in pairs(SPY_INFO) do
+        if zone.guid == spyInfo.guid then
+            return spyInfo
+        end
+    end
+    return nil
+end
+
+function onObjectEnterZone(zone, object)
+    if zone.type == "Hand" then
+        if (zone.guid ~= HAND_INFO[activePlayerColor].guid) and (zone.guid ~= SPY_INFO[activePlayerColor].guid) then
+            local handInfo = getHandInfo(zone)
+            if handInfo and handInfo.hotseat then
+                if not object.is_face_down then
+                    object.flip()
+                    return
+                end
+            end
+        end
+    end
 end
 
 function onPlayerChangeColor(playerColor)
@@ -390,6 +500,7 @@ confTable = {
         RATIOS = BUILDING_MODE_TO_RATIOS["BM_NORMAL"]
     },
     MULTI_CHAR = {Red = 1, Blue = 2, Green = 3, Yellow = 4},
+    HOT_SEAT = {false, false, false, false},
     SPECIAL_DECKS = {},
     CUSTOM_RATIOS = STD_RATIOS
 }
@@ -438,10 +549,15 @@ local function placeExpansions()
     end
 end
 
-local function setPlayerZoneOwners(ownerTable)
-    for _, colorTable  in pairs(ownerTable) do
+local function setPlayerZoneOwners(ownerTable, hotSeat)
+    for playerID, colorTable  in pairs(ownerTable) do
         local ownerColor = colorTable[1]
         local nextHandIndex = HAND_INFO[ownerColor].index
+        if #colorTable > 1 then
+            for _, color in ipairs(colorTable) do
+                HAND_INFO[color].hotseat = hotSeat[playerID]
+            end
+        end
         for _, color in ipairs(colorTable) do
             local playerZone = getObjectFromGUID(ZONE_GUID_PLAYER[color])
             if playerZone then
@@ -585,6 +701,23 @@ function UI_multiCharChanged(_, checked, id)
     end
 end
 
+function UI_toggleHotSeat(_, _, id)
+    local playerID = 0
+    for key in string.gmatch(id, "[%d]+") do
+        playerID = tonumber(key)
+        break
+    end
+    local color = "#EAE5DE"
+    if confTable.HOT_SEAT[playerID] then
+        confTable.HOT_SEAT[playerID] = false
+    else
+        color = "#D43723"
+        confTable.HOT_SEAT[playerID] = true
+    end
+    UI.setAttribute(id, "color", color)
+    UI.setAttribute("Player_" .. playerID, "color", color)
+end
+
 function UI_multiCharDone()
     UI.setAttribute("multiCharSettings", "active", "false")
 end
@@ -671,7 +804,8 @@ function UI_configurationDone(player)
                 ownerTable[playerID] = {color}
             end
         end
-        setPlayerZoneOwners(ownerTable)
+
+        setPlayerZoneOwners(ownerTable, confTable.HOT_SEAT)
     end
     if confTable.CHALLENGES_ACTIVE then
         getObjectFromGUID(ZONE_GUID_DECK.MONSTER).call("activateChallengeMode")
@@ -847,12 +981,10 @@ function UI_hideReminder()
 end
 
 function startTurnSystem()
+    Turns.enable = false
+
     activePlayerColor = startPlayerColor
     callTurnStartEvents(nil, activePlayerColor)
-    UI.setAttribute("passButton", "image", "turn_" .. string.lower(activePlayerColor))
-    UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[activePlayerColor])
-    UI.show("turnInfo")
-    UI.setAttribute("turnInfo", "visibility", PLAYER_OWNER[activePlayerColor] .. "|Black")
 
     local sfxCube = getObjectFromGUID(SFX_CUBE_GUID)
     if sfxCube then
@@ -872,6 +1004,16 @@ function startTurnSystem()
         local playerOverlayPosition = playerZoneOverlay_start.getPosition():setAt('y', 1.49)
         playerZoneOverlay_start.setPosition(playerOverlayPosition)
     end
+
+    local cameraParams = getCameraParamsForTurnPassing(activePlayerColor)
+    if cameraParams then
+        Player[PLAYER_OWNER[activePlayerColor]].lookAt(cameraParams)
+    end
+
+    UI.setAttribute("passButton", "image", "turn_" .. string.lower(activePlayerColor))
+    UI.setAttribute("passButton", "textColor", PLAYER_COLOR_HEX[activePlayerColor])
+    UI.show("turnInfo")
+    UI.setAttribute("turnInfo", "visibility", PLAYER_OWNER[activePlayerColor] .. "|Black")
 end
 
 function UI_passTurn(clickerPlayer)
@@ -1035,10 +1177,10 @@ PLAYER_OWNER = {
 }
 
 HAND_INFO = {
-    Red = {index = 1, owner = "Red", guid = "b000d8"},
-    Blue = {index = 1, owner = "Blue", guid = "29f1f6"},
-    Green = {index = 1, owner = "Green", guid = "489f26"},
-    Yellow = {index = 1, owner = "Yellow", guid = "e2e2d1"}
+    Red = {index = 1, owner = "Red", guid = "b000d8", hotseat = false},
+    Blue = {index = 1, owner = "Blue", guid = "29f1f6", hotseat = false},
+    Green = {index = 1, owner = "Green", guid = "489f26", hotseat = false},
+    Yellow = {index = 1, owner = "Yellow", guid = "e2e2d1", hotseat = false}
 }
 
 SPY_INFO = {
@@ -1053,6 +1195,13 @@ TURN_ORDER = {
     Blue = "Green",
     Green = "Yellow",
     Yellow = "Red"
+}
+
+TURN_SETTINGS = {
+    Red = {camera = true},
+    Blue = {camera = true},
+    Green = {camera = true},
+    Yellow = {camera = true}
 }
 
 REAL_PLAYER_COLOR = {
@@ -1348,6 +1497,12 @@ function deactivateCharacter(params)
         return
     end
     getObjectFromGUID(ZONE_GUID_PLAYER[params.playerColor]).call("deactivateCharacter")
+end
+
+function changeCameraMovementAtTurnPassing(params)
+    if params then
+        TURN_SETTINGS[params.playerColor].camera = params.active
+    end
 end
 
 function changeRewardingMode(params)
