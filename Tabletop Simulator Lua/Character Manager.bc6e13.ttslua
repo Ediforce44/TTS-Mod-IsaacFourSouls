@@ -221,16 +221,20 @@ end
 function updateCharactersCount(obj, _, value)
   local newValue = nil
   if value ~= "" then
-      if tonumber(value) > 7 then
-          print("Invalid input value. Set to max: 7")
-          newValue = 7
-      elseif tonumber(value) <= 0 then
-          print("Invalid input value. Set to min: 1")
-          newValue = 1
+      if tonumber(value) then
+          if tonumber(value) > 7 then
+              print("Invalid input value. Set to max: 7")
+              newValue = 7
+          elseif tonumber(value) <= 0 then
+              print("Invalid input value. Set to min: 1")
+              newValue = 1
+          else
+              newValue = value
+          end
       else
-          newValue = value
+          newValue = inputCharCount
       end
-      obj.editInput({index=1, value=newValue})
+      Wait.frames(function() obj.editInput({index=1, value=newValue}) end)
       inputCharCount = newValue
   end
 end
