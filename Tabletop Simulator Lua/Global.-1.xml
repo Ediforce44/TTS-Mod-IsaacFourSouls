@@ -632,7 +632,7 @@
     offsetXY="0 -80"
     allowDragging="false"
     returnToOriginalPositionWhenReleased="true">
-    <Button id="passButton" image="turn_red" colors="White|#CCCCCC|#AAAAAA|Grey" fontSize="30" textColor="White" fontStyle="bold" onClick="UI_passTurn">End Turn</Button>
+    <Button id="passButton" image="turn_red" colors="White|#CCCCCC|#AAAAAA|Grey" fontSize="30" textColor="White" fontStyle="bold" onClick="87e737/UI_passTurn">End Turn</Button>
 </Panel>
 
 <Panel
@@ -647,7 +647,7 @@
     allowDragging="false"
     visibility="Host"
     returnToOriginalPositionWhenReleased="true">
-    <Button id="skipButton" image="turn_white" colors="White|#CCCCCC|#AAAAAA|Grey" fontSize="20" textColor="#EAE5DE" fontStyle="bold" onClick="UI_skipTurn">Skip Turn?</Button>
+    <Button id="skipButton" image="turn_white" colors="White|#CCCCCC|#AAAAAA|Grey" fontSize="20" textColor="#EAE5DE" fontStyle="bold" onClick="87e737/UI_skipTurn">Skip Turn?</Button>
 </Panel>
 
 <Panel
@@ -706,7 +706,7 @@
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
                         <Toggle isOn="true" class="isaacColor" interactable="true" id="Red_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
                         <Toggle isOn="true" class="isaacColor" id="Red_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Red_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
+                        <Toggle class="isaacColor" id="Red_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Red_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
@@ -776,7 +776,7 @@
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
                         <Toggle isOn="true" class="isaacColor" interactable="true" id="Blue_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
                         <Toggle isOn="true" class="isaacColor" id="Blue_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Blue_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
+                        <Toggle class="isaacColor" id="Blue_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Blue_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
@@ -846,7 +846,7 @@
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
                         <Toggle isOn="true" class="isaacColor" interactable="true" id="Green_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
                         <Toggle isOn="true" class="isaacColor" id="Green_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Green_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
+                        <Toggle class="isaacColor" id="Green_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Green_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
@@ -916,7 +916,7 @@
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
                         <Toggle isOn="true" class="isaacColor" interactable="true" id="Yellow_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
                         <Toggle isOn="true" class="isaacColor" id="Yellow_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Yellow_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
+                        <Toggle class="isaacColor" id="Yellow_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
                         <Toggle interactable="false" class="isaacColor" id="Yellow_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">

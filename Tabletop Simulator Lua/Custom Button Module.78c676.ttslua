@@ -529,6 +529,7 @@ end
 
 local OPTION_TABLE = {
     Red = {
+        CAMERA_MOVEMENT = true,
         AUTO_REWARDING = true,
         AUTO_LOOT = false,
         AUTO_HEALING = false,
@@ -537,6 +538,7 @@ local OPTION_TABLE = {
         SPY_ZONE_POS = "SIDE"
     },
     Blue = {
+        CAMERA_MOVEMENT = true,
         AUTO_REWARDING = true,
         AUTO_LOOT = false,
         AUTO_HEALING = false,
@@ -545,6 +547,7 @@ local OPTION_TABLE = {
         SPY_ZONE_POS = "SIDE"
     },
     Green = {
+        CAMERA_MOVEMENT = true,
         AUTO_REWARDING = true,
         AUTO_LOOT = false,
         AUTO_HEALING = false,
@@ -553,6 +556,7 @@ local OPTION_TABLE = {
         SPY_ZONE_POS = "SIDE"
     },
     Yellow = {
+        CAMERA_MOVEMENT = true,
         AUTO_REWARDING = true,
         AUTO_LOOT = false,
         AUTO_HEALING = false,
@@ -607,10 +611,11 @@ function UI_optionsDone(clickPlayer, _, id)
     UI.hide("options_" .. zoneColor)
 
     local playerOptionTable = OPTION_TABLE[zoneColor]
-    Global.call("changeCameraMovementAtTurnPassing", {playerColor = zoneColor, active = playerOptionTable.CAMERA_MOVEMENT})
+    local turnModule = getObjectFromGUID(Global.getVar("TURN_MODULE_GUID"))
+    turnModule.call("changeTurnSettings", {color = zoneColor, setting = "camera", newValue = playerOptionTable.CAMERA_MOVEMENT})
+    turnModule.call("changeTurnSettings", {color = zoneColor, setting = "looting", newValue = playerOptionTable.AUTO_LOOT})
+    turnModule.call("changeTurnSettings", {color = zoneColor, setting = "playerHealing", newValue = playerOptionTable.AUTO_HEALING})
     Global.call("changeRewardingMode", {playerColor = zoneColor, active = playerOptionTable.AUTO_REWARDING})
-    --TODO auto looting
-    --TODO auto healing
     --TODO death detection
     --TODO looting zone
     --TODO shop payment
