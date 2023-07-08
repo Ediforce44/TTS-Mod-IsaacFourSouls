@@ -3,6 +3,8 @@ owner_color = "Yellow"
 zone_color = "Yellow"
 active = false
 
+HP_GUIDS = Global.getTable("HEART_TOKENS_GUID")[zone_color]
+
 ZONE_EDGES = {
     {x=0, z=0},       -- 1 = |""  ""| = 3
     {x=0, z=0},       -- 2 = |__  __| = 4
@@ -270,6 +272,16 @@ local function getPositionForCounter(counterType)
     return nil
 end
 
+local function getHPs(zone, functionParams)
+    local hp = 0
+    for _, obj in pairs(zone.getObjects()) do
+        if obj.type == "Card" then
+            hp = hp + (obj.call("getHP", functionParams) or 0)
+        end
+    end
+    return hp
+end
+
 function onLoad(saved_data)
     calculateZoneEdges()
     initIndexTables()
@@ -327,12 +339,53 @@ end
 
 function reanimatePlayer()
     playerAlive = true
+    --TODO
+    healPlayer()
 end
 
 function killPlayer()
+    --TODO play death sound
     deactivateCharacter()
     payDeathPenalty()
     playerAlive = false
+end
+
+function getPlayerHP()
+    for i = 1, i < #HP_GUIDS do
+        local hpToken = getObjectFromGUID(HP_GUIDS[i + 1])
+        if hpToken and not hpToken.getVar("isActive") then
+            return (i - 1)
+        end
+    end
+    return (#HP_GUIDS - 1)
+end
+
+function healPlayer(params)
+    local playerHP = 0
+    playerHP = playerHP + getHPs(self, params)
+
+    local soulZoneGuids = Global.getTable("ZONE_GUID_SOUL")
+    local soulZone = getObjectFromGUID(soulZoneGuids[zone_color])
+    if soulZone then
+        playerHP = playerHP + getHPs(soulZone, params)
+    end
+
+    if playerHP == 0 then
+        return
+    end
+
+    if params and params.amount then
+        playerHP = getPlayerHP() + params.amount
+    end
+
+    if playerHP >= #HP_GUIDS then
+        playerHP = #HP_GUIDS - 1
+    end
+
+    local hpToken = getObjectFromGUID(HP_GUIDS[playerHP + 1])
+    if hpToken then
+        hpToken.call("onPickUp")
+    end
 end
 
 function getIndex(params)

@@ -373,7 +373,15 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 function turnEvent_playerHealing(params)
-    --TODO calculate for every player who has activated auto healing his HP and adjust his HP-Counter
+    local playerZoneGuids = Global.getTable("ZONE_GUID_PLAYER")
+    for color, settings in pairs(TURN_SETTINGS) do
+        if settings.playerHealing then
+            local playerZone = getObjectFromGUID(playerZoneGuids[color])
+            if playerZone then
+                playerZone.call("healPlayer")
+            end
+        end
+    end
 end
 
 function turnEvent_resetZones(_)

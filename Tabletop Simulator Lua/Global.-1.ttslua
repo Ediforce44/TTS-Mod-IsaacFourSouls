@@ -105,10 +105,10 @@ function onSave()                   --EbyE44
 end
 
 HEART_TOKENS_GUID = {
-    Yellow = {"c02908", "3f81b7", "f8e991", "f825c2", "2a9dfc", "443adb"},
-    Green = {"12326f", "c326f1", "f5d095", "7e882b", "66804c", "e24915"},
-    Blue = {"78f8e7", "c9f7b2", "4b26ea", "098303", "9e8aa0", "dbcc87"},
-    Red = {"bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
+    Yellow = {"6d1f5d", "c02908", "3f81b7", "f8e991", "f825c2", "2a9dfc", "443adb"},
+    Green = {"7023b1", "12326f", "c326f1", "f5d095", "7e882b", "66804c", "e24915"},
+    Blue = {"8c24ed", "78f8e7", "c9f7b2", "4b26ea", "098303", "9e8aa0", "dbcc87"},
+    Red = {"975325", "bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
 }
 
 function startTurnSystem()
@@ -1245,6 +1245,26 @@ function getCounterInZone(params)
         for _ , object in pairs(params.zone.getObjects()) do
             if object.getName() == "Counter\n" or object.getName() == "Counter" then
                 return object
+            end
+        end
+    end
+end
+
+function getCounterOnCard(params)
+    local card = params.card
+    if card == nil then
+        if params.guid then
+            card = getObjectFromGUID(params.guid)
+        else
+            printWarning({text = "Wrong parameters in global function 'getCounterOnCard()'."})
+        end
+    end
+    local allCounters = getObjectsWithAllTags({"Counter", "Number"})
+    local cardPosition = card.getPosition()
+    for _, counter in pairs(allCounters) do
+        if math.abs(counter.getPosition().x - cardPosition.x) < 1.5 then
+            if math.abs(counter.getPosition().z - cardPosition.z) < 2 then
+                return counter
             end
         end
     end
