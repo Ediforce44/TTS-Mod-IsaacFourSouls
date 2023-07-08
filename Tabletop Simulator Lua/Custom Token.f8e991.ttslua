@@ -15,21 +15,11 @@ HEART_INDEX = getSelfIndex()
 isActive = false
 
 function onPickUp()
-  if HEART_INDEX == 1 then
-    isActive = isNextHeartActive() and true or not isActive
-  else
     isActive = true
-  end
 
   calcOtherHeartsState()
   changeColorByState()
   stopPickUp()
-end
-
-function isNextHeartActive()
-  local obj = getObjectFromGUID(HEARTS_GUID[HEART_INDEX + 1])
-  if obj == nil then return false end
-  return obj.getVar("isActive")
 end
 
 function calcOtherHeartsState()

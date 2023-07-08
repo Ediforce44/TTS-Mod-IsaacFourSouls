@@ -1,21 +1,15 @@
 --- Edited by Ediforce44
-owner_color = "Red"
+owner_color = "Yellow"
 HEARTS_GUID = Global.getTable("HEART_TOKENS_GUID")[owner_color]
-INACTIVE_HEART_COLOR = {0, 0, 0}
+INACTIVE_HEART_COLOR = {1, 1, 1}
 ACTIVE_HEART_COLOR = Global.getTable("REAL_PLAYER_COLOR_RGB")[owner_color]
 
-function getSelfIndex()
-  for i, guid in pairs(HEARTS_GUID) do
-    if self.guid == guid then return i end
-  end
-end
-
-HEART_INDEX = getSelfIndex()
+HEART_INDEX = 1
 
 isActive = false
 
 function onPickUp()
-    isActive = true
+  isActive = false
 
   calcOtherHeartsState()
   changeColorByState()
@@ -27,8 +21,6 @@ function calcOtherHeartsState()
     local obj = getObjectFromGUID(guid)
     if i > HEART_INDEX then
       changeHeartState(guid, false)
-    elseif i < HEART_INDEX then
-      changeHeartState(guid, true)
     end
   end
 end
