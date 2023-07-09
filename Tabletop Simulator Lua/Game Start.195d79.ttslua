@@ -276,7 +276,7 @@ local function setupOfficialContent(gameLanguage)
                     local zone = getObjectFromGUID(guid)
                     if zone and zone.getVar("active") then
                         zone.call("healPlayer")
-                        
+
                         local handInfo = Global.getTable("HAND_INFO")[zoneColor]
                         BUILT_DECKS.LOOT.deal(3, handInfo.owner, handInfo.index)
                     end

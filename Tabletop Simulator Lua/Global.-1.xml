@@ -713,7 +713,7 @@
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
                         <Toggle class="isaacColor" interactable="false" id="Red_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Red_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Red_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Toggle class="isaacColor" id="Red_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
@@ -783,7 +783,7 @@
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
                         <Toggle class="isaacColor" interactable="false" id="Blue_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Blue_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Blue_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Toggle class="isaacColor" id="Blue_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
@@ -853,7 +853,7 @@
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
                         <Toggle class="isaacColor" interactable="false" id="Green_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Green_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Green_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Toggle class="isaacColor" id="Green_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
@@ -923,7 +923,7 @@
                         <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
                         <Toggle class="isaacColor" interactable="false" id="Yellow_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Yellow_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
-                        <Toggle interactable="false" class="isaacColor" id="Yellow_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Toggle class="isaacColor" id="Yellow_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>

@@ -616,7 +616,7 @@ function UI_optionsDone(clickPlayer, _, id)
     turnModule.call("changeTurnSettings", {color = zoneColor, setting = "looting", newValue = playerOptionTable.AUTO_LOOT})
     turnModule.call("changeTurnSettings", {color = zoneColor, setting = "playerHealing", newValue = playerOptionTable.AUTO_HEALING})
     Global.call("changeRewardingMode", {playerColor = zoneColor, active = playerOptionTable.AUTO_REWARDING})
-    --TODO death detection
+    Global.call("changeDeathDetectionMode", {playerColor = zoneColor, active = playerOptionTable.DEATH_DETECTION})
     --TODO looting zone
     --TODO shop payment
 

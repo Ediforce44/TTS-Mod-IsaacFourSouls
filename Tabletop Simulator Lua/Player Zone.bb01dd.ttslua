@@ -272,11 +272,11 @@ local function getPositionForCounter(counterType)
     return nil
 end
 
-local function getHPs(zone, functionParams)
+local function getHPs(zone)
     local hp = 0
     for _, obj in pairs(zone.getObjects()) do
         if obj.type == "Card" then
-            hp = hp + (obj.call("getHP", functionParams) or 0)
+            hp = hp + (obj.call("getHP", {}) or 0)
         end
     end
     return hp
@@ -337,17 +337,19 @@ function deactivateCharacter()
     end
 end
 
+function deactivateActiveItems()
+    --TODO
+end
+
 function reanimatePlayer()
     playerAlive = true
-    --TODO
-    healPlayer()
 end
 
 function killPlayer()
-    --TODO play death sound
-    deactivateCharacter()
-    payDeathPenalty()
     playerAlive = false
+    deactivateCharacter()
+    deactivateActiveItems()
+    payDeathPenalty()
 end
 
 function getPlayerHP()
@@ -362,20 +364,21 @@ end
 
 function healPlayer(params)
     local playerHP = 0
-    playerHP = playerHP + getHPs(self, params)
-
-    local soulZoneGuids = Global.getTable("ZONE_GUID_SOUL")
-    local soulZone = getObjectFromGUID(soulZoneGuids[zone_color])
-    if soulZone then
-        playerHP = playerHP + getHPs(soulZone, params)
-    end
-
-    if playerHP == 0 then
-        return
-    end
 
     if params and params.amount then
         playerHP = getPlayerHP() + params.amount
+    else
+        playerHP = getHPs(self)
+
+        local soulZoneGuids = Global.getTable("ZONE_GUID_SOUL")
+        local soulZone = getObjectFromGUID(soulZoneGuids[zone_color])
+        if soulZone then
+            playerHP = playerHP + getHPs(soulZone)
+        end
+
+        if playerHP == 0 then
+            return
+        end
     end
 
     if playerHP >= #HP_GUIDS then

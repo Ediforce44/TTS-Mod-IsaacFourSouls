@@ -3,6 +3,7 @@ owner_color = "Blue"
 HEARTS_GUID = Global.getTable("HEART_TOKENS_GUID")[owner_color]
 INACTIVE_HEART_COLOR = {0, 0, 0}
 ACTIVE_HEART_COLOR = Global.getTable("REAL_PLAYER_COLOR_RGB")[owner_color]
+PLAYER_ZONE_GUID = Global.getTable("ZONE_GUID_PLAYER")[owner_color]
 
 function getSelfIndex()
   for i, guid in pairs(HEARTS_GUID) do
@@ -15,7 +16,12 @@ HEART_INDEX = getSelfIndex()
 isActive = false
 
 function onPickUp()
-    isActive = true
+  isActive = true
+
+  local playerZone = getObjectFromGUID(PLAYER_ZONE_GUID)
+  if playerZone then
+      playerZone.call("reanimatePlayer")
+  end
 
   calcOtherHeartsState()
   changeColorByState()

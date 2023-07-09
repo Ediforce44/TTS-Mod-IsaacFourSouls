@@ -57,12 +57,8 @@ function onLoad(saved_data)         --EbyE44
         if loaded_data.startPlayerColor then
             setNewStartPlayer({playerColor = loaded_data.startPlayerColor})
         end
-        if loaded_data.automaticRewarding then
-            local autoRewarding = loaded_data.automaticRewarding
-            automaticRewarding.Yellow = autoRewarding.Yellow and true
-            automaticRewarding.Green = autoRewarding.Green and true
-            automaticRewarding.Blue = autoRewarding.Blue and true
-            automaticRewarding.Red = autoRewarding.Red and true
+        if loaded_data.playerSettings then
+            PLAYER_SETTINGS = loaded_data.playerSettings
         end
         if loaded_data.minionZoneInfo then
             for i, infoTable in ipairs(loaded_data.minionZoneInfo) do
@@ -99,7 +95,7 @@ end
 
 function onSave()                   --EbyE44
     return JSON.encode({activePlayerColor = activePlayerColor, startPlayerColor = startPlayerColor
-        , automaticRewarding = automaticRewarding, minionZoneInfo = ZONE_INFO_MINION, bossZoneGuid = ZONE_GUID_BOSS
+        , playerSettings = PLAYER_SETTINGS, minionZoneInfo = ZONE_INFO_MINION, bossZoneGuid = ZONE_GUID_BOSS
         , customCounterBagGuids = COUNTER_BAGS_GUID, handInfo = HAND_INFO, playerOwner = PLAYER_OWNER
         , spyInfo = SPY_INFO})
 end
@@ -868,11 +864,11 @@ activePlayerColor   = "None"
 startPlayerColor    = "None"
 gameLanguage        = "None"
 
-automaticRewarding = {
-    Yellow = true,
-    Green = true,
-    Blue = true,
-    Red = true
+PLAYER_SETTINGS = {
+    Yellow = {rewarding = true, deathDetection = false},
+    Green = {rewarding = true, deathDetection = false},
+    Blue = {rewarding = true, deathDetection = false},
+    Red = {rewarding = true, deathDetection = false}
 }
 
 CLICK_DELAY = 0.3
@@ -1214,7 +1210,7 @@ function changeRewardingMode(params)
     local color = ""
     if params.playerColor == nil then
         if params.player == nil then
-            printWarning({text = "Wrong parameters in global function 'deactivateRewarding()'."})
+            printWarning({text = "Wrong parameters in global function 'changeRewardingMode()'."})
             return
         else
             color = params.player.color
@@ -1223,8 +1219,8 @@ function changeRewardingMode(params)
         color = params.playerColor
     end
     local newValue = (params.active == true)
-    if newValue ~= automaticRewarding[color] then
-        automaticRewarding[color] = newValue
+    if newValue ~= PLAYER_SETTINGS[color].rewarding then
+        PLAYER_SETTINGS[color].rewarding = newValue
         getObjectFromGUID(ZONE_GUID_SOUL[color]).call("onSwitchingRewardingMode", {newState = newValue})
         local msg = "Your Auto Rewarding has been "
         if newValue == true then
@@ -1236,6 +1232,21 @@ function changeRewardingMode(params)
             broadcastToColor(msg, PLAYER_OWNER[color])
         end
     end
+end
+
+function changeDeathDetectionMode(params)
+    local color = ""
+    if params.playerColor == nil then
+        if params.player == nil then
+            printWarning({text = "Wrong parameters in global function 'changeDeathDetectionMode()'."})
+            return
+        else
+            color = params.player.color
+        end
+    else
+        color = params.playerColor
+    end
+    PLAYER_SETTINGS[color].deathDetection = (params.active == true)
 end
 
 function getCounterInZone(params)

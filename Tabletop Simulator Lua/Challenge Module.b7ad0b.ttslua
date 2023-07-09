@@ -3,8 +3,8 @@ BOARD_MANAGER_GUID = "bd69bd"
 CUSTOM_BUTTON_MODULE_GUID = "78c676"
 MONSTER_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").MONSTER
 
-CHALLENGE_BOARD_URL = "http://cloud-3.steamusercontent.com/ugc/2074512488984736593/967BC76C69213D5CA85300EDB45293A4C459A8B6/"
-CHALLENGE_BOARD_EXPANDED_URL = "http://cloud-3.steamusercontent.com/ugc/2074512488984736790/E34F5F1C7DF556CC60390C1F27DE5D80C3CF0C18/"
+CHALLENGE_BOARD_URL = "http://cloud-3.steamusercontent.com/ugc/2063259124650479201/DF7365CC91884C5BEA13B2756FD6A727DFD86838/"
+CHALLENGE_BOARD_EXPANDED_URL = "http://cloud-3.steamusercontent.com/ugc/2063259124650479326/E87EEC60F9054E0FF60B04806A38CF9FA48EF685/"
 
 local isChallengeModeActive = false
 local isBoardExpanded = false
@@ -17,6 +17,7 @@ local yellowPlayerStuff = {
     ZONE_PLAYER = "bb01dd",
     ZONE_LOOT = "a81bbf",
     DICE = "9069fa",
+    DEATH = "6d1f5d",
     HEART_ONE = "c02908",
     HEART_TWO = "3f81b7",
     HEART_THREE = "f8e991",
@@ -36,6 +37,7 @@ local greenPlayerStuff = {
     ZONE_PLAYER = "19df91",
     ZONE_LOOT = "7831c7",
     DICE = "4dce5a",
+    DEATH = "7023b1",
     HEART_ONE = "12326f",
     HEART_TWO = "c326f1",
     HEART_THREE = "f5d095",

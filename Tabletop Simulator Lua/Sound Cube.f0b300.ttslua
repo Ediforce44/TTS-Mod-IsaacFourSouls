@@ -7,7 +7,8 @@ SOUND_INFO = {
     UNHOLY = 3,
     WRONG = 4,
     LAUGH = 5,
-    HOLY = 6
+    HOLY = 6,
+    DEATH = 7
 }
 
 function onLoad(saved_data)
@@ -72,4 +73,8 @@ end
 
 function playHoly()
     play(SOUND_INFO.HOLY)
+end
+
+function playDeath()
+    play(SOUND_INFO.DEATH)
 end
