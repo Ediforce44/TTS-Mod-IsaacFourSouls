@@ -749,6 +749,19 @@ function UI_debugBase()
     end
 end
 
+function UI_extractChars(_, _, id)
+    local characterManager = getObjectFromGUID("bc6e13")
+    if characterManager then
+        if id == "debugChars" then
+            characterManager.call("_debug_characters")
+        else
+            characterManager.call("_debug_characters", {language = id:gsub("debugChars", "")})
+        end
+    else
+        printWarning({text = "Character Manager not found (wrong GUID)!"})
+    end
+end
+
 function UI_showReminder()
     UI.show("reminder")
 end
@@ -1067,7 +1080,7 @@ COUNTER_BAGS_GUID = {
     GUT = "8abd1b"
 }
 
-SFX_CUBE_GUID = "f0b300"
+SFX_CUBE_GUID = "ca024f"
 
 TURN_MODULE_GUID = "87e737"
 

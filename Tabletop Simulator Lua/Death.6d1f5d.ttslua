@@ -10,11 +10,13 @@ HEART_INDEX = 1
 isActive = false
 
 function onPickUp()
-  isActive = false
-
-  local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
-  if sfxCube then
+  if isActive then
+    local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
+    if sfxCube then
       sfxCube.call("playDeath")
+    end
+
+    isActive = false
   end
 
   calcOtherHeartsState()

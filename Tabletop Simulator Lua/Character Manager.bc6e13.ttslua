@@ -55,12 +55,14 @@ function onSave()
     return JSON.encode({originalPositionTable})
 end
 
-function loadCharPacksFromWorld()
+function loadCharPacksFromWorld(debug)
   characterPull = {}
   local allObj = getAllObjects()
   for i, obj in pairs(allObj) do
-    if (obj.getDescription() == "character-pack") and (obj.getPosition().y > 0) and not isCharUsedInWaitPull(obj.guid) then
-      table.insert(characterPull, obj.getGUID())
+    if (obj.getDescription() == "character-pack") then
+        if debug or ((obj.getPosition().y > 0) and not isCharUsedInWaitPull(obj.guid)) then
+            table.insert(characterPull, obj.getGUID())
+        end
     end
   end
 end
@@ -443,6 +445,65 @@ function click_storeOrExtract()
             else
                 self.editButton({index = STORE_BUTTON_INDEX, label = STORE_BUTTON_LABEL.STORE})
                 characterPlacer.call("extractSurplusCharacterPacks")
+            end
+        end
+    end
+end
+
+
+function _debug_characters(params)
+    local languagePrefix = nil
+    if params and params.language then
+        languagePrefix = params.language
+    end
+
+    local charDeck = nil
+    local itemDeck = nil
+
+    loadCharPacksFromWorld(true)
+    for _, charPackGuid in pairs(characterPull) do
+        local charPack = getObjectFromGUID(charPackGuid)
+        if charPack then
+            if languagePrefix then
+                for _, objectInfo in pairs(charPack.getObjects()) do
+                    if objectInfo.description == languagePrefix .. "_character" then
+                        local charCard = charPack.takeObject({guid = objectInfo.guid})
+                        if charDeck then
+                            charDeck = charDeck.putObject(charCard)
+                        else
+                            charCard.setPosition({0.5, 1.5, -15.24})
+                            charDeck = charCard
+                        end
+                    elseif objectInfo.description == languagePrefix .. "_character-item" then
+                        local itemCard = charPack.takeObject({guid = objectInfo.guid})
+                        if itemDeck then
+                            itemDeck = itemDeck.putObject(itemCard)
+                        else
+                            itemCard.setPosition({4.51, 1.5, -15.24})
+                            itemDeck = itemCard
+                        end
+                    end
+                end
+            else
+                for _, objectInfo in pairs(charPack.getObjects()) do
+                    if string.match(objectInfo.description, "_character$") then
+                        local charCard = charPack.takeObject({guid = objectInfo.guid})
+                        if charDeck then
+                            charDeck = charDeck.putObject(charCard)
+                        else
+                            charCard.setPosition({0.5, 1.5, -15.24})
+                            charDeck = charCard
+                        end
+                    elseif string.match(objectInfo.description, "_character[-]item$") then
+                        local itemCard = charPack.takeObject({guid = objectInfo.guid})
+                        if itemDeck then
+                            itemDeck = itemDeck.putObject(itemCard)
+                        else
+                            itemCard.setPosition({4.51, 1.5, -15.24})
+                            itemDeck = itemCard
+                        end
+                    end
+                end
             end
         end
     end

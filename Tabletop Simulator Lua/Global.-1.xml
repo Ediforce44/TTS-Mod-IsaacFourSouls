@@ -562,8 +562,8 @@
     id="debug"
     active="false"
     class="isaacBackground"
-    height="180"
-    width="250"
+    height="220"
+    width="300"
     rectAlignment="UpperCenter"
     offsetXY="450 -50"
     allowDragging="true"
@@ -571,6 +571,12 @@
     <VerticalLayout childAlignment="UpperCenter" padding="10 10 10 10" spacing="5" childForceExpandWidth="false" childForceExpandHeight="false">
         <Text class="isaacColor" fontSize="30" fontStyle="bold" alignment="UpperCenter" color="red">!Debug Mode!</Text>
         <Button class="isaacColor" id="debugBase" preferredWidth="150" minHeight="35" fontSize="20" fontStyle="bold" onClick="UI_debugBase">Raise Base</Button>
+        <HorizontalLayout childForceExpandWidth="false" childForceExpandHeight="false" childAlignment="MiddleCenter">
+            <Button class="isaacColor" id="debugChars" preferredWidth="150" minHeight="35" fontSize="20" fontStyle="bold" onClick="UI_extractChars">Debug Chars</Button>
+            <Button class="isaacColor" id="debugCharsUS" preferredWidth="33" minHeight="30" fontSize="15" fontStyle="bold" onClick="UI_extractChars">US</Button>
+            <Button class="isaacColor" id="debugCharsES" preferredWidth="33" minHeight="30" fontSize="15" fontStyle="bold" onClick="UI_extractChars">ES</Button>
+            <Button class="isaacColor" id="debugCharsRU" preferredWidth="33" minHeight="30" fontSize="15" fontStyle="bold" onClick="UI_extractChars">RU</Button>
+        </HorizontalLayout>
         <Button class="isaacColor" preferredWidth="170" minHeight="35" fontSize="20" fontStyle="bold" onClick="UI_showReminder">Show Reminder</Button>
         <Button class="isaacColor" preferredWidth="150" minHeight="35" fontSize="20" fontStyle="bold" onClick="UI_hideDebugPanel">Exit</Button>
     </VerticalLayout>
