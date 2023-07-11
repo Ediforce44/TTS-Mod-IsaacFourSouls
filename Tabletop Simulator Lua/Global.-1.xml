@@ -72,7 +72,7 @@
 <Panel
     id="config"
     active="false"
-    height="600"
+    height="630"
     width="1160"
     rectAlignment="UpperCenter"
     offsetXY="0 -80"
@@ -94,7 +94,7 @@
             </VerticalLayout>
         </Panel></Cell>
     </Row>
-    <Row preferredHeight="400">
+    <Row preferredHeight="430">
         <Cell><Panel>
             <VerticalLayout
                 id="confExpansions"
@@ -119,6 +119,7 @@
                     <Toggle class="isaacColor confExpToggle" id="Four Souls: Unbirth">Four Souls: Unbirth</Toggle>
                     <Toggle class="isaacColor confExpToggle" id="Four Souls: ALT">Four Souls: ALT</Toggle>
                     <Toggle class="isaacColor confExpToggle" id="The Lab Pack by Ogskive, Jaxxon, and Mollybee.">The Lab Pack</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Wonderlair Miscellany">Wonderlair Miscellany</Toggle>
                     <Toggle class="isaacColor confExpToggle" id="Sirc City Mod">Sirc City Mod</Toggle>
                     <Toggle class="isaacColor confExpToggle" id="Box Nintenella">Box Nintenella</Toggle>
                     <Toggle class="isaacColor confExpToggle" id="Community Remix">Community Remix</Toggle>
@@ -135,6 +136,7 @@
                     <Toggle class="isaacColor confExpToggle" id="Undertale">Undertale</Toggle>
                     <Toggle class="isaacColor confExpToggle" id="Linttop and Poddlesli">Linttop &#38; Poddlesli</Toggle>
                     <Toggle class="isaacColor confExpToggle" id="Planetarium Expansion">Planetarium Expansion</Toggle>
+                    <Toggle class="isaacColor confExpToggle" id="Your Own Medicine">Your Own Medicine</Toggle>
                 </GridLayout>
             </VerticalLayout>
         </Panel></Cell>
@@ -709,18 +711,18 @@
             <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
                 <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
-                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
-                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Red_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
-                        <Toggle isOn="true" class="isaacColor" id="Red_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
-                        <Toggle class="isaacColor" id="Red_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
-                        <Toggle class="isaacColor" id="Red_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Turn Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Red_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Start</Toggle>
+                        <Toggle class="isaacColor" id="Red_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Looting at Turn Start</Toggle>
+                        <Toggle class="isaacColor" id="Red_AutoActivation" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoActivation">Item Activation at Start</Toggle>
+                        <Toggle class="isaacColor" id="Red_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Healing at Turn End</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
-                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">General Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Red_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle class="isaacColor" id="Red_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Red_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Red_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
-                        <Toggle class="isaacColor" id="Red_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
-                        <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
@@ -779,17 +781,18 @@
             <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
                 <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
-                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
-                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Blue_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
-                        <Toggle isOn="true" class="isaacColor" id="Blue_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
-                        <Toggle class="isaacColor" id="Blue_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
-                        <Toggle class="isaacColor" id="Blue_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Turn Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Blue_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Start</Toggle>
+                        <Toggle class="isaacColor" id="Blue_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Looting at Turn Start</Toggle>
+                        <Toggle class="isaacColor" id="Blue_AutoActivation" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoActivation">Item Activation at Start</Toggle>
+                        <Toggle class="isaacColor" id="Blue_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Healing at Turn End</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
-                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">General Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Blue_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle class="isaacColor" id="Blue_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Blue_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Blue_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
-                        <Toggle class="isaacColor" id="Blue_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
@@ -849,18 +852,18 @@
             <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
                 <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
-                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
-                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Green_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
-                        <Toggle isOn="true" class="isaacColor" id="Green_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
-                        <Toggle class="isaacColor" id="Green_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
-                        <Toggle class="isaacColor" id="Green_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Turn Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Green_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Start</Toggle>
+                        <Toggle class="isaacColor" id="Green_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Looting at Turn Start</Toggle>
+                        <Toggle class="isaacColor" id="Green_AutoActivation" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoActivation">Item Activation at Start</Toggle>
+                        <Toggle class="isaacColor" id="Green_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Healing at Turn End</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
-                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">General Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Green_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle class="isaacColor" id="Green_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Green_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Green_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
-                        <Toggle class="isaacColor" id="Green_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
-                        <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
@@ -919,18 +922,18 @@
             <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
                 <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
-                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Automations</Text>
-                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Yellow_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Turn Start</Toggle>
-                        <Toggle isOn="true" class="isaacColor" id="Yellow_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
-                        <Toggle class="isaacColor" id="Yellow_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Auto-Looting at Turn Start</Toggle>
-                        <Toggle class="isaacColor" id="Yellow_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Auto-Healing at Turn End</Toggle>
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Turn Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Yellow_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Start</Toggle>
+                        <Toggle class="isaacColor" id="Yellow_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Looting at Turn Start</Toggle>
+                        <Toggle class="isaacColor" id="Yellow_AutoActivation" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoActivation">Item Activation at Start</Toggle>
+                        <Toggle class="isaacColor" id="Yellow_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Healing at Turn End</Toggle>
                     </VerticalLayout>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
-                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">More Automations</Text>
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">General Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Yellow_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle class="isaacColor" id="Yellow_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Yellow_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Yellow_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
-                        <Toggle class="isaacColor" id="Yellow_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
-                        <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">

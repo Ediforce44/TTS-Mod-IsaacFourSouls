@@ -1,7 +1,7 @@
-
 ON_TURN_EVENTS = {
     END = {
         {call_function = "turnEvent_playerHealing", function_params = {}, function_owner=self.guid, valid = true},
+        {call_function = "turnEvent_activation", function_params = {}, function_owner=self.guid, valid = true},
     },
     START = {
         {call_function = "turnEvent_resetZones", function_params = {}, function_owner=self.guid, valid = true},
@@ -10,10 +10,10 @@ ON_TURN_EVENTS = {
 }
 
 TURN_SETTINGS = {
-    Red = {camera = true, looting = false, playerHealing = false},
-    Blue = {camera = true, looting = false, playerHealing = false},
-    Green = {camera = true, looting = false, playerHealing = false},
-    Yellow = {camera = true, looting = false, playerHealing = false}
+    Red = {camera = true, looting = false, playerHealing = false, itemActivation = false},
+    Blue = {camera = true, looting = false, playerHealing = false, itemActivation = false},
+    Green = {camera = true, looting = false, playerHealing = false, itemActivation = false},
+    Yellow = {camera = true, looting = false, playerHealing = false, itemActivation = false}
 }
 
 TURN_ORDER = {
@@ -130,7 +130,7 @@ local function transferTurn(previousPlayerColor, nextPlayerColor)
     callTurnEndEvents(previousPlayerColor, nextPlayerColor)
 
     Global.setVar("activePlayerColor", nextPlayerColor)
-    
+
     print(Global.call("getPlayerString", {playerColor = previousPlayerColor}) .. "'s turn is over. It's now "
         .. Global.call("getPlayerString", {playerColor = nextPlayerColor}) .. "'s turn.")
     callTurnStartEvents(previousPlayerColor, nextPlayerColor)
@@ -386,8 +386,18 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------- Basic Turn Events ------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+function turnEvent_activation(params)
+    local playerZoneGuids = Global.getTable("ZONE_GUID_PLAYER")
+    if TURN_SETTINGS[params.playerColorStart].itemActivation then
+        local playerZone = getObjectFromGUID(playerZoneGuids[params.playerColorStart])
+        if playerZone then
+            playerZone.call("activateCharacter")
+            playerZone.call("activateActiveItems")
+        end
+    end
+end
 
-function turnEvent_playerHealing(params)
+function turnEvent_playerHealing()
     local playerZoneGuids = Global.getTable("ZONE_GUID_PLAYER")
     for color, settings in pairs(TURN_SETTINGS) do
         if settings.playerHealing then
