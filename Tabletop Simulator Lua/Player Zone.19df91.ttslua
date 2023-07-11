@@ -17,7 +17,7 @@ ROW_MAX = 2
 INDICES_PER_ROW = INDEX_MAX / ROW_MAX
 
 playerAlive = true
-attachedObjects = {}
+attachedObjects = {CARDS = {}, COUNTERS = {}}
 indexTable = {}
 indexTableCounter = {}
 
@@ -83,12 +83,27 @@ local function payDeathPenalty()
     return
 end
 
-local function attachObject(object)
-    attachedObjects[object.getGUID()] = 1
+local function attachCard(card)
+    attachedObjects.CARDS[card.getGUID()] = {IsItem = card.hasTag("ITEM"), ActiveItem = card.hasTag("ACTIVE"), Ethernal = card.hasTag("ETHERNAL")}
 end
 
-local function detachObject(object)
-    attachedObjects[object.getGUID()] = nil
+local function attachCounter(counter)
+    local counterType = "None"
+    for _, tag in pairs(counter.getTags()) do
+        if tag ~= "COUNTER" then
+            counterType = tag
+            break
+        end
+    end
+    attachedObjects.COUNTERS[counter.getGUID()] = {Type = counterType}
+end
+
+local function detachCard(card)
+    attachedObjects.CARDS[card.getGUID()] = nil
+end
+
+local function detachCounter(counter)
+    attachedObjects.COUNTERS[counter.getGUID()] = nil
 end
 
 local function getRowAndColumnFromPosition(position)
@@ -303,8 +318,10 @@ function onLoad(saved_data)
         end
     end
     for _ , obj in pairs(self.getObjects()) do
-        if obj.tag == "Card" then
-            attachObject(obj)
+        if obj.type == "Card" then
+            attachCard(obj)
+        elseif obj.hasTag("Counter") then
+            attachCounter(obj)
         end
     end
 end
@@ -315,16 +332,28 @@ end
 
 function onObjectEnterZone(zone, enteringObject)
     if zone.getGUID() == self.guid then
-        if enteringObject.tag == "Card" then
-            attachObject(enteringObject)
+        if enteringObject.type == "Card" then
+            attachCard(enteringObject)
+        elseif enteringObject.hasTag("Counter") then
+            attachCounter(enteringObject)
         end
     end
 end
 
 function onObjectLeaveZone(zone, leavingObject)
     if zone.getGUID() == self.guid then
-        if leavingObject.tag == "Card" then
-            detachObject(leavingObject)
+        if leavingObject.type == "Card" then
+            detachCard(leavingObject)
+        elseif leavingObject.hasTag("Counter") then
+            detachCounter(leavingObject)
+        end
+    end
+end
+
+function activateCharacter()
+    for _ , obj in pairs(self.getObjects()) do
+        if obj.hasTag("Character") then
+            obj.setRotationSmooth({0, 180, 0}, false)
         end
     end
 end
@@ -332,13 +361,31 @@ end
 function deactivateCharacter()
     for _ , obj in pairs(self.getObjects()) do
         if obj.hasTag("Character") then
-            obj.setRotationSmooth({0, 90, 0}, false)
+            obj.setRotationSmooth({0, 270, 0}, false)
+        end
+    end
+end
+
+function activateActiveItems()
+    for cardGuid, cardInfo in pairs(attachedObjects.CARDS) do
+        if cardInfo.ActiveItem then
+            local card = getObjectFromGUID(cardGuid)
+            if card then
+                card.setRotationSmooth({0, 180, 0}, false)
+            end
         end
     end
 end
 
 function deactivateActiveItems()
-    --TODO
+    for cardGuid, cardInfo in pairs(attachedObjects.CARDS) do
+        if cardInfo.ActiveItem then
+            local card = getObjectFromGUID(cardGuid)
+            if card then
+                card.setRotationSmooth({0, 270, 0}, false)
+            end
+        end
+    end
 end
 
 function reanimatePlayer()
