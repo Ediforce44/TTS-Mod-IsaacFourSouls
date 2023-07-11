@@ -338,27 +338,27 @@ function getButtonXML(spyZoneOwnerColor, object)
 return [[<Button visibility="]] .. spyZoneOwnerColor .. [["
     active="true"
     image="spy_bottom"
-    height="67"
-    width="35"
-    offsetXY="80 -182"
+    height="79"
+    width="52"
+    offsetXY="80 -193"
     rotation="0 0 180"
     onClick="]] .. selfGuid .. [[/UI_bottom(]] .. objectGUID .. [[">
 </Button>
 <Button visibility="]] .. spyZoneOwnerColor .. [["
     active="true"
     image="spy_top"
-    height="67"
-    width="35"
-    offsetXY="80 -231"
+    height="79"
+    width="52"
+    offsetXY="80 -270"
     rotation="0 0 180"
     onClick="]] .. selfGuid .. [[/UI_top(]] .. objectGUID .. [[">
 </Button>
 <Button visibility="]] .. spyZoneOwnerColor .. [["
     active="true"
     image="spy_delete"
-    height="67"
-    width="35"
-    offsetXY="80 182"
+    height="79"
+    width="52"
+    offsetXY="80 193"
     rotation="0 0 180"
     onClick="]] .. selfGuid .. [[/UI_discard(]] .. objectGUID .. [[">
  </Button>]]
@@ -366,27 +366,27 @@ return [[<Button visibility="]] .. spyZoneOwnerColor .. [["
 return [[<Button visibility="]] .. spyZoneOwnerColor .. [["
     active="true"
     image="spy_bottom"
-    height="50"
-    width="50"
-    offsetXY="80 -175"
+    height="59"
+    width="75"
+    offsetXY="70 -183"
     rotation="0 0 180"
     onClick="]] .. selfGuid .. [[/UI_bottom(]] .. objectGUID .. [[">
 </Button>
 <Button visibility="]] .. spyZoneOwnerColor .. [["
     active="true"
     image="spy_top"
-    height="50"
-    width="50"
-    offsetXY="80 -211"
+    height="59"
+    width="75"
+    offsetXY="70 -240"
     rotation="0 0 180"
     onClick="]] .. selfGuid .. [[/UI_top(]] .. objectGUID .. [[">
 </Button>
 <Button visibility="]] .. spyZoneOwnerColor .. [["
     active="true"
     image="spy_delete"
-    height="50"
-    width="50"
-    offsetXY="80 175"
+    height="59"
+    width="75"
+    offsetXY="70 183"
     rotation="0 0 180"
     onClick="]] .. selfGuid .. [[/UI_discard(]] .. objectGUID .. [[">
 </Button>]]
@@ -530,36 +530,40 @@ end
 local OPTION_TABLE = {
     Red = {
         CAMERA_MOVEMENT = true,
-        AUTO_REWARDING = true,
         AUTO_LOOT = false,
+        AUTO_ACTIVATION = false,
         AUTO_HEALING = false,
+        AUTO_REWARDING = true,
         DEATH_DETECTION = false,
         BUTTON_THEME = "DARK",
         SPY_ZONE_POS = "SIDE"
     },
     Blue = {
         CAMERA_MOVEMENT = true,
-        AUTO_REWARDING = true,
         AUTO_LOOT = false,
+        AUTO_ACTIVATION = false,
         AUTO_HEALING = false,
+        AUTO_REWARDING = true,
         DEATH_DETECTION = false,
         BUTTON_THEME = "DARK",
         SPY_ZONE_POS = "SIDE"
     },
     Green = {
         CAMERA_MOVEMENT = true,
-        AUTO_REWARDING = true,
         AUTO_LOOT = false,
+        AUTO_ACTIVATION = false,
         AUTO_HEALING = false,
+        AUTO_REWARDING = true,
         DEATH_DETECTION = false,
         BUTTON_THEME = "DARK",
         SPY_ZONE_POS = "SIDE"
     },
     Yellow = {
         CAMERA_MOVEMENT = true,
-        AUTO_REWARDING = true,
         AUTO_LOOT = false,
+        AUTO_ACTIVATION = false,
         AUTO_HEALING = false,
+        AUTO_REWARDING = true,
         DEATH_DETECTION = false,
         BUTTON_THEME = "DARK",
         SPY_ZONE_POS = "SIDE"
@@ -571,19 +575,24 @@ function UI_toggleCameraMovement(_, checked, id)
     OPTION_TABLE[zoneColor].CAMERA_MOVEMENT = (checked == "True")
 end
 
-function UI_toggleAutoRewarding(_, checked, id)
-    local zoneColor = string.match(id, "%w+")
-    OPTION_TABLE[zoneColor].AUTO_REWARDING = (checked == "True")
-end
-
 function UI_toggleAutoLoot(_, checked, id)
     local zoneColor = string.match(id, "%w+")
     OPTION_TABLE[zoneColor].AUTO_LOOT = (checked == "True")
 end
 
+function UI_toggleAutoActivation(_, checked, id)
+    local zoneColor = string.match(id, "%w+")
+    OPTION_TABLE[zoneColor].AUTO_ACTIVATION = (checked == "True")
+end
+
 function UI_toggleAutoHealing(_, checked, id)
     local zoneColor = string.match(id, "%w+")
     OPTION_TABLE[zoneColor].AUTO_HEALING = (checked == "True")
+end
+
+function UI_toggleAutoRewarding(_, checked, id)
+    local zoneColor = string.match(id, "%w+")
+    OPTION_TABLE[zoneColor].AUTO_REWARDING = (checked == "True")
 end
 
 function UI_toggleDeathDetection(_, checked, id)
@@ -614,10 +623,11 @@ function UI_optionsDone(clickPlayer, _, id)
     local turnModule = getObjectFromGUID(Global.getVar("TURN_MODULE_GUID"))
     turnModule.call("changeTurnSettings", {color = zoneColor, setting = "camera", newValue = playerOptionTable.CAMERA_MOVEMENT})
     turnModule.call("changeTurnSettings", {color = zoneColor, setting = "looting", newValue = playerOptionTable.AUTO_LOOT})
+    turnModule.call("changeTurnSettings", {color = zoneColor, setting = "itemActivation", newValue = playerOptionTable.AUTO_ACTIVATION})
     turnModule.call("changeTurnSettings", {color = zoneColor, setting = "playerHealing", newValue = playerOptionTable.AUTO_HEALING})
     Global.call("changeRewardingMode", {playerColor = zoneColor, active = playerOptionTable.AUTO_REWARDING})
     Global.call("changeDeathDetectionMode", {playerColor = zoneColor, active = playerOptionTable.DEATH_DETECTION})
-    --TODO looting zone
+    --TODO auto-loot zone
     --TODO shop payment
 
     local themeInfoTable = CUSTOM_BUTTON_THEME[playerOptionTable.BUTTON_THEME]
