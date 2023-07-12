@@ -793,7 +793,6 @@
                         <Toggle class="isaacColor" id="Blue_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Blue_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
                         <Toggle class="isaacColor" interactable="false" id="Blue_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
-                        <Text color="red" alignment="MiddleLeft">Grayed out options will be added soon!</Text>
                     </VerticalLayout>
                     <ToggleGroup>
                     <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
