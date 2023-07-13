@@ -24,9 +24,9 @@ function createAll()
     s_color = {0.5, 0.5, 0.5, 95}
 
     if light_mode then
-        f_color = {1,1,1,100}
+        f_color = {1,1,1,95}
     else
-        f_color = {1,1,1,100}
+        f_color = {0,0,0,100}
     end
 
     if self.getName() == "" then
@@ -57,10 +57,10 @@ function createAll()
         label = "Counter",
         function_owner = self,
         alignment = 3,
-        position = {0,0.05,1.5},
+        position = {0,0.05,0.95},
         width = 1200,
-        height = 1000,
-        font_size = 200, 
+        height = 700,
+        font_size = 200,
         scale={x=1, y=1, z=1},
         font_color= f_color,
         color = {0,0,0,0}
@@ -72,51 +72,7 @@ function createAll()
     else
         lightButtonText = "[ Set light ]"
     end
-    self.createButton({
-        label=lightButtonText,
-        tooltip=lightButtonText,
-        click_function="swap_fcolor",
-        function_owner=self,
-        position={0,-0.05,0.6},
-        rotation={180,180,0},
-        height=250,
-        width=1200,
-        scale={x=1, y=1, z=1},
-        font_size=250,
-        font_color=s_color,
-        color={0,0,0,0}
-        })
 
-    self.createButton({
-        label="[ Reset ]",
-        tooltip="[ Reset ]",
-        click_function="reset_val",
-        function_owner=self,
-        position={0,-0.05,1.2},
-        rotation={180,180,0},
-        height=250,
-        width=1200,
-        scale={x=1, y=1, z=1},
-        font_size=250,
-        font_color=s_color,
-        color={0,0,0,0}
-        })
-
-    self.createInput({
-        value = "#",
-        label = "...",
-        input_function = "keepSample",
-        function_owner = self,
-        alignment = 3,
-        position={0,-0.05,-0.9},
-        rotation={180,180,0},
-        width = 600,
-        height = 800,
-        font_size = 1200,
-        scale={x=1, y=1, z=1},
-        font_color=f_color,
-        color = {0,0,0,0}
-        })
 
     setTooltips()
 end
