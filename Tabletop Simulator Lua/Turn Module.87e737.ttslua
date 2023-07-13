@@ -97,10 +97,7 @@ local function getCameraParamsForTurnPassing(nextPlayerColor)
     if handZone then
         cameraParams = {}
         local cameraPosition = handZone.getPosition()
-        local translation = Vector(0, 0, 10)
-        if cameraPosition.z > 0 then
-            translation = translation * -1
-        end
+        local translation = Vector(0, 0, 10):rotateOver('y', handZone.getRotation().y)
         cameraParams.position = cameraPosition + translation
         cameraParams.yaw = handZone.getRotation().y
         cameraParams.pitch = 65

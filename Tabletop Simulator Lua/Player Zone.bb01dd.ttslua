@@ -353,7 +353,7 @@ end
 function activateCharacter()
     for _ , obj in pairs(self.getObjects()) do
         if obj.hasTag("Character") then
-            obj.setRotationSmooth({0, 180, 0}, false)
+            obj.setRotationSmooth({0, 0, 0}, false)
         end
     end
 end
@@ -361,7 +361,7 @@ end
 function deactivateCharacter()
     for _ , obj in pairs(self.getObjects()) do
         if obj.hasTag("Character") then
-            obj.setRotationSmooth({0, 270, 0}, false)
+            obj.setRotationSmooth({0, 90, 0}, false)
         end
     end
 end
@@ -371,7 +371,7 @@ function activateActiveItems()
         if cardInfo.ActiveItem then
             local card = getObjectFromGUID(cardGuid)
             if card then
-                card.setRotationSmooth({0, 180, 0}, false)
+                card.setRotationSmooth({0, 0, 0}, false)
             end
         end
     end
@@ -382,7 +382,7 @@ function deactivateActiveItems()
         if cardInfo.ActiveItem then
             local card = getObjectFromGUID(cardGuid)
             if card then
-                card.setRotationSmooth({0, 270, 0}, false)
+                card.setRotationSmooth({0, 90, 0}, false)
             end
         end
     end

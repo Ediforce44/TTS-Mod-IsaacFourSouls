@@ -162,7 +162,7 @@ local function getHandInfo(zone)
 end
 
 function onObjectEnterZone(zone, object)
-    if zone.type == "Hand" then
+    if (zone.type == "Hand") and HAND_INFO[activePlayerColor] then
         if (zone.guid ~= HAND_INFO[activePlayerColor].guid) and (zone.guid ~= SPY_INFO[activePlayerColor].guid) then
             local handInfo = getHandInfo(zone)
             if handInfo and handInfo.hotseat then
