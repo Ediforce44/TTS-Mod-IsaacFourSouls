@@ -10,10 +10,10 @@ ON_TURN_EVENTS = {
 }
 
 TURN_SETTINGS = {
-    Red = {camera = true, looting = false, playerHealing = false, itemActivation = false},
-    Blue = {camera = true, looting = false, playerHealing = false, itemActivation = false},
-    Green = {camera = true, looting = false, playerHealing = false, itemActivation = false},
-    Yellow = {camera = true, looting = false, playerHealing = false, itemActivation = false}
+    Red = {camera = true, looting = false, playerHealing = true, itemActivation = true},
+    Blue = {camera = true, looting = false, playerHealing = true, itemActivation = true},
+    Green = {camera = true, looting = false, playerHealing = true, itemActivation = true},
+    Yellow = {camera = true, looting = false, playerHealing = true, itemActivation = true}
 }
 
 TURN_ORDER = {
