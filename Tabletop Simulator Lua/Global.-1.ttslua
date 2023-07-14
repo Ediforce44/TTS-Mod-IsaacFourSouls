@@ -119,12 +119,12 @@ end
 
 function addTurnEvent(params)
     if (params == nil) or (params.call_function == nil) then
-        return
+        return nil
     end
 
     local turnModule = getObjectFromGUID(TURN_MODULE_GUID)
     if turnModule then
-        turnModule.call("addTurnEvent", params)
+        return turnModule.call("addTurnEvent", params)
     end
 end
 
@@ -1108,7 +1108,7 @@ DECK_POSITION = {
 
 DEAD_END_POSITION = {}
 
-CHALLENGE_LEFTOVERS_POSITION = Vector(46.75, 1.7, -14)
+CHALLENGE_LEFTOVERS_POSITION = Vector(46.8, 1.7, -6.5)
 EVEN_MORE_CHARS_POSITION = Vector(86, 1.7, 0)
 
 function printWarning(params)

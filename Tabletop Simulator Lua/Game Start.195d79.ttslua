@@ -235,7 +235,7 @@ local function setupExpansions(gameLanguage)
     return #expansions
 end
 
-local function setupOfficialContent(gameLanguage)
+local function setupOfficialContent(gameLanguage, startPlayerColor)
     if not ready_for_setup then
         local tableBase = getObjectFromGUID(TABLE_BASE_GUID)
 
@@ -287,7 +287,11 @@ local function setupOfficialContent(gameLanguage)
             for zoneColor, zoneGuid in pairs(Global.getTable("ZONE_GUID_PLAYER")) do
                 local playerZone =  getObjectFromGUID(zoneGuid)
                 if playerZone and playerZone.getVar("active") then
-                    playerZone.call("deactivateCharacter")
+                    if playerZone.getVar("zone_color") == startPlayerColor then
+                        playerZone.call("activateCharacter")
+                    else
+                        playerZone.call("deactivateCharacter")
+                    end
                 end
             end
 
@@ -440,11 +444,11 @@ function onStart()
                 Wait.time(
                     function()
                         broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Official Content")
-                        setupOfficialContent(gameLanguage)
+                        setupOfficialContent(gameLanguage, startPlayerColor)
                     end, 1)
             else
                 broadcastToAll(Global.getTable("PRINT_COLOR_SPECIAL").GRAY_LIGHT .. "Loading Official Content")
-                setupOfficialContent(gameLanguage)
+                setupOfficialContent(gameLanguage, startPlayerColor)
             end
         end, officialSetupDelay)
 end

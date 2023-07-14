@@ -257,7 +257,7 @@ function finishMonster(params)
     if monsterCard == nil then
         return nil
     end
-    if Global.getTable("automaticRewarding")[activePlayerColor] then
+    if Global.getTable("PLAYER_SETTINGS")[activePlayerColor].rewarding then
         local rewarded = MONSTER_DECK_ZONE.call("payOutRewards", {playerColor = activePlayerColor, rewardTable = active_monster_reward})
         if rewarded then
             broadcastToAll(Global.call("getActivePlayerString") .. " got rewards for killing "
