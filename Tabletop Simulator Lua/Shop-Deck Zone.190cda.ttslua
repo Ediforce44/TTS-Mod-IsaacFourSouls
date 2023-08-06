@@ -53,7 +53,7 @@ local function resetPurchaseButton(zone)
     end
 end
 
-local function purchaseShopItem(zone)
+local function purchaseShopItem(zone, playerColor)
     local itemName = zone.getTable("shop_item_attrs").NAME
     local boughtCard = nil
     for _ , obj in pairs(zone.getObjects()) do
@@ -67,14 +67,17 @@ local function purchaseShopItem(zone)
     end
     if boughtCard ~= nil then
         if printBuyPhrase(itemName) then
-            Global.call("getActivePlayerZone").call("placeObjectInZone", {object = boughtCard})
+            local playerZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[playerColor])
+            if playerZone then
+                playerZone.call("placeObjectInZone", {object = boughtCard})
+            end
             return true
         end
     end
     return false
 end
 
-local function purchaseShopDeckItem()
+local function purchaseShopDeckItem(playerColor)
     local boughtCard = nil
     for _ , obj in pairs(self.getObjects()) do
         if obj.tag == "Deck" then
@@ -88,7 +91,10 @@ local function purchaseShopDeckItem()
     end
     if boughtCard ~= nil then
         Wait.frames(function () printBuyPhrase(boughtCard.getName()) end, 1)
-        Global.call("getActivePlayerZone").call("placeObjectInZone", {object = boughtCard})
+        local playerZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[playerColor])
+        if playerZone then
+            playerZone.call("placeObjectInZone", {object = boughtCard})
+        end
         return true
     end
     return false
@@ -247,7 +253,8 @@ function placeNewTreasureCard(params)
 end
 
 function click_function_PurchaseButton(zone, color, alt_click)
-    if Global.getVar("activePlayerColor") == color or Player[color].admin then
+    local activePlayerColor = Global.getVar("activePlayerColor")
+    if activePlayerColor == color or Player[color].admin then
         if alt_click then
             resetPurchaseButton(zone)
             return
@@ -256,7 +263,11 @@ function click_function_PurchaseButton(zone, color, alt_click)
         if purchaseButton.label == PURCHASE_BUTTON_STATES.INACTIVE then
             zone.call("activateZone")
         elseif purchaseButton.label == PURCHASE_BUTTON_STATES.PURCHASE then
-            if purchaseShopItem(zone) then
+            local playerColor = color
+            if Global.getTable("HAND_INFO")[activePlayerColor].owner == color then
+                playerColor = activePlayerColor
+            end
+            if purchaseShopItem(zone, playerColor) then
                 Wait.frames(function ()
                         if not zone.call("containsDeckOrCard") then
                             placeNewTreasureCard({zone = zone})
@@ -270,10 +281,15 @@ function click_function_PurchaseButton(zone, color, alt_click)
 end
 
 function click_function_ShopButton(zone, color, alt_click)
-    if Global.getVar("activePlayerColor") == color or Player[color].admin then
+    local activePlayerColor = Global.getVar("activePlayerColor")
+    if activePlayerColor == color or Player[color].admin then
         local shopButton = getShopButton()
         if shopButton.label == SHOP_BUTTON_STATES.PURCHASE then
-            purchaseShopDeckItem()
+            if Global.getTable("HAND_INFO")[activePlayerColor].owner == color then
+                purchaseShopDeckItem(activePlayerColor)
+            else
+                purchaseShopDeckItem(color)
+            end
         else
             Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(shopButton.label) .. "."})
         end

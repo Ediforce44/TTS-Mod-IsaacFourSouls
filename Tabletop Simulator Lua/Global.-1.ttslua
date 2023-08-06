@@ -354,6 +354,11 @@ local function setPlayerZoneOwners(ownerTable, hotSeat)
             SPY_INFO[color].owner = ownerColor
             nextHandIndex = nextHandIndex + 1
         end
+        for _, color in ipairs(colorTable) do
+            if color ~= ownerColor then
+                Player[color].changeColor("Grey")
+            end
+        end
         local playerString = ""
         for _, color in pairs(colorTable) do
             playerString = playerString .. " - " .. getPlayerString({playerColor = color}) .. "[-]"
