@@ -80,20 +80,12 @@ function resetClickCounter()
     clickCounter = 0
 end
 
-function dealLootCard()    --EbyE44
+function drawLootCard()    --EbyE44
     if owner_color == nil then
         Global.call("printWarning", {text = "Wrong color. Choose a player color and try it again."})
         return
     end
-    local zone = getObjectFromGUID(LOOT_DECK_ZONE_GUID)
-    for _, obj in pairs(zone.getObjects()) do
-        if obj.tag == "Deck" or obj.tag == "Card" then
-            local handInfo = Global.getTable("HAND_INFO")[owner_color]
-            obj.deal(1, handInfo.owner, handInfo.index)
-            return
-        end
-    end
-    Global.call("printWarning", {text = "Can't find the Loot deck. Place the Loot deck on its starting position."})
+    getObjectFromGUID(LOOT_DECK_ZONE_GUID).call("dealLootCard", {playerColor = owner_color})
 end
 
 -- This function is disabled

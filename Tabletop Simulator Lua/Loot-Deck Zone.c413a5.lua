@@ -18,22 +18,6 @@ local function getLootButton()
     return self.getButtons()[LOOT_BUTTON_INDEX + 1]
 end
 
-local function drawLootCard(playerColor)
-    for _ , obj in pairs(self.getObjects()) do
-        if obj.tag == "Deck" then
-            obj.deal(1, playerColor)
-            break
-        elseif obj.tag == "Card" then
-            --boughtCard = obj
-            --boughtCard.flip()
-            break
-        else
-            return false
-        end
-    end
-    return true
-end
-
 function onLoad(saved_data)
     if saved_data == "" then
         return
@@ -95,8 +79,30 @@ end
 function click_function_LootButton(zone, color, alt_click)
     local lootButton = getLootButton()
     if lootButton.label == LOOT_BUTTON_STATES.LOOT then
-        drawLootCard(color)
+        local activePlayerColor = Global.getVar("activePlayerColor")
+        if Global.getTable("HAND_INFO")[activePlayerColor].owner == color then
+            dealLootCard({playerColor = activePlayerColor})
+        else
+            dealLootCard({playerColor = color})
+        end
     else
         Global.call("printWarning", {text = "Unknown loot button state: " .. tostring(lootButton.label) .. "."})
     end
+end
+
+function dealLootCard(params)
+    if (params == nil) or (params.playerColor == nil) then
+        Global.call("printWarning", {text = "Wrong parameters in Loot Deck Zone function 'dealLootCard()'."})
+        return false
+    end
+    for _, obj in pairs(self.getObjects()) do
+        if obj.type == "Deck" or obj.type == "Card" then
+            local handInfo = Global.getTable("HAND_INFO")[params.playerColor]
+            obj.deal(1, handInfo.owner, handInfo.index)
+            return true
+        end
+    end
+
+    Global.call("printWarning", {text = "Can't find the Loot deck. Place the Loot deck on its starting position."})
+    return false
 end
