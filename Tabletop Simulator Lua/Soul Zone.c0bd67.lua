@@ -1,6 +1,8 @@
 -- Written by Ediforce44
 owner_color = "Blue"
 
+souls_in_this_zone = 0
+
 ZONE_EDGES = {
     {x=0, z=0},       -- 1 = |""  ""| = 3
     {x=0, z=0},       -- 2 = |__  __| = 4
@@ -137,6 +139,8 @@ function onLoad(saved_data)
             attachObject(obj)
         end
     end
+
+    souls_in_this_zone = getSoulCount()
 end
 
 function onSave()
@@ -146,7 +150,37 @@ end
 function onObjectEnterZone(zone, enteringObject)
     if zone.getGUID() == self.guid then
         if enteringObject.tag == "Card" then
+
             attachObject(enteringObject)
+
+            Wait.condition(function()
+                if attachedObjects[enteringObject.guid] then
+                    local soulAmountEarned = enteringObject.getVar("soul") or 0
+                    if soulAmountEarned > 0 then
+                        souls_in_this_zone = getSoulCount()
+
+                        local soulAmount = "Souls"
+                        if soulAmountEarned == 0 then
+                            soulAmount = "no Soul"
+                        elseif soulAmountEarned == 1 then
+                            soulAmount = "1 Soul"
+                        elseif soulAmountEarned > 1 then
+                            soulAmount = tostring(soulAmountEarned) .. " Souls"
+                        end
+                        broadcastToAll(Global.call("getPlayerString", {playerColor = owner_color}) .. " earned "
+                            .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. soulAmount .. "[-]. Hurray !!!")
+
+                        local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
+                        if sfxCube then
+                            sfxCube.call("playHoly")
+                        end
+                    end
+                end
+            end,
+            function()
+                return not enteringObject.isSmoothMoving()
+            end,
+            1)
         end
     end
 end
@@ -155,13 +189,25 @@ function onObjectLeaveZone(zone, leavingObject)
     if zone.getGUID() == self.guid then
         if leavingObject.tag == "Card" then
             detachObject(leavingObject)
+            souls_in_this_zone = getSoulCount()
         end
     end
 end
 
+function getSoulCount()
+    local counter = 0
+    local objInZone = self.getObjects()
+    for _, obj in pairs(objInZone) do
+      if obj.getVar("soul") ~= nil then
+        counter = counter + obj.getVar("soul")
+      end
+    end
+    return counter
+end
+
 function placeObjectInZone(params)
     if params.object == nil then
-        Global.call("printWarning", {text = "Wrong parameters in player zone function 'placeCardInPlayerZone()'."})
+        Global.call("printWarning", {text = "Wrong parameters in Soul Zone function 'placeObjectInZone()'."})
         return
     end
     local position = nil
@@ -171,23 +217,6 @@ function placeObjectInZone(params)
         position = getNextFreePosition()
     end
     if position ~= nil then
-        Wait.frames(function ()
-                local rewards = params.object.getTable("rewards")
-                if rewards then
-                    local soulAmount = "Souls"
-                    if rewards.SOULS == 0 then
-                        soulAmount = "no Soul"
-                    elseif rewards.SOULS == 1 then
-                        soulAmount = "1 Soul"
-                    elseif rewards.SOULS > 1 then
-                        soulAmount = tostring(rewards.SOULS) .. " Souls"
-                    else
-                        return
-                    end
-                    broadcastToAll(Global.call("getPlayerString", {playerColor = owner_color}) .. " earned "
-                        .. Global.getTable("PRINT_COLOR_SPECIAL").SOUL .. soulAmount .. "[-]. Hurray !!!")
-                end
-            end)
         placeObject(params.object, position)
     else
         local handInfo = Global.getTable("HAND_INFO")[owner_color]

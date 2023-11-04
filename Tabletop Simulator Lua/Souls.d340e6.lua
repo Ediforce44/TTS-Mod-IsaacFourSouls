@@ -9,41 +9,17 @@ function deal_soul_token(object, color)         --EbyE44
     Global.call("placeSoulToken", {playerColor = owner_color})
 end
 
-function onObjectEnterScriptingZone(zone, object)
-    if zone ~= getObjectFromGUID(zone_guid) then return end
-    Wait.frames(function()
-        local soulCount = getSoulsCountInZone()
-        if soulCount > val then
-            local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
-            if sfxCube then
-                sfxCube.call("playHoly")
-            end
-        end
+function onUpdate()
+    local soulCount = getSoulCountInZone()
+    if soulCount ~= val then
         val = soulCount
         updateVal()
         updateSave()
-    end, 5)
-end
-
-function getSoulsCountInZone()
-  local counter = 0
-  local zone = getObjectFromGUID(zone_guid)
-  local objInZone = zone.getObjects()
-  for _, obj in pairs(objInZone) do
-    if obj.getVar("soul") ~= nil then
-      counter = counter + obj.getVar("soul")
     end
-  end
-  return counter
 end
 
-function onObjectLeaveScriptingZone(zone, object)
-    if zone ~= getObjectFromGUID(zone_guid) then return end
-    Wait.frames(function()
-      val = getSoulsCountInZone()
-      updateVal()
-      updateSave()
-    end, 5)
+function getSoulCountInZone()
+    return getObjectFromGUID(zone_guid).getVar("souls_in_this_zone") or 0
 end
 
 MIN_VALUE = 0
