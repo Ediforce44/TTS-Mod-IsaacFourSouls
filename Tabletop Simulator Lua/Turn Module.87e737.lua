@@ -49,6 +49,10 @@ SPY_INFO = {
 }
 
 function onLoad(saved_data)
+    for _, player in pairs(Player.getPlayers()) do
+        player.changeColor("Grey")
+    end
+
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         if loaded_data.onTurnEvents then
@@ -132,6 +136,7 @@ local function getCameraParamsForTurnPassing(nextPlayerColor)
 end
 
 local function transferTurn(previousPlayerColor, nextPlayerColor)
+    --Play turn passing sound
     local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
     if sfxCube then
         sfxCube.call("playSwoosh")
@@ -212,6 +217,7 @@ local function passTurn(nextPlayerColor)
                 for i = 3, 1, -1 do
                     Wait.time(function()
                         broadcastToColor(i, preHandInfo.owner, {r=1, g=0, b=0})
+                        --Play count down sound
                         local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
                         sfxCube.call("playButton")
                     end, 3-i)
@@ -228,13 +234,31 @@ local function passTurn(nextPlayerColor)
     transferTurn(previousPlayerColor, nextPlayerColor)
 end
 
+local function showSkipTurn(activePlayerColor)
+    local nextPlayerConditionID = Wait.condition(
+        function()
+            UI.setAttribute("skipButton", "text", "Skip Turn of " .. activePlayerColor)
+            UI.setAttribute("skipButton", "textColor", "#EAE5DE")
+            UI.show("skipTurn")
+            UI.setAttribute("skipTurn", "visibility", "Host|Black")
+        end, function()
+            return HAND_INFO[activePlayerColor].owner ~= HAND_INFO[getNextPlayerColor({currentPlayerColor = activePlayerColor})].owner
+        end)
+    Wait.condition(
+        function()
+            UI.hide("skipTurn")
+            Wait.stop(nextPlayerConditionID)
+        end, function()
+            return Player[HAND_INFO[activePlayerColor].owner].seated
+        end, 60)
+end
+
 function UI_passTurn(clickerPlayer)
     if clickerPlayer == nil then
         return
     end
-    --TODO replace playerZone
-    local activeZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[Global.getVar("activePlayerColor")])
-    if (activeZone.getVar("owner_color") == clickerPlayer.color) then
+
+    if (HAND_INFO[Global.getVar("activePlayerColor")].owner == clickerPlayer.color) then
         passTurn(getNextPlayerColor())
     end
 end
@@ -252,34 +276,16 @@ end
 --Player Events
 function onPlayerChangeColor(playerColor)
     local activePlayerColor = Global.getVar("activePlayerColor")
-    if Global.call("hasGameStarted") and Global.getTable("PLAYER")[activePlayerColor] then
-        --TODO replace playerZone
+    if TURN_SYSTEM_STARTED and Global.getTable("PLAYER")[activePlayerColor] then
         local activeZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[activePlayerColor])
-
-        if not activeZone or not activeZone.getVar("active") or not Player[activeZone.getVar("owner_color")].seated then
-
-            local nextPlayerConditionID = Wait.condition(
-                function()
-                    UI.setAttribute("skipButton", "text", "Skip Turn of " .. activePlayerColor)
-                    UI.setAttribute("skipButton", "textColor", "#EAE5DE")
-                    UI.show("skipTurn")
-                    UI.setAttribute("skipTurn", "visibility", "Host")
-                end, function()
-                    return activePlayerColor ~= getNextPlayerColor({currentPlayerColor = activePlayerColor})
-                end)
-            Wait.condition(
-                function()
-                    UI.hide("skipTurn")
-                    Wait.stop(nextPlayerConditionID)
-                end, function()
-                    return Player[HAND_INFO[activePlayerColor].owner].seated
-                end, 60)
+        if not Player[HAND_INFO[activePlayerColor].owner].seated or not activeZone or not activeZone.getVar("active") then
+            showSkipTurn(activePlayerColor)
         end
     end
 end
 
 function onPlayerConnect(player)
-    player.color = "Grey"
+    player.changeColor("Grey")
 end
 
 -- Hand Zone Events
@@ -301,21 +307,30 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------- Turn System ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-
---TODO check if start player is active player, else search for new start player
 function startTurnSystem(params)
     if not params or not params.startPlayerColor then
         return
     end
 
-    Turns.enable = false
-
-    TURN_SYSTEM_STARTED = true
+    if not Player[HAND_INFO[params.startPlayerColor].owner].seated then
+        local nextActivePlayerColor = getNextPlayerColor({currentPlayerColor = params.startPlayerColor})
+        if nextActivePlayerColor == params.startPlayerColor then
+            Global.call("printWarning", {text = Global.getTable("PRINT_COLOR_SPECIAL").RED .. "Fatal Error: No Player selected a playable color. Please reload!!!" .. "[-]"})
+            return
+        else
+            Global.call("printWarning", {text = "Start player missing?! Wtf are you guys doing?"})
+            showSkipTurn(params.startPlayerColor)
+        end
+    end
 
     START_PLAYER_COLOR = params.startPlayerColor
+    TURN_SYSTEM_STARTED = true
+    Turns.enable = false
+    Global.setVar("activePlayerColor", START_PLAYER_COLOR)
 
     callTurnStartEvents(nil, START_PLAYER_COLOR)
 
+    --Play turn passing / game start sound
     local sfxCube = getObjectFromGUID(Global.getVar("SFX_CUBE_GUID"))
     if sfxCube then
         sfxCube.call("playSwoosh")
@@ -340,7 +355,6 @@ function startTurnSystem(params)
         Player[HAND_INFO[START_PLAYER_COLOR].owner].lookAt(cameraParams)
     end
 
-    Global.setVar("activePlayerColor", START_PLAYER_COLOR)
     UI.setAttribute("passButton", "image", "turn_" .. string.lower(START_PLAYER_COLOR))
     UI.setAttribute("passButton", "textColor", Global.getTable("PLAYER_COLOR_HEX")[START_PLAYER_COLOR])
     UI.show("turnInfo")
@@ -395,11 +409,8 @@ function activateTurnEvent(params)
     end
 end
 
+--If no player has selected a playable color, it returns the active player color
 function getNextPlayerColor(params)
-    if not TURN_SYSTEM_STARTED then
-        return START_PLAYER_COLOR
-    end
-
     local currentPlayerColor = Global.getVar("activePlayerColor")
     if params and params.currentPlayerColor then
         currentPlayerColor = params.currentPlayerColor
@@ -410,11 +421,10 @@ function getNextPlayerColor(params)
 
     while(not nextPlayerFound) do
         nextColor = TURN_ORDER[nextColor]
-        --TODO replace playerZone
-        activeZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[nextColor])
-        if activeZone and activeZone.getVar("active") then
-            local zoneOwner = Player[activeZone.getVar("owner_color")]
-            if zoneOwner and zoneOwner.seated then
+        local nextZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[nextColor])
+        if nextZone and nextZone.getVar("active") then
+            local nextHandOwner = Player[HAND_INFO[nextColor].owner]
+            if nextHandOwner and nextHandOwner.seated then
                 nextPlayerFound = true
             end
         end
