@@ -1476,7 +1476,7 @@ function placeMinion(params)
                 if playerColor == nil then
                     playerColor = Global.getVar("activePlayerColor")
                 end
-                local handInfo = Global.getTable("HAND_INFO")[playerColor]
+                local handInfo = Global.call("getHandInfo")[playerColor]
                 params.card.deal(1, handInfo.owner, handInfo.index)
                 return
             end
@@ -2502,7 +2502,7 @@ end
 local function deleteObjectsAndSnappoints()
     deletePlayerStuff()
 
-    local handInfos = Global.getTable("HAND_INFO")
+    local handInfos = Global.call("getHandInfo")
     for originalOwnerColor, guid in pairs(handZones) do
         local handZone = getObjectFromGUID(guid)
         if handZone then
@@ -2514,7 +2514,7 @@ local function deleteObjectsAndSnappoints()
         end
     end
 
-    local spyInfos = Global.getTable("SPY_INFO")
+    local spyInfos = Global.call("getSpyInfo")
     for originalOwnerColor, guid in pairs(spyZones) do
         local spyZone = getObjectFromGUID(guid)
         if spyZone then

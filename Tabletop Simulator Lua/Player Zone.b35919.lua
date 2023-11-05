@@ -481,7 +481,7 @@ function placeObjectInZone(params)
     if position ~= nil then
         placeObject(params.object, position)
     elseif params.object.use_hands then
-        local handInfo = Global.getTable("HAND_INFO")[zone_color]
+        local handInfo = Global.call("getHandInfo")[zone_color]
         params.object.deal(1, handInfo.owner, handInfo.index)
     else
         return false
@@ -521,7 +521,7 @@ function placeMultipleObjectsInZone(params)
     -- Not enough free fields for cards
     for index = nextObjectIndex , maxObjectIndex do
         if params.object.use_hands then
-            local handInfo = Global.getTable("HAND_INFO")[zone_color]
+            local handInfo = Global.call("getHandInfo")[zone_color]
             params.objects[index].deal(1, handInfo.owner, handInfo.index)
         end
     end

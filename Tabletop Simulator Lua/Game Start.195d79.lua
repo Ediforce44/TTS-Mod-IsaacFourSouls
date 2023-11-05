@@ -1,6 +1,8 @@
 CHARACTER_MANAGER_GUID = "bc6e13"
 CHALLENGE_MODULE_GUID = "b7ad0b"
 
+TURN_MODULE = nil
+
 PLAYER_COLORS = {'Red', 'Blue', 'Yellow', 'Green'}
 
 START_BUTTON_INDEX = 1
@@ -277,7 +279,7 @@ local function setupOfficialContent(gameLanguage, startPlayerColor)
                     if zone and zone.getVar("active") then
                         zone.call("healPlayer")
 
-                        local handInfo = Global.getTable("HAND_INFO")[zoneColor]
+                        local handInfo = Global.call("getHandInfo")[zoneColor]
                         BUILT_DECKS.LOOT.deal(3, handInfo.owner, handInfo.index)
                     end
                 end
@@ -337,6 +339,8 @@ local function setupChallengeStart(gameLanguage)
 end
 
 function onLoad()
+    TURN_MODULE = getObjectFromGUID(Global.getVar("TURN_MODULE_GUID"))
+
     self.createButton({
     click_function = "onStart",
     label = "Start",
@@ -391,8 +395,8 @@ function onStart()
         return
     end
 
-    local isAllReady = isAllPlayersSelectCharacter()
-    if isAllReady == false or isAllReady == nil then
+    local everyPlayerReady = everyPlayerSelectedCharacter()
+    if everyPlayerReady == false or everyPlayerReady == nil then
         Global.call("printWarning", {text = "Each player must take a character before start."})
         return
     end
@@ -453,7 +457,7 @@ function onStart()
         end, officialSetupDelay)
 end
 
-function isAllPlayersSelectCharacter()
+function everyPlayerSelectedCharacter()
     local characterPlacerObj = getObjectFromGUID(CHARACTER_MANAGER_GUID)
     local playersSpawnedCharacterObj = characterPlacerObj.getTable("playersSpawnedCharacterObj")
     local selectedCharacterCount = 0
@@ -463,23 +467,7 @@ function isAllPlayersSelectCharacter()
         end
     end
 
-    return (selectedCharacterCount == getPlayersCount()) and (selectedCharacterCount ~= 0)
-end
-
-function getPlayersCount()
-    local counter = 0
-    for _, zoneGuid in pairs(Global.getTable("ZONE_GUID_PLAYER")) do
-        local playerZone = getObjectFromGUID(zoneGuid)
-        if playerZone then
-            local ownerColor = playerZone.getVar("owner_color")
-            for _, player in pairs(Player.getPlayers()) do
-                if ownerColor == player.color then
-                    counter = counter + 1
-                end
-            end
-        end
-    end
-    return counter
+    return (selectedCharacterCount == TURN_MODULE.call("getPlayerCount") and (selectedCharacterCount ~= 0))
 end
 
 function checkAndShuffleDecks()

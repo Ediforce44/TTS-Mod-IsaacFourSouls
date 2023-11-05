@@ -80,7 +80,7 @@ function click_function_LootButton(zone, color, alt_click)
     local lootButton = getLootButton()
     if lootButton.label == LOOT_BUTTON_STATES.LOOT then
         local activePlayerColor = Global.getVar("activePlayerColor")
-        if Global.getTable("HAND_INFO")[activePlayerColor].owner == color then
+        if Global.call("getHandInfo")[activePlayerColor].owner == color then
             dealLootCard({playerColor = activePlayerColor})
         else
             dealLootCard({playerColor = color})
@@ -97,7 +97,7 @@ function dealLootCard(params)
     end
     for _, obj in pairs(self.getObjects()) do
         if obj.type == "Deck" or obj.type == "Card" then
-            local handInfo = Global.getTable("HAND_INFO")[params.playerColor]
+            local handInfo = Global.call("getHandInfo")[params.playerColor]
             obj.deal(1, handInfo.owner, handInfo.index)
             return true
         end

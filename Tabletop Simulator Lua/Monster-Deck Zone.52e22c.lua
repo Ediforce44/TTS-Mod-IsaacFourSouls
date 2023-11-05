@@ -438,7 +438,7 @@ local function payOutLoot(playerColor, amount)
         Global.call("printWarning", {text = "Can't find the Loot deck."
             .. " Place the Loot deck on its starting position."})
     end
-    local handInfo = Global.getTable("HAND_INFO")[playerColor]
+    local handInfo = Global.call("getHandInfo")[playerColor]
     lootDeck.deal(amount, handInfo.owner, handInfo.index)
 end
 

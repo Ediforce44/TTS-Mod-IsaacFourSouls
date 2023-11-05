@@ -46,7 +46,7 @@ end
 
 function update()
     if not owner_color then return end
-    local handInfo = Global.getTable("HAND_INFO")[owner_color]
+    local handInfo = Global.call("getHandInfo")[owner_color]
     objectCount = #Player[handInfo.owner].getHandObjects(handInfo.index)
     self.editButton({index=0, label=objectCount, tooltip=objectCount .. "\nLoot"})
 end
@@ -98,7 +98,7 @@ function setOwner(color)
     local objectCount = 0
     if color then
         owner_color = color
-        local handInfo = Global.getTable("HAND_INFO")[owner_color]
+        local handInfo = Global.call("getHandInfo")[owner_color]
         objectCount = #Player[handInfo.owner].getHandObjects(handInfo.index)
         --self.setName(objectCount)
     else

@@ -118,7 +118,7 @@ local function createButtonsOnCustomButton(buttonObj, buttonType)
 end
 
 function onLoad(saved_data)
-    for color, infoTable in pairs(Global.getTable("SPY_INFO")) do
+    for color, infoTable in pairs(Global.call("getSpyInfo")) do
         SPY_ZONE_GUIDS[color] = infoTable.guid
     end
 
@@ -132,11 +132,11 @@ function onLoad(saved_data)
         end
     end
 
-    local playerOwner = Global.getTable("PLAYER_OWNER")
+    local playerOwner = Global.call("getHandInfo")
     for guid, infoTable in pairs(cardsInSpyZones) do
         local card = getObjectFromGUID(guid)
         if card then
-            card.UI.setXml(getButtonXML(playerOwner[infoTable.owner], card))
+            card.UI.setXml(getButtonXML(playerOwner[infoTable.owner].owner, card))
         end
     end
 
@@ -165,9 +165,11 @@ end
 local function click_SpyButton(buttonObj, playerColor, alt_click, deck, cardType)
     local buttonObjGuid = buttonObj.getGUID()
     local zoneColor = nil
+    local spyInfo = Global.call("getSpyInfo")
+
     for ownerColor, guid in pairs(CUSTOM_BUTTONS[cardType]) do
         if guid == buttonObjGuid then
-            if Global.getTable("PLAYER_OWNER")[ownerColor] ~= playerColor then
+            if spyInfo[ownerColor].owner ~= playerColor then
                 return
             else
                 zoneColor = ownerColor
@@ -182,7 +184,6 @@ local function click_SpyButton(buttonObj, playerColor, alt_click, deck, cardType
         tempBlockButton(buttonObj)
         buttonAnimation(buttonObj)
         if deck then
-            local spyInfo = Global.getTable("SPY_INFO")
             for i = 1, 5 do
                 local card = deck.takeObject()
                 if card == nil then
@@ -201,7 +202,6 @@ local function click_SpyButton(buttonObj, playerColor, alt_click, deck, cardType
                 card = deck
             end
             card.addTag("SPY")
-            local spyInfo = Global.getTable("SPY_INFO")
             card.deal(1, spyInfo[zoneColor].owner, spyInfo[zoneColor].index)
             card.interactable = false
             Wait.time(function() card.interactable = true end, 0.5)
@@ -510,9 +510,10 @@ function click_ShowPlayerOptions(buttonObj, playerColor, _)
 
     local buttonObjGuid = buttonObj.getGUID()
     local zoneColor = nil
+    local handInfo = Global.call("getHandInfo")
     for ownerColor, guid in pairs(CUSTOM_BUTTONS.OPTION) do
         if guid == buttonObjGuid then
-            if Global.getTable("PLAYER_OWNER")[ownerColor] ~= playerColor then
+            if handInfo[ownerColor].owner ~= playerColor then
                 return
             else
                 zoneColor = ownerColor
@@ -653,7 +654,7 @@ function UI_optionsDone(clickPlayer, _, id)
         Wait.frames(function()
             obj.addTag("SPY")
             enableHandZoneForce(obj)
-            local spyInfo = Global.getTable("SPY_INFO")
+            local spyInfo = Global.call("getSpyInfo")
             obj.deal(1, spyInfo[zoneColor].owner, spyInfo[zoneColor].index)
             Wait.time(function() unhideCard(obj) end, 1)
         end)

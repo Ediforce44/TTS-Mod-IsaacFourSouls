@@ -219,7 +219,7 @@ function placeObjectInZone(params)
     if position ~= nil then
         placeObject(params.object, position)
     else
-        local handInfo = Global.getTable("HAND_INFO")[owner_color]
+        local handInfo = Global.call("getHandInfo")[owner_color]
         params.object.deal(1, handInfo.owner, handInfo.index)
     end
 end

@@ -45,8 +45,12 @@ local function enterDebugMode()
     UI.show("debug")
 end
 ------------------------------------------------------------------------------------------------------------------------
+local turn_module = nil
+
 
 function onLoad(saved_data)         --EbyE44
+    turn_module = getObjectFromGUID(TURN_MODULE_GUID)
+
     setPositionTables()
 
     if saved_data ~= "" then
@@ -73,15 +77,6 @@ function onLoad(saved_data)         --EbyE44
         if loaded_data.customCounterBagGuids then
             COUNTER_BAGS_GUID = loaded_data.customCounterBagGuids
         end
-        if loaded_data.handInfo then
-            HAND_INFO = loaded_data.handInfo
-        end
-        if loaded_data.spyInfo then
-            SPY_INFO = loaded_data.spyInfo
-        end
-        if loaded_data.playerOwner then
-            PLAYER_OWNER = loaded_data.playerOwner
-        end
     end
     if not hasGameStarted() then
         UI.show("config")
@@ -98,8 +93,7 @@ end
 function onSave()                   --EbyE44
     return JSON.encode({activePlayerColor = activePlayerColor, startPlayerColor = startPlayerColor
         , playerSettings = PLAYER_SETTINGS, minionZoneInfo = ZONE_INFO_MINION, bossZoneGuid = ZONE_GUID_BOSS
-        , customCounterBagGuids = COUNTER_BAGS_GUID, handInfo = HAND_INFO, playerOwner = PLAYER_OWNER
-        , spyInfo = SPY_INFO})
+        , customCounterBagGuids = COUNTER_BAGS_GUID})
 end
 
 HEART_TOKENS_GUID = {
@@ -110,70 +104,28 @@ HEART_TOKENS_GUID = {
 }
 
 function startTurnSystem()
-    Turns.enable = false
-    activePlayerColor = startPlayerColor
-
-    local turnModule = getObjectFromGUID(TURN_MODULE_GUID)
-    if turnModule then
-        turnModule.call("startTurnSystem", {startPlayerColor = activePlayerColor})
+    if turn_module then
+        turn_module.call("startTurnSystem", {startPlayerColor = startPlayerColor})
     end
 end
 
+----------------------------------------------- Deprecated ------------------------------------------------------------
+-- USE SAME FUNCTIONS ON TURN MODULE DIRECTLY --
 function addTurnEvent(params)
-    if (params == nil) or (params.call_function == nil) then
-        return nil
-    end
-
-    local turnModule = getObjectFromGUID(TURN_MODULE_GUID)
-    if turnModule then
-        return turnModule.call("addTurnEvent", params)
+    if turn_module then
+        return turn_module.call("addTurnEvent", params)
     end
 end
 
 function deactivateTurnEvent(params)
-    if params.eventID then
-        local turnModule = getObjectFromGUID(TURN_MODULE_GUID)
-        if turnModule then
-            turnModule.call("deactivateTurnEvent", params)
-        end
+    if turn_module then
+        turn_module.call("deactivateTurnEvent", params)
     end
 end
 
 function activateTurnEvent(params)
-    if params.eventID then
-        local turnModule = getObjectFromGUID(TURN_MODULE_GUID)
-        if turnModule then
-            turnModule.call("activateTurnEvent", params)
-        end
-    end
-end
-
-local function getHandInfo(zone)
-    for handOwner, handInfo in pairs(HAND_INFO) do
-        if zone.guid == handInfo.guid then
-            return handInfo
-        end
-    end
-
-    for handOwner, spyInfo in pairs(SPY_INFO) do
-        if zone.guid == spyInfo.guid then
-            return HAND_INFO[handOwner]
-        end
-    end
-    return nil
-end
-
-function onObjectEnterZone(zone, object)
-    if (zone.type == "Hand") and HAND_INFO[activePlayerColor] then
-        if (zone.guid ~= HAND_INFO[activePlayerColor].guid) and (zone.guid ~= SPY_INFO[activePlayerColor].guid) then
-            local handInfo = getHandInfo(zone)
-            if handInfo and handInfo.hotseat then
-                if not object.is_face_down then
-                    object.flip()
-                    return
-                end
-            end
-        end
+    if turn_module then
+        turn_module.call("activateTurnEvent", params)
     end
 end
 
@@ -328,44 +280,32 @@ local function placeExpansions()
     end
 end
 
-local function setPlayerZoneOwners(ownerTable, hotSeat)
-    for playerID, colorTable  in pairs(ownerTable) do
+local function configurePlayerZoneOwners(ownerTable, hotSeat)
+    local handZoneTable = {}
+    local handZoneHotSeat = {}
+    for playerID, colorTable in pairs(ownerTable) do
         local ownerColor = colorTable[1]
-        local nextHandIndex = HAND_INFO[ownerColor].index
-        if #colorTable > 1 then
-            for _, color in ipairs(colorTable) do
-                HAND_INFO[color].hotseat = hotSeat[playerID]
-            end
-        end
-        for _, color in ipairs(colorTable) do
+        handZoneHotSeat[ownerColor] = hotSeat[playerID]
+        handZoneTable[ownerColor] = colorTable
+    end
+
+    for ownerColor, colorTable in pairs(handZoneTable) do
+        for _, color in pairs(colorTable) do
             local playerZone = getObjectFromGUID(ZONE_GUID_PLAYER[color])
             if playerZone then
                 playerZone.setVar("owner_color", ownerColor)
-                local handZone = getObjectFromGUID(HAND_INFO[color].guid)
-                handZone.setValue(ownerColor)
-                HAND_INFO[color].index = nextHandIndex
-                HAND_INFO[color].owner = ownerColor
-                PLAYER_OWNER[color] = ownerColor
-                nextHandIndex = nextHandIndex + 1
             end
         end
-        for _, color in ipairs(colorTable) do
-            local spyZone = getObjectFromGUID(SPY_INFO[color].guid)
-            spyZone.setValue(ownerColor)
-            SPY_INFO[color].index = nextHandIndex
-            SPY_INFO[color].owner = ownerColor
-            nextHandIndex = nextHandIndex + 1
-        end
-        for _, color in ipairs(colorTable) do
-            if color ~= ownerColor then
-                Player[color].changeColor("Grey")
-            end
-        end
+    end
+
+    turn_module.call("joinHandZones", {combinedHandZones = handZoneTable, hotSeat = handZoneHotSeat})
+
+    for ownerColor, colorTable  in pairs(handZoneTable) do
         local playerString = ""
         for _, color in pairs(colorTable) do
             playerString = playerString .. " - " .. getPlayerString({playerColor = color}) .. "[-]"
         end
-        broadcastToAll(getPlayerString({playerColor = ownerColor}) .. "[-] plays " .. playerString)
+        broadcastToAll(getPlayerString({playerColor = ownerColor}) .. "[-] plays " .. playerString .. " -")
     end
 end
 
@@ -572,7 +512,7 @@ function UI_configurationDone(player)
 
     UI.hide("config")
 
-    local deckBuilder = getObjectFromGUID("69a80e")
+    local deckBuilder = getObjectFromGUID(DECK_BUILDER_MODULE_GUID)
     if not confTable.ROOMS_ACTIVE then
         deckBuilder.call("disableDeck", {deckID = "ROOM"})
     end
@@ -588,8 +528,8 @@ function UI_configurationDone(player)
                 ownerTable[playerID] = {color}
             end
         end
-
-        setPlayerZoneOwners(ownerTable, confTable.HOT_SEAT)
+        
+        configurePlayerZoneOwners(ownerTable, confTable.HOT_SEAT)
     end
     if confTable.CHALLENGES_ACTIVE then
         getObjectFromGUID(ZONE_GUID_DECK.MONSTER).call("activateChallengeMode")
@@ -826,7 +766,7 @@ function pickColor(falseInput)
     if (not falseInput) then
         broadcastToAll(getPlayerString({playerColor = nextEntry.picker}) .. " picks a Player Color for "
             .. nextEntry.reason .. ".")
-        broadcastToColor("Please pick a Player Color for " .. nextEntry.reason .. ".", PLAYER_OWNER[nextEntry.picker])
+        broadcastToColor("Please pick a Player Color for " .. nextEntry.reason .. ".", getHandInfo()[nextEntry.picker].owner)
     end
 end
 
@@ -854,7 +794,7 @@ function UI_colorPicked(player, _, idValue)
         local picked = getPlayerString({playerColor = pickedColor})
         local zone = getObjectFromGUID(ZONE_GUID_PLAYER[pickedColor])
         if not (zone and zone.getVar("active")) then
-            broadcastToColor(picked .. " is not a active Player!", PLAYER_OWNER[player.color])
+            broadcastToColor(picked .. " is not a active Player!", getHandInfo()[player.color].owner)
             pickColor(true)
             return
         end
@@ -913,27 +853,6 @@ PLAYER = {
     Blue = "Blue",
     Green = "Green",
     Yellow = "Yellow"
-}
-
-PLAYER_OWNER = {
-    Red = "Red",
-    Blue = "Blue",
-    Green = "Green",
-    Yellow = "Yellow"
-}
-
-HAND_INFO = {
-    Red = {index = 1, owner = "Red", guid = "b000d8", hotseat = false},
-    Blue = {index = 1, owner = "Blue", guid = "29f1f6", hotseat = false},
-    Green = {index = 1, owner = "Green", guid = "489f26", hotseat = false},
-    Yellow = {index = 1, owner = "Yellow", guid = "e2e2d1", hotseat = false}
-}
-
-SPY_INFO = {
-    Red = {index = 2, owner = "Red", guid = "744c42"},
-    Blue = {index = 2, owner = "Blue", guid = "32da79"},
-    Green = {index = 2, owner = "Green", guid = "69a792"},
-    Yellow = {index = 2, owner = "Yellow", guid = "ad4169"}
 }
 
 REAL_PLAYER_COLOR = {
@@ -1090,6 +1009,7 @@ COUNTER_BAGS_GUID = {
 SFX_CUBE_GUID = "ca024f"
 
 TURN_MODULE_GUID = "87e737"
+DECK_BUILDER_MODULE_GUID = "69a80e"
 
 --Initialised in onLoad
 DISCARD_PILE_POSITION = {
@@ -1178,6 +1098,14 @@ function setNewStartPlayer(params)
     return false
 end
 
+function getHandInfo()
+    return turn_module.getTable("HAND_INFO")
+end
+
+function getSpyInfo()
+    return turn_module.getTable("SPY_INFO")
+end
+
 function getPlayerString(params)
     local playerString = "'Player not Found'"
     if params.playerColor ~= nil then
@@ -1215,7 +1143,7 @@ function isPlayerAuthorized(params)
     end
 
     -- Interacting player has to be the owner or has to be an admin
-    return (ownerColor == playerColor) or Player[playerColor].admin or (PLAYER_OWNER[ownerColor] == playerColor)
+    return (ownerColor == playerColor) or Player[playerColor].admin or (getHandInfo()[ownerColor].owner == playerColor)
 end
 
 function deactivateCharacter(params)
@@ -1248,8 +1176,9 @@ function changeRewardingMode(params)
         else
             msg = msg .."turned OFF !!!"
         end
-        if Player[PLAYER_OWNER[color]].seated then
-            broadcastToColor(msg, PLAYER_OWNER[color])
+        local ownerColor = getHandInfo()[color].owner
+        if Player[ownerColor].seated then
+            broadcastToColor(msg, ownerColor)
         end
     end
 end
@@ -1424,7 +1353,7 @@ function dealLootToColor(params)
     end
     local amount = params.amount or 1
     local lootDeck = getLootDeck()
-    local handInfo = HAND_INFO[params.color]
+    local handInfo = turn_module.getTable("HAND_INFO")[params.color]
     lootDeck.deal(amount, handInfo.owner, handInfo.index)
 end
 

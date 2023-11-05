@@ -264,7 +264,7 @@ function click_function_PurchaseButton(zone, color, alt_click)
             zone.call("activateZone")
         elseif purchaseButton.label == PURCHASE_BUTTON_STATES.PURCHASE then
             local playerColor = color
-            if Global.getTable("HAND_INFO")[activePlayerColor].owner == color then
+            if Global.call("getHandInfo")[activePlayerColor].owner == color then
                 playerColor = activePlayerColor
             end
             if purchaseShopItem(zone, playerColor) then
@@ -285,7 +285,7 @@ function click_function_ShopButton(zone, color, alt_click)
     if activePlayerColor == color or Player[color].admin then
         local shopButton = getShopButton()
         if shopButton.label == SHOP_BUTTON_STATES.PURCHASE then
-            if Global.getTable("HAND_INFO")[activePlayerColor].owner == color then
+            if Global.call("getHandInfo")[activePlayerColor].owner == color then
                 purchaseShopDeckItem(activePlayerColor)
             else
                 purchaseShopDeckItem(color)
