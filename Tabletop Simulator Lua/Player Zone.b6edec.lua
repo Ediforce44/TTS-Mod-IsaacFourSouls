@@ -1,6 +1,6 @@
 -- Written by Ediforce44
-owner_color = "Yellow"
-zone_color = "Yellow"
+owner_color = "Purple"
+zone_color = "Purple"
 active = false
 
 HP_GUIDS = Global.getTable("HEART_TOKENS_GUID")[zone_color]
@@ -25,13 +25,13 @@ local timerCounterID = 1
 
 local function calculateZoneEdges()
     local scale = self.getScale()
-    local xOffset = scale.x / 2
-    local zOffset = scale.z / 2
+    local xOffset = scale.z / 2
+    local zOffset = scale.x / 2
     local position = self.getPosition()
-    ZONE_EDGES[1] = {x = position.x + xOffset, z = position.z - zOffset}
-    ZONE_EDGES[2] = {x = position.x + xOffset, z = position.z + zOffset}
-    ZONE_EDGES[3] = {x = position.x - xOffset, z = position.z - zOffset}
-    ZONE_EDGES[4] = {x = position.x - xOffset, z = position.z + zOffset}
+    ZONE_EDGES[1] = {x = position.x + xOffset, z = position.z + zOffset}
+    ZONE_EDGES[2] = {x = position.x - xOffset, z = position.z + zOffset}
+    ZONE_EDGES[3] = {x = position.x + xOffset, z = position.z - zOffset}
+    ZONE_EDGES[4] = {x = position.x - xOffset, z = position.z - zOffset}
 end
 
 local function getTimerParameters(blockedIndex)
@@ -110,14 +110,14 @@ local function getRowAndColumnFromPosition(position)
     local marginOffset = 0.7
     local row = 0
     for r = 1, ROW_MAX do
-        if math.abs(position.z - indexTable[r][1].position.z) < marginOffset then
+        if math.abs(position.x - indexTable[r][1].position.x) < marginOffset then
             row = r
             break
         end
     end
     if row > 0 then
         for c = 1, INDICES_PER_ROW do
-            if math.abs(position.x - indexTable[row][c].position.x) < marginOffset then
+            if math.abs(position.z - indexTable[row][c].position.z) < marginOffset then
                 column = c
                 break
             end
@@ -127,17 +127,17 @@ local function getRowAndColumnFromPosition(position)
 end
 
 local function insertIndexEntry(newEntry)
-    local ROW_WIDTH = math.abs(((ZONE_EDGES[2].z - ZONE_EDGES[1].z) / 2))
+    local ROW_WIDTH = math.abs(((ZONE_EDGES[2].x - ZONE_EDGES[1].x) / 2))
     local row = 0
     for r = 1, ROW_MAX do
-        if newEntry.position.z > (ZONE_EDGES[2].z - (ROW_WIDTH * r)) then
+        if newEntry.position.x < (ZONE_EDGES[2].x + (ROW_WIDTH * r)) then
             row = r
             break
         end
     end
     local newIndex = #indexTable[row] + 1
     for index , entry in pairs(indexTable[row]) do
-        if entry.position.x < newEntry.position.x then
+        if entry.position.z < newEntry.position.z then
             newIndex = index
             break
         end
@@ -149,14 +149,14 @@ local function insertIndexEntryCounter(newEntry)
     local marginOffset = 0.7
     local newIndex = #indexTableCounter + 1
     for index , entry in ipairs(indexTableCounter) do
-        if math.abs(entry.position.z - newEntry.position.z) < marginOffset then
-            if entry.position.x < newEntry.position.x then
+        if math.abs(entry.position.x - newEntry.position.x) < marginOffset then
+            if entry.position.z < newEntry.position.z then
                 newIndex = index
             else
                 newIndex = index + 1
             end
             break
-        elseif entry.position.z > newEntry.position.z then
+        elseif entry.position.x < newEntry.position.x then
             newIndex = 1
             break
         end
@@ -173,8 +173,8 @@ local function initIndexTables()
     local position = {}
     for _ , snapPoint in pairs(Global.getSnapPoints()) do
         position = snapPoint.position
-        if position.x < ZONE_EDGES[1].x and position.z > ZONE_EDGES[1].z then
-            if position.x > ZONE_EDGES[4].x and position.z < ZONE_EDGES[4].z then
+        if position.x < ZONE_EDGES[1].x and position.z < ZONE_EDGES[1].z then
+            if position.x > ZONE_EDGES[4].x and position.z > ZONE_EDGES[4].z then
                 if #snapPoint.tags == 0 then
                     insertIndexEntry({free = true, position = position:setAt('y', 5), tempBlocked = false})
                 elseif snapPoint.tags[1] == "COUNTER" then
@@ -197,7 +197,7 @@ local function calculateIndexTable()
     resetIndexTable()
     for _ , object in pairs(self.getObjects()) do
         if object.tag == "Card" or object.tag == "Deck" then
-            local rowColumnTable = getRowAndColumnFromPosition(object.getPosition())
+            local rowColumnTable= getRowAndColumnFromPosition(object.getPosition())
             indexTable[rowColumnTable.row][rowColumnTable.column].free = false
         end
     end
@@ -266,7 +266,7 @@ local function getNextFreePosition(startingIndex)
 end
 
 local function placeObject(object, position)
-    object.setRotationSmooth({0, 0, 0}, false)
+    object.setRotationSmooth({0, 270, 0}, false)
     object.setPositionSmooth(position, false)
 end
 
@@ -354,7 +354,7 @@ end
 function activateCharacter()
     for _ , obj in pairs(self.getObjects()) do
         if obj.hasTag("Character") then
-            obj.setRotationSmooth({0, 0, 0}, false)
+            obj.setRotationSmooth({0, 270, 0}, false)
         end
     end
 end
@@ -362,7 +362,7 @@ end
 function deactivateCharacter()
     for _ , obj in pairs(self.getObjects()) do
         if obj.hasTag("Character") then
-            obj.setRotationSmooth({0, 90, 0}, false)
+            obj.setRotationSmooth({0, 0, 0}, false)
         end
     end
 end
@@ -372,7 +372,7 @@ function activateActiveItems()
         if cardInfo.ActiveItem then
             local card = getObjectFromGUID(cardGuid)
             if card then
-                card.setRotationSmooth({0, 0, 0}, false)
+                card.setRotationSmooth({0, 270, 0}, false)
             end
         end
     end
@@ -383,7 +383,7 @@ function deactivateActiveItems()
         if cardInfo.ActiveItem then
             local card = getObjectFromGUID(cardGuid)
             if card then
-                card.setRotationSmooth({0, 90, 0}, false)
+                card.setRotationSmooth({0, 0, 0}, false)
             end
         end
     end
@@ -547,7 +547,7 @@ function placeCounterInZone(params)
                 local position = getPositionForCounter(params.counter.getTags()[2])
                 if position then
                     params.counter.setPositionSmooth(position, false)
-                    params.counter.setRotationSmooth(Vector(0, 180, 0))
+                    params.counter.setRotationSmooth(Vector(0, 270, 0))
                 end
             end
         else
@@ -561,7 +561,7 @@ function placeCounterInZone(params)
             for i = 1, amount do
                 local counter = counterBag.takeObject()
                 counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
-                counter.setRotationSmooth(Vector(0, 180, 0))
+                counter.setRotationSmooth(Vector(0, 270, 0))
             end
         end
     end

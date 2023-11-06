@@ -207,7 +207,7 @@ end
 
 function placeObjectInZone(params)
     if params.object == nil then
-        Global.call("printWarning", {text = "Wrong parameters in Soul Zone function 'placeObjectInZone()'."})
+        Global.call("printWarning", {text = "Wrong parameters in soul zone function 'placeObjectInZone()'."})
         return
     end
     local position = nil

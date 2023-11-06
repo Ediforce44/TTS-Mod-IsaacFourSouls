@@ -1,130 +1,82 @@
 --- Edited by Ediforce44
-TURN_BUTTON_COUNT = 8
-TURN_BUTTON_INDICES = {
-    Red = {1,5},
-    Blue = {2,6},
-    Green = {3,7},
-    Yellow = {4,8}
-}
-TURN_INPUT_INDICES = {1, 2}
+TURN_BUTTON_COUNT = 0
+TURN_BUTTON_INDICES = {}
+TURN_INPUT_INDICES = {}
 
 local secondTurnButtonsDisabled = false
 
-local function createTurnButtons()
-    self.createButton({
-      click_function = "onClickRedBtn",
-      function_owner = self,
-      label          = "",
-      position       = {-1.2, 1, 5},
-      width          = 300,
-      height         = 300,
-      color          = {0.85, 0.1, 0.09},
-      tooltip        = "Red Turn"
-    })
-    self.createButton({
-      click_function = "onClickBlueBtn",
-      function_owner = self,
-      label          = "",
-      position       = {-0.4, 1, 5},
-      width          = 300,
-      height         = 300,
-      color          = {0.12, 0.53, 1},
-      tooltip        = "Blue Turn"
-    })
-    self.createButton({
-      click_function = "onClickGreenBtn",
-      function_owner = self,
-      label          = "",
-      position       = {0.4, 1, 5},
-      width          = 300,
-      height         = 300,
-      color          = {0.19, 0.7, 0.16},
-      tooltip        = "Green Turn"
-    })
-    self.createButton({
-      click_function = "onClickYellowBtn",
-      function_owner = self,
-      label          = "",
-      position       = {1.2, 1, 5},
-      width          = 300,
-      height         = 300,
-      color          = {0.9, 0.89, 0.17},
-      tooltip        = "Yellow Turn"
-    })
+local startPositions = {Vector(-2, 1, 9.4), Vector(1.6, 1, -9.4)}
 
-    self.createButton({
-      click_function = "onClickRedBtn",
-      function_owner = self,
-      label          = "",
-      position       = {1.2, 1, -5},
-      rotation       = {0, 180, 0},
-      width          = 300,
-      height         = 300,
-      color          = {0.85, 0.1, 0.09},
-      tooltip        = "Red Turn"
-    })
-    self.createButton({
-      click_function = "onClickBlueBtn",
-      function_owner = self,
-      label          = "",
-      position       = {0.4, 1, -5},
-      rotation       = {0, 180, 0},
-      width          = 300,
-      height         = 300,
-      color          = {0.12, 0.53, 1},
-      tooltip        = "Blue Turn"
-    })
-    self.createButton({
-      click_function = "onClickGreenBtn",
-      function_owner = self,
-      label          = "",
-      position       = {-0.4, 1, -5},
-      rotation       = {0, 180, 0},
-      width          = 300,
-      height         = 300,
-      color          = {0.19, 0.7, 0.16},
-      tooltip        = "Green Turn"
-    })
-    self.createButton({
-      click_function = "onClickYellowBtn",
-      function_owner = self,
-      label          = "",
-      position       = {-1.2, 1, -5},
-      rotation       = {0, 180, 0},
-      width          = 300,
-      height         = 300,
-      color          = {0.9, 0.89, 0.17},
-      tooltip        = "Yellow Turn"
-    })
+local function createTurnInputs()
     self.createInput({
+        value = "Starting Turn",
         input_function = "dummy",
         function_owner = self,
-        value          = "Starting Turn",
-        alignment      = 3,
-        position       = {0, 1, 4.50},
-        rotation       = {0, 0, 0},
-        width          = 2000,
-        height         = 400,
-        font_size      = 250,
-        color          = {0, 0, 0, 0},
-        font_color     = {1, 1, 1, 100}
-    })
+        alignment = 3,
+        position = startPositions[1] + Vector(2, 0, -0.7),
+        rotation = {0, 0, 0},
+        width = 1500,
+        height = 320,
+        font_size = 250,
+        scale = {x=1, y=1, z=1},
+        font_color = {1, 1, 1, 100},
+        color = {0,0,0,0}
+        })
+    TURN_INPUT_INDICES[1] = 1
     self.createInput({
+        value = "Starting Turn",
         input_function = "dummy",
         function_owner = self,
-        value          = "Starting Turn",
-        alignment      = 3,
-        position       = {0, 1, -4.50},
-        rotation       = {0, 180, 0},
-        width          = 2000,
-        height         = 400,
-        font_size      = 250,
-        color          = {0, 0, 0, 0},
-        font_color     = {1, 1, 1, 100}
-    })
+        alignment = 3,
+        position = startPositions[2] + Vector(-2, 0, 0.7),
+        rotation = {0, 180, 0},
+        width = 1500,
+        height = 320,
+        font_size = 250,
+        scale = {x=1, y=1, z=1},
+        font_color = {1, 1, 1, 100},
+        color = {0,0,0,0}
+        })
+    TURN_INPUT_INDICES[2] = 2
+end
+
+local function createTurnButtons()
+    local buttonCount = 0
+    for _, playerColor in pairs(Global.getTable("PLAYER")) do
+        TURN_BUTTON_INDICES[playerColor] = {}
+        self.createButton({
+            click_function = "onClick" .. playerColor .. "Btn",
+            function_owner = self,
+            label          = "",
+            position       = startPositions[1],
+            width          = 300,
+            height         = 300,
+            color          = Global.getTable("REAL_PLAYER_COLOR_RGB")[playerColor],
+            tooltip        = playerColor .. "'s Turn"
+        })
+        buttonCount = buttonCount + 1
+        TURN_BUTTON_INDICES[playerColor][1] = buttonCount
+        self.createButton({
+            click_function = "onClick" .. playerColor .. "Btn",
+            function_owner = self,
+            label          = "",
+            position       = startPositions[2],
+            rotation       = {0, 180, 0},
+            width          = 300,
+            height         = 300,
+            color          = Global.getTable("REAL_PLAYER_COLOR_RGB")[playerColor],
+            tooltip        = playerColor .. "'s Turn"
+        })
+        buttonCount = buttonCount + 1
+        TURN_BUTTON_INDICES[playerColor][2] = buttonCount
+        startPositions[1][1] = startPositions[1][1] + 0.8
+        startPositions[2][1] = startPositions[2][1] - 0.8
+    end
+    TOTAL_BUTTON_COUNT = buttonCount
 end
 
 function onLoad(saved_data)
+  createTurnInputs()
   createTurnButtons()
 
   if saved_data ~= "" then
@@ -175,6 +127,22 @@ end
 
 function onClickYellowBtn()
   Global.call("setNewStartPlayer", {playerColor = "Yellow"})
+end
+
+function onClickWhiteBtn()
+  Global.call("setNewStartPlayer", {playerColor = "White"})
+end
+
+function onClickPurpleBtn()
+  Global.call("setNewStartPlayer", {playerColor = "Purple"})
+end
+
+function onClickTealBtn()
+  Global.call("setNewStartPlayer", {playerColor = "Teal"})
+end
+
+function onClickPinkBtn()
+  Global.call("setNewStartPlayer", {playerColor = "Pink"})
 end
 
 function selectStartTurn(params)

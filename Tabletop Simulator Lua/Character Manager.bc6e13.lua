@@ -5,15 +5,19 @@ characterPull = {}
 waitForSelectCharacters = {
   Red = {},
   Blue = {},
+  Purple = {},
   Green = {},
-  Yellow = {}
+  Yellow = {},
+  White = {}
 }
 
 playersSpawnedCharacterObj = {
   Red = {},
   Blue = {},
+  Purple = {},
   Green = {},
-  Yellow = {}
+  Yellow = {},
+  White = {}
 }
 
 originalPositionTable = {}

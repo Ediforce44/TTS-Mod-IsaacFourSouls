@@ -1,5 +1,5 @@
 -- Written by Ediforce44
-owner_color = "Yellow"
+owner_color = "White"
 
 ZONE_EDGES = {
     {x=0, z=0},      -- 1 = |""  ""| = 3
@@ -15,13 +15,13 @@ indexTable = {}
 
 local function calculateZoneEdges()
     local scale = self.getScale()
-    local xOffset = scale.x / 2
-    local zOffset = scale.z / 2
+    local xOffset = scale.z / 2
+    local zOffset = scale.x / 2
     local position = self.getPosition()
-    ZONE_EDGES[1] = {x = position.x + xOffset, z = position.z - zOffset}
-    ZONE_EDGES[2] = {x = position.x + xOffset, z = position.z + zOffset}
-    ZONE_EDGES[3] = {x = position.x - xOffset, z = position.z - zOffset}
-    ZONE_EDGES[4] = {x = position.x - xOffset, z = position.z + zOffset}
+    ZONE_EDGES[1] = {x = position.x - xOffset, z = position.z - zOffset}
+    ZONE_EDGES[2] = {x = position.x + xOffset, z = position.z - zOffset}
+    ZONE_EDGES[3] = {x = position.x - xOffset, z = position.z + zOffset}
+    ZONE_EDGES[4] = {x = position.x + xOffset, z = position.z + zOffset}
 end
 
 local function getTimerParameters(blockedIndex)
@@ -49,7 +49,7 @@ end
 local function insertIndexEntry(newEntry)
     local newIndex = #indexTable + 1
     for index , entry in pairs(indexTable) do
-        if entry.position.x < newEntry.position.x then
+        if entry.position.z > newEntry.position.z then
             newIndex = index
             break
         end
@@ -63,8 +63,8 @@ local function initIndexTable()
     local position = {}
     for _ , snapPoint in pairs(Global.getSnapPoints()) do
         position = snapPoint.position
-        if position.x < ZONE_EDGES[1].x and position.z > ZONE_EDGES[1].z then
-            if position.x > ZONE_EDGES[4].x and position.z < ZONE_EDGES[4].z then
+        if position.x > ZONE_EDGES[1].x and position.z > ZONE_EDGES[1].z then
+            if position.x < ZONE_EDGES[4].x and position.z < ZONE_EDGES[4].z then
                 insertIndexEntry({free = true, position = position, tempBlocked = false})
             end
         end
@@ -84,7 +84,7 @@ local function calculateIndexTable()
         if object.tag == "Card" or object.tag == "Deck" then
             local objectPosition = object.getPosition()
             for index = 1, INDEX_MAX do
-                if math.abs(objectPosition.x - indexTable[index].position.x) < marginOffset then
+                if math.abs(objectPosition.z - indexTable[index].position.z) < marginOffset then
                     indexTable[index].free = false
                 end
             end
@@ -116,7 +116,7 @@ local function getNextFreePosition()
 end
 
 local function placeObject(object, position)
-    object.setRotationSmooth({0, 90, 0}, false)
+    object.setRotationSmooth({0, 180, 0}, false)
     object.setPositionSmooth(position, false)
 end
 

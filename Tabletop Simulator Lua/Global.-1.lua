@@ -31,12 +31,12 @@ local function setPositionTables()
     DECK_POSITION.LOOT = getObjectFromGUID(ZONE_GUID_DECK.LOOT).getPosition():setAt('y', 5)
     DECK_POSITION.MONSTER = getObjectFromGUID(ZONE_GUID_DECK.MONSTER).getPosition():setAt('y', 5)
     DECK_POSITION.BONUS_SOUL = getObjectFromGUID(ZONE_GUID_DECK.BONUS_SOUL).getPosition():setAt('y', 5)
-    DECK_POSITION.MONSTER_SEP = Vector(41.73, 5, -11.51)
-    DECK_POSITION.LO_TREASURE = Vector(41.73, 5, 15.06)
-    DECK_POSITION.LO_LOOT = Vector(41.73, 5, 11.73)
-    DECK_POSITION.LO_MONSTER = Vector(41.73, 5, -14.84)
-    DECK_POSITION.LO_ROOM = Vector(47, 5, 6)
-    DECK_POSITION.LO_BONUS_SOUL = Vector(47, 5, 12)
+    DECK_POSITION.MONSTER_SEP = Vector(38.5, 5, 6.3)
+    DECK_POSITION.LO_TREASURE = Vector(86.4, 5, 24)
+    DECK_POSITION.LO_LOOT = Vector(91, 5, 24)
+    DECK_POSITION.LO_MONSTER = Vector(95.6, 5, 24)
+    DECK_POSITION.LO_ROOM = Vector(100.2, 5, 24)
+    DECK_POSITION.LO_BONUS_SOUL = Vector(104.8, 5, 24)
 
     DEAD_END_POSITION = getObjectFromGUID("ad2a86").getPosition()
 end
@@ -100,7 +100,9 @@ HEART_TOKENS_GUID = {
     Yellow = {"6d1f5d", "c02908", "3f81b7", "f8e991", "f825c2", "2a9dfc", "443adb"},
     Green = {"7023b1", "12326f", "c326f1", "f5d095", "7e882b", "66804c", "e24915"},
     Blue = {"8c24ed", "78f8e7", "c9f7b2", "4b26ea", "098303", "9e8aa0", "dbcc87"},
-    Red = {"975325", "bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"}
+    Red = {"975325", "bcabf3", "ca5135", "0a7171", "33bf0c", "159680", "c7837a"},
+    Purple = {"43ec51", "be7a8d", "5de961", "112a91", "9d12fc", "12172b", "fccccd"},
+    White = {"cc0d47", "d9d023", "92bf0c", "09e4bd", "6b5764", "7ea1d5", "38cb84"}
 }
 
 function startTurnSystem()
@@ -230,8 +232,8 @@ confTable = {
         CHARACTERS = 2,
         RATIOS = BUILDING_MODE_TO_RATIOS["BM_NORMAL"]
     },
-    MULTI_CHAR = {Red = 1, Blue = 2, Green = 3, Yellow = 4},
-    HOT_SEAT = {false, false, false, false},
+    MULTI_CHAR = {Red = 1, Blue = 2, Purple = 3, Green = 4, Yellow = 5, White = 6},
+    HOT_SEAT = {false, false, false, false, false, false},
     SPECIAL_DECKS = {},
     CUSTOM_RATIOS = STD_RATIOS
 }
@@ -265,7 +267,7 @@ local function placeChallenge()
 end
 
 local function placeExpansions()
-    local nextPosition = Vector(-42, 3, 4.5)
+    local nextPosition = Vector(-40, 3, 8.5)
     local allObjects = Global.getObjects()
     for expansionName, selected in pairs(confTable.EXPANSIONS) do
         if selected then
@@ -363,9 +365,9 @@ end
 
 function UI_setSeededChars(_, playerCount)
     if playerCount and tonumber(playerCount) then
-        if tonumber(playerCount) > 4 then
-            confTable.SEED_ARGS["CHARACTERS"] = 4
-            UI.setAttribute("confSeedPlayer", "text", "4")
+        if tonumber(playerCount) > 6 then
+            confTable.SEED_ARGS["CHARACTERS"] = 6
+            UI.setAttribute("confSeedPlayer", "text", "6")
         elseif tonumber(playerCount) < 2 then
             confTable.SEED_ARGS["CHARACTERS"] = 2
             UI.setAttribute("confSeedPlayer", "text", "2")
@@ -828,7 +830,9 @@ PLAYER_SETTINGS = {
     Yellow = {rewarding = true, deathDetection = false},
     Green = {rewarding = true, deathDetection = false},
     Blue = {rewarding = true, deathDetection = false},
-    Red = {rewarding = true, deathDetection = false}
+    Red = {rewarding = true, deathDetection = false},
+    Purple = {rewarding = true, deathDetection = false},
+    White = {rewarding = true, deathDetection = false}
 }
 
 CLICK_DELAY = 0.3
@@ -851,36 +855,46 @@ GAME_LANGUAGE = {
 PLAYER = {
     Red = "Red",
     Blue = "Blue",
+    Purple = "Purple",
     Green = "Green",
-    Yellow = "Yellow"
+    Yellow = "Yellow",
+    White = "White"
 }
 
 REAL_PLAYER_COLOR = {
     Yellow = "[E7E52C]",
     Green = "[2BB837]",
     Blue = "[1C79F8]",
-    Red = "[C60A00]"
+    Red = "[C60A00]",
+    Purple = "[7D00CB]",
+    White = "[E8E8E8]"
 }
 
 PLAYER_COLOR_HEX = {
     Red = "#C60A00",
     Blue = "#1C79F8",
     Green = "#33A92D",
-    Yellow = "#D3D626"
+    Yellow = "#D3D626",
+    Purple = "#7D00CB",
+    White = "#E8E8E8"
 }
 
 REAL_PLAYER_COLOR_RGB = {
-    Yellow = {231/255, 229/255, 44/255},
+    Yellow = {208/255, 228/255, 49/255},
     Green = {43/255, 184/255, 55/255},
     Blue = {28/255, 121/255, 248/255},
-    Red = {198/255, 10/255, 0/255}
+    Red = {198/255, 10/255, 0/255},
+    Purple = {126/255, 0, 204/255},
+    White = {232/255, 232/255, 232/255}
 }
 
 PRINT_COLOR_PLAYER = {
     YELLOW = REAL_PLAYER_COLOR["Yellow"],
     GREEN = REAL_PLAYER_COLOR["Green"],
     BLUE = REAL_PLAYER_COLOR["Blue"],
-    RED = REAL_PLAYER_COLOR["Red"]
+    RED = REAL_PLAYER_COLOR["Red"],
+    PURPLE = REAL_PLAYER_COLOR["Purple"],
+    WHITE = REAL_PLAYER_COLOR["White"]
 }
 
 PRINT_COLOR_SPECIAL = {
@@ -945,22 +959,28 @@ ZONE_GUID_MONSTER = {
 ZONE_GUID_PLAYER = {
     Red = "b35919",
     Blue = "60361f",
+    Purple = "b6edec",
     Green = "19df91",
-    Yellow = "bb01dd"
+    Yellow = "bb01dd",
+    White = "f37e50"
 }
 
 ZONE_GUID_PILL = {
     Yellow = "53dd4c",
     Green = "e3361a",
     Blue = "9af794",
-    Red = "d12e48"
+    Red = "d12e48",
+    Purple = "378c77",
+    White = "dd8046"
 }
 
 ZONE_GUID_SOUL = {
     Yellow = "92610d",
     Green = "f95f84",
     Blue = "c0bd67",
-    Red = "8515c8"
+    Red = "8515c8",
+    Purple = "30f5d3",
+    White = "5bb264"
 }
 
 ZONE_GUID_BONUSSOUL = {
@@ -977,14 +997,18 @@ COIN_COUNTER_GUID = {
     Yellow = "9d76db",
     Green = "c46653",
     Blue = "8edf63",
-    Red = "965140"
+    Red = "965140",
+    Purple = "9c2f48",
+    White = "76f80e"
 }
 
 SOUL_COUNTER_GUID = {
     Red = "98de07",
     Blue = "281235",
     Green = "4e958e",
-    Yellow = "d340e6"
+    Yellow = "d340e6",
+    Purple = "94c288",
+    White = "ef0a2b"
 }
 
 MONSTER_HP_COUNTER_GUID = {
@@ -1035,8 +1059,8 @@ DECK_POSITION = {
 
 DEAD_END_POSITION = {}
 
-CHALLENGE_LEFTOVERS_POSITION = Vector(46.8, 1.7, -6.5)
-EVEN_MORE_CHARS_POSITION = Vector(86, 1.7, 0)
+CHALLENGE_LEFTOVERS_POSITION = Vector(66, 1.7, 24)
+EVEN_MORE_CHARS_POSITION = Vector(119, 1.7, 0)
 
 function printWarning(params)
     if params.text == nil then

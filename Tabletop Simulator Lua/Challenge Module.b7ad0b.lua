@@ -3,13 +3,13 @@ BOARD_MANAGER_GUID = "bd69bd"
 CUSTOM_BUTTON_MODULE_GUID = "78c676"
 MONSTER_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").MONSTER
 
-CHALLENGE_BOARD_URL = "http://cloud-3.steamusercontent.com/ugc/2063259124650479201/DF7365CC91884C5BEA13B2756FD6A727DFD86838/"
-CHALLENGE_BOARD_EXPANDED_URL = "http://cloud-3.steamusercontent.com/ugc/2063259124650479326/E87EEC60F9054E0FF60B04806A38CF9FA48EF685/"
+CHALLENGE_BOARD_URL = "http://cloud-3.steamusercontent.com/ugc/2063259124650744923/617ECDFF0D85D7C5415441D666616BCCE76B23FE/"
+CHALLENGE_BOARD_EXPANDED_URL = "http://cloud-3.steamusercontent.com/ugc/2063259124650745077/3603EA3CBEF5B8CB5A69C34FF020364DB9910F88/"
 
 local isChallengeModeActive = false
 local isBoardExpanded = false
 
-local areaToDeleteEdges = {x1 =-45, z1 =18, x2 =38, z2 =5}
+local areaToDeleteEdges = {x1 =-43, z1 =22.22, x2 =42, z2 =9}
 
 local yellowPlayerStuff = {
     ZONE_SOUL = "92610d",
@@ -728,7 +728,7 @@ local function createPlayerResurrectButtons()
             click_function = "click_function_ResurrectButton_Red",
             function_owner = self,
             label          = RESURRECT_BUTTON_STATES.ADD_MINION,
-            position       = {7, 0, -2.8},
+            position       = {7, 0, -1.8},
             width          = 1400,
             height         = 360,
             font_size      = 240,
@@ -741,7 +741,7 @@ local function createPlayerResurrectButtons()
             click_function = "click_function_ResurrectButton_Blue",
             function_owner = self,
             label          = RESURRECT_BUTTON_STATES.ADD_MINION,
-            position       = {-7, 0, -2.8},
+            position       = {-7, 0, -1.8},
             width          = 1400,
             height         = 360,
             font_size      = 240,
@@ -750,6 +750,32 @@ local function createPlayerResurrectButtons()
             tooltip        = " - Left-Click: Add monster to Blue Minion Zone"
         })
         PLAYER_RESURRECT_BUTTON_INDICES["Blue"] = 2
+        self.createButton({
+            click_function = "click_function_ResurrectButton_Purple",
+            function_owner = self,
+            label          = RESURRECT_BUTTON_STATES.ADD_MINION,
+            position       = {-7, 0, -3.8},
+            width          = 1400,
+            height         = 360,
+            font_size      = 240,
+            color          = {0.35, 0, 0.7},
+            font_color     = {1, 1, 1},
+            tooltip        = " - Left-Click: Add monster to Blue Minion Zone"
+        })
+        PLAYER_RESURRECT_BUTTON_INDICES["Purple"] = 3
+        self.createButton({
+            click_function = "click_function_ResurrectButton_White",
+            function_owner = self,
+            label          = RESURRECT_BUTTON_STATES.ADD_MINION,
+            position       = {7, 0, -3.8},
+            width          = 1400,
+            height         = 360,
+            font_size      = 240,
+            color          = {0.5, 0.5, 0.5},
+            font_color     = {1, 1, 1},
+            tooltip        = " - Left-Click: Add monster to Blue Minion Zone"
+        })
+        PLAYER_RESURRECT_BUTTON_INDICES["White"] = 4
     end
 end
 
@@ -1517,6 +1543,16 @@ function callbackFunctionSelect_Blue(params)
     callbackFunctionSelect(params)
 end
 
+function callbackFunctionSelect_Purple(params)
+    params["zoneOwner"] = "Purple"
+    callbackFunctionSelect(params)
+end
+
+function callbackFunctionSelect_White(params)
+    params["zoneOwner"] = "White"
+    callbackFunctionSelect(params)
+end
+
 local function resurrectButtonClick(clickerColor, resurrectButtonIndex, resurrectButtonOwner)
     resurrectButtonOwner = resurrectButtonOwner or "Default"
     if Global.getVar("activePlayerColor") == clickerColor or Player[clickerColor].admin then
@@ -1586,6 +1622,17 @@ function click_function_ResurrectButton_Blue(_, color)
     resurrectButtonClick(color, PLAYER_RESURRECT_BUTTON_INDICES.Blue, "Blue")
 end
 
+function click_function_ResurrectButton_Purple(_, color)
+    resetResurrectButton(PLAYER_RESURRECT_BUTTON_INDICES.Purple)
+    deactivateResurrectButton(PLAYER_RESURRECT_BUTTON_INDICES.Purple)
+    resurrectButtonClick(color, PLAYER_RESURRECT_BUTTON_INDICES.Purple, "Purple")
+end
+
+function click_function_ResurrectButton_White(_, color)
+    resetResurrectButton(PLAYER_RESURRECT_BUTTON_INDICES.White)
+    deactivateResurrectButton(PLAYER_RESURRECT_BUTTON_INDICES.White)
+    resurrectButtonClick(color, PLAYER_RESURRECT_BUTTON_INDICES.White, "White")
+end
 ------------------------------------------------ Boss Zone -------------------------------------------------------------
 function updateAttributes(params)
     if params.HP == nil then
@@ -2302,25 +2349,25 @@ function click_function_SlotButton(_, color, alt_click)
 end
 ]]
 
-local BOSS_POS = Vector(-3.28, 1.5, 8.14)
+local BOSS_POS = Vector(0, 1.5, 12.75)
 local BOSS_COUNTER_OFFSET = 3.33
 local BOSS_CUSTOM_COUNTER_OFFSET = Vector(-1.7, 0, 0.3)
-local CRULE_POS = Vector(-3.28, 1.5, 14.8)
-local CCOUNTER_ONE_POS = Vector(3.75, 1.5, 14.3)
-local CCOUNTER_TWO_POS = Vector(-10.3, 1.5, 14.3)
+local CRULE_POS = Vector(0, 1.5, 19.47)
+local CCOUNTER_ONE_POS = Vector(7.02, 1.5, 18.95)
+local CCOUNTER_TWO_POS = Vector(-7.02, 1.5, 18.95)
 
-local MINION_POS_START = Vector(15.64, 1.5, 7.95)
+local MINION_POS_START = Vector(18.91, 1.5, 12.58)
 local MINION_POS_OFFSET_X = 3.33
-local MINION_POS_OFFSET_Z = 6.32
+local MINION_POS_OFFSET_Z = 6.36
 local MINION_POS_AMOUNT_PER_ROW = 7
 local MINION_COUNTER_OFFSET = 2.8
-local MINIONE_POS_START = Vector(-22.19, 1.5, 7.95)
+local MINIONE_POS_START = Vector(-18.91, 1.5, 12.58)
 
-local CSLOT_POS_START = Vector(8.68, 1.5, 7.95)
+local CSLOT_POS_START = Vector(11.96, 1.5, 12.58)
 local CSLOT_POS_OFFSET_X = MINION_POS_OFFSET_X
 local CSLOT_POS_OFFSET_Z = MINION_POS_OFFSET_Z
 local CSLOT_POS_AMOUNT_PER_ROW = 2
-local CSLOTE_POS_START = Vector(-15.25, 1.5, 7.95)
+local CSLOTE_POS_START = Vector(-11.96, 1.5, 12.58)
 
 local function getSnapPointsInArea(edgeTable)
     local snapPointsInArea = {}
@@ -2550,12 +2597,20 @@ local function deleteObjectsAndSnappoints()
     Global.setSnapPoints(newSnapPointList)
 end
 
+local function changeBoard(imageURL)
+    obj_surface = getObjectFromGUID("4ee1f2")
+    local customInfo = obj_surface.getCustomObject()
+    customInfo.diffuse = imageURL
+    obj_surface.setCustomObject(customInfo)
+    obj_surface = obj_surface.reload()
+end
+
 local function createExpansionButton()
     self.createButton({
         click_function = "click_function_expandChallengeZone",
         function_owner = self,
         label          = "Expand Challenge Zone",
-        position       = {57, 2.4, -12},
+        position       = {92.5, 1.31, -2.5},
         width          = 3200,
         height         = 500,
         font_size      = 300,
@@ -2566,7 +2621,7 @@ local function createExpansionButton()
 end
 
 local function createChallengeLayout()
-    getObjectFromGUID(BOARD_MANAGER_GUID).call("changeBoard", {url = CHALLENGE_BOARD_URL, name = "Challenge Board (by Ediforce44)"})
+    changeBoard(CHALLENGE_BOARD_URL)
     createSpecialSnapPoints()
     setupChallengeProps()
     createZones()
@@ -2628,7 +2683,7 @@ function click_function_expandChallengeZone(_, playerColor)
     end
     self.removeButton(0)
     isBoardExpanded = true
-    getObjectFromGUID(BOARD_MANAGER_GUID).call("changeBoard", {url = CHALLENGE_BOARD_EXPANDED_URL, name = "Challenge Board Expanded (by Ediforce44)"})
+    changeBoard(CHALLENGE_BOARD_EXPANDED_URL)
     setupMinionProps(MINIONE_POS_START, 2, MINION_POS_AMOUNT_PER_ROW, true)
     local newMinionZoneTable = createMinionZones(MINIONE_POS_START, 2, MINION_POS_AMOUNT_PER_ROW, true)
     Global.setTable("ZONE_INFO_MINION", newMinionZoneTable)
@@ -2726,18 +2781,24 @@ function expandChallengeZone()
 end
 
 function activatePlayerMinionZones(params)
-    local zonesPerPlayer = MINION_POS_AMOUNT_PER_ROW * 2
+    local zonesPerPlayer = MINION_POS_AMOUNT_PER_ROW
     if params and params.amountPerPlayer ~= nil then
         zonesPerPlayer = math.min(params.amountPerPlayer, zonesPerPlayer)
     end
     expandChallengeZone()
 
-    local playerMinionZoneGuids = {Red = {}, Blue = {}}
-    for i = (MINION_POS_AMOUNT_PER_ROW * 2) - (zonesPerPlayer - 1), MINION_POS_AMOUNT_PER_ROW * 2, 1 do
+    local playerMinionZoneGuids = {Red = {}, Blue = {}, Purple = {}, White = {}}
+    for i = (MINION_POS_AMOUNT_PER_ROW * 1) - (zonesPerPlayer - 1), MINION_POS_AMOUNT_PER_ROW * 1, 1 do
         table.insert(playerMinionZoneGuids.Red, i)
     end
-    for i = (MINION_POS_AMOUNT_PER_ROW * 4) - (zonesPerPlayer - 1), (MINION_POS_AMOUNT_PER_ROW * 4), 1 do
+    for i = (MINION_POS_AMOUNT_PER_ROW * 2) - (zonesPerPlayer - 1), MINION_POS_AMOUNT_PER_ROW * 2, 1 do
+        table.insert(playerMinionZoneGuids.White, i)
+    end
+    for i = (MINION_POS_AMOUNT_PER_ROW * 3) - (zonesPerPlayer - 1), (MINION_POS_AMOUNT_PER_ROW * 3), 1 do
         table.insert(playerMinionZoneGuids.Blue, i)
+    end
+    for i = (MINION_POS_AMOUNT_PER_ROW * 4) - (zonesPerPlayer - 1), MINION_POS_AMOUNT_PER_ROW * 4, 1 do
+        table.insert(playerMinionZoneGuids.Purple, i)
     end
     for _, indexID in pairs(playerMinionZoneGuids.Red) do
         local hpCounter = getObjectFromGUID(propTable.HP_COUNTER_MINION[indexID])
@@ -2749,6 +2810,18 @@ function activatePlayerMinionZones(params)
         local hpCounter = getObjectFromGUID(propTable.HP_COUNTER_MINION[indexID])
         if hpCounter then
             hpCounter.setColorTint({0, 0, 1})
+        end
+    end
+    for _, indexID in pairs(playerMinionZoneGuids.Purple) do
+        local hpCounter = getObjectFromGUID(propTable.HP_COUNTER_MINION[indexID])
+        if hpCounter then
+            hpCounter.setColorTint({0.7, 0, 1})
+        end
+    end
+    for _, indexID in pairs(playerMinionZoneGuids.White) do
+        local hpCounter = getObjectFromGUID(propTable.HP_COUNTER_MINION[indexID])
+        if hpCounter then
+            hpCounter.setColorTint({1, 1, 1})
         end
     end
 

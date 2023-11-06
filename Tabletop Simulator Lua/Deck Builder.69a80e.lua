@@ -301,10 +301,10 @@ local DECK_INFOS = {
         DISABLED            = false,
         RATIOS              = DECK_BONUS_SOUL_RATIOS,
         DECK_POSITION       = nil,
-        DECK_ROTATION       = Vector(0, 270, 180),
+        DECK_ROTATION       = Vector(0, 180, 180),
         DECK_NAME           = "Bonus Soul Deck",
         LEFTOVERS_POSITION  = nil,
-        LEFTOVERS_ROTATION  = Vector(180, 0, 0),
+        LEFTOVERS_ROTATION  = Vector(0, 270, 180),
         LEFTOVERS_NAME      = "Leftover Bonus Soul Cards"
     },
     MONSTER_SEP = {

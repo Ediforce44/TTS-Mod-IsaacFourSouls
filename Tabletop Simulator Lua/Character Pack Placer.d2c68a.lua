@@ -1,11 +1,11 @@
-START_POS = Vector(50.38, 1.02, 14.24)
-NEXT_BASE_POS = Vector(66.2, 20.75, -0.2)
-BASE_SCALE = {1, 1, 4}
+START_POS = Vector(65.88, 1.02, 17.18)
+NEXT_BASE_POS = Vector(87.9, 20.75, -0.3)
+BASE_SCALE = {1.25, 1, 6.3}
 
 X_MARGIN = 3.21
 Z_MARGIN = 4.91
-MAX_ROW_SIZE = 11
-MAX_Z_COORDINATE = -17
+MAX_ROW_SIZE = 16
+MAX_Z_COORDINATE = -21
 CHARACTER_MANAGER_GUID = "bc6e13"
 TABLE_BASE_GUID = "f5c4fe"
 EVEN_MORE_CHARS_BAG_GUID = nil
@@ -449,7 +449,7 @@ end
 
 function selectCharacter(_, playerClickerColor)
   if PLAYER_COLORS[playerClickerColor] == nil then
-    Global.call("printWarningTP", {text = "Invalid player color. No position points for this color. Available colors: [DA1917]Red[-], [1E87FF]Blue[-], [E6E42B]Yellow[-], [30B22A]Green[-]", color =  playerClickerColor})
+    Global.call("printWarningTP", {text = "Invalid player color. No position points for this color. Available colors: Red, Blue, Purple, Green, Yellow and White", color =  playerClickerColor})
     return
   end
 

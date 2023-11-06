@@ -48,7 +48,7 @@
     active="false"
     class="isaacBackground"
     height="180"
-    width="210"
+    width="300"
     rectAlignment="UpperCenter"
     offsetXY="450 -50"
     allowDragging="true"
@@ -61,8 +61,10 @@
             spacing="5">
             <Button color="#C60A00"  id="Red"  class="colorButton"></Button>
             <Button color="#1C79F8"  id="Blue"  class="colorButton"></Button>
+            <Button color="#7D00CB" id="Purple" class="colorButton"></Button>
             <Button color="#2BB837"  id="Green"  class="colorButton"></Button>
             <Button color="#D0E431" id="Yellow" class="colorButton"></Button>
+            <Button color="#E8E8E8" id="White" class="colorButton"></Button>
         </HorizontalLayout>
         <Button class="isaacColor colorButton" id="random" preferredWidth="150" minHeight="35" text="Random" fontSize="20" fontStyle="bold"></Button>
         <Button class="isaacColor" id="cancel" preferredWidth="150" minHeight="35" text="Cancel" fontSize="20" fontStyle="bold" onClick="UI_cancelPick"></Button>
@@ -474,8 +476,8 @@
 <Panel
     id="multiCharSettings"
     active="false"
-    height="460"
-    width="500"
+    height="550"
+    width="550"
     rectAlignment="UpperCenter"
     offsetXY="600 -80"
     showAnimation="FadeIn"
@@ -492,56 +494,86 @@
                 <Text class="isaacColor">The Green and Yellow Player-Zones don't exist in Challenge Mode!</Text>
             </VerticalLayout>
         </Panel>
-        <Panel class="isaacBackground" preferredHeight="260" childAlignment="UpperCenter">
+        <Panel class="isaacBackground" preferredHeight="350" childAlignment="UpperCenter">
             <VerticalLayout childForceExpandHeight="true" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
                 <TableLayout
                     cellBackgroundColor="rgba(0, 0, 0, 0)"
-                    columnWidths="75 65 65 65 65 50"
-                    preferredWidth="380"
-                    preferredHeight="240">
+                    columnWidths="70 65 65 65 65 65 65 50"
+                    preferredWidth="510"
+                    preferredHeight="340">
                     <Row preferredHeight="40">
                         <Cell></Cell>
                         <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">Red</Text></Cell>
                         <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">Blue</Text></Cell>
+                        <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">Purple</Text></Cell>
                         <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">Green</Text></Cell>
                         <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">Yellow</Text></Cell>
+                        <Cell><Text class="isaacColor" fontSize="15" fontStyle="Bold">White</Text></Cell>
                     </Row>
-                    <Row preferredHeight="200">
-                        <Cell><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                    <Row preferredHeight="300">
+                        <Cell><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="60 30" childFourceExpandWidth="false" spacing="2">
                             <Text class="isaacColor" id="Player_1" fontSize="15" fontStyle="Bold">Player 1</Text>
                             <Text class="isaacColor" id="Player_2" fontSize="15" fontStyle="Bold">Player 2</Text>
                             <Text class="isaacColor" id="Player_3" fontSize="15" fontStyle="Bold">Player 3</Text>
                             <Text class="isaacColor" id="Player_4" fontSize="15" fontStyle="Bold">Player 4</Text>
+                            <Text class="isaacColor" id="Player_5" fontSize="15" fontStyle="Bold">Player 5</Text>
+                            <Text class="isaacColor" id="Player_6" fontSize="15" fontStyle="Bold">Player 6</Text>
                         </GridLayout></Cell>
-                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="60 30" childFourceExpandWidth="false" spacing="2">
                             <Toggle isOn="true" class="isaacColor multiChar" id="Red_1"></Toggle>
                             <Toggle class="isaacColor multiChar" id="Red_2"></Toggle>
                             <Toggle class="isaacColor multiChar" id="Red_3"></Toggle>
                             <Toggle class="isaacColor multiChar" id="Red_4"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Red_5"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Red_6"></Toggle>
                         </GridLayout></ToggleGroup></Cell>
-                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="60 30" childFourceExpandWidth="false" spacing="2">
                             <Toggle class="isaacColor multiChar" id="Blue_1"></Toggle>
                             <Toggle isOn="true" class="isaacColor multiChar" id="Blue_2"></Toggle>
                             <Toggle class="isaacColor multiChar" id="Blue_3"></Toggle>
                             <Toggle class="isaacColor multiChar" id="Blue_4"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Blue_5"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Blue_6"></Toggle>
                         </GridLayout></ToggleGroup></Cell>
-                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="60 30" childFourceExpandWidth="false" spacing="2">
+                            <Toggle class="isaacColor multiChar" id="Purple_1"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Purple_2"></Toggle>
+                            <Toggle isOn="true" class="isaacColor multiChar" id="Purple_3"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Purple_4"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Purple_5"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Purple_6"></Toggle>
+                        </GridLayout></ToggleGroup></Cell>
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="60 30" childFourceExpandWidth="false" spacing="2">
                             <Toggle class="isaacColor multiChar" id="Green_1"></Toggle>
                             <Toggle class="isaacColor multiChar" id="Green_2"></Toggle>
-                            <Toggle isOn="true" class="isaacColor multiChar" id="Green_3"></Toggle>
-                            <Toggle class="isaacColor multiChar" id="Green_4"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Green_3"></Toggle>
+                            <Toggle isOn="true" class="isaacColor multiChar" id="Green_4"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Green_5"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Green_6"></Toggle>
                         </GridLayout></ToggleGroup></Cell>
-                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="70 30" childFourceExpandWidth="false" spacing="2">
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="60 30" childFourceExpandWidth="false" spacing="2">
                             <Toggle class="isaacColor multiChar" id="Yellow_1"></Toggle>
                             <Toggle class="isaacColor multiChar" id="Yellow_2"></Toggle>
                             <Toggle class="isaacColor multiChar" id="Yellow_3"></Toggle>
-                            <Toggle isOn="true" class="isaacColor multiChar" id="Yellow_4"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Yellow_4"></Toggle>
+                            <Toggle isOn="true" class="isaacColor multiChar" id="Yellow_5"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="Yellow_6"></Toggle>
+                        </GridLayout></ToggleGroup></Cell>
+                        <Cell><ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="60 30" childFourceExpandWidth="false" spacing="2">
+                            <Toggle class="isaacColor multiChar" id="White_1"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="White_2"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="White_3"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="White_4"></Toggle>
+                            <Toggle class="isaacColor multiChar" id="White_5"></Toggle>
+                            <Toggle isOn="true" class="isaacColor multiChar" id="White_6"></Toggle>
                         </GridLayout></ToggleGroup></Cell>
                         <Cell><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="24 24" childAlignment="UpperCenter" padding="0 0 3 0" childFourceExpandHight="false" spacing="8">
                             <Button id="HS_1" icon="hot_seat" class="isaacColor hotSeat"></Button>
                             <Button id="HS_2" icon="hot_seat" class="isaacColor hotSeat"></Button>
                             <Button id="HS_3" icon="hot_seat" class="isaacColor hotSeat"></Button>
                             <Button id="HS_4" icon="hot_seat" class="isaacColor hotSeat"></Button>
+                            <Button id="HS_5" icon="hot_seat" class="isaacColor hotSeat"></Button>
+                            <Button id="HS_6" icon="hot_seat" class="isaacColor hotSeat"></Button>
                         </GridLayout></Cell>
                     </Row>
                 </TableLayout>
@@ -827,6 +859,76 @@
 </Panel>
 
 <Panel
+    id="options_Purple"
+    active="false"
+    height="600"
+    width="500"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.3"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="Purple">
+    <VerticalLayout>
+        <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
+                <Text class="isaacColor">Change your personal Player-Options, then press 'Done'!</Text>
+                <Text class="isaacColor">This options will only affect you and your own player zone!</Text>
+            </VerticalLayout>
+        </Panel>
+        <Panel class="isaacBackground" preferredHeight="400">
+            <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
+                <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Turn Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="Purple_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Start</Toggle>
+                        <Toggle class="isaacColor" id="Purple_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Looting at Turn Start</Toggle>
+                        <Toggle isOn="true" class="isaacColor" id="Purple_AutoActivation" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoActivation">Item Activation at Start</Toggle>
+                        <Toggle isOn="true" class="isaacColor" id="Purple_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Healing at Turn End</Toggle>
+                    </VerticalLayout>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">General Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Purple_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle class="isaacColor" id="Purple_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Toggle class="isaacColor" interactable="false" id="Purple_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
+                        <Toggle class="isaacColor" interactable="false" id="Purple_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                    </VerticalLayout>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Graphics of Buttons</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Purple_DARK" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Dark</Toggle>
+                        <Toggle class="isaacColor" id="Purple_LIGHT" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Light</Toggle>
+                        <Toggle class="isaacColor" id="Purple_FANCY" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Fancy</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Spy-Zone position</Text>
+                        <Toggle isOn="true" class="isaacColor" id="Purple_SIDE" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">Next to Hand-Zone</Toggle>
+                        <Toggle class="isaacColor" id="Purple_FRONT" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">In front of Hand-Zone</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                </GridLayout>
+                <Button
+                    id="Purple_OpitionsDone"
+                    minHeight="40"
+                    preferredWidth="400"
+                    alignment="LowerCenter"
+                    text="Done" fontSize="30"
+                    onClick="78c676/UI_optionsDone"
+                    class="isaacColor"
+                    textColor="black"
+                    fontStyle="Bold">
+                </Button>
+            </VerticalLayout>
+        </Panel>
+    </VerticalLayout>
+</Panel>
+
+<Panel
     id="options_Green"
     active="false"
     height="600"
@@ -952,6 +1054,76 @@
                 </GridLayout>
                 <Button
                     id="Yellow_OpitionsDone"
+                    minHeight="40"
+                    preferredWidth="400"
+                    alignment="LowerCenter"
+                    text="Done" fontSize="30"
+                    onClick="78c676/UI_optionsDone"
+                    class="isaacColor"
+                    textColor="black"
+                    fontStyle="Bold">
+                </Button>
+            </VerticalLayout>
+        </Panel>
+    </VerticalLayout>
+</Panel>
+
+<Panel
+    id="options_White"
+    active="false"
+    height="600"
+    width="500"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.3"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="White">
+    <VerticalLayout>
+        <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
+                <Text class="isaacColor">Change your personal Player-Options, then press 'Done'!</Text>
+                <Text class="isaacColor">This options will only affect you and your own player zone!</Text>
+            </VerticalLayout>
+        </Panel>
+        <Panel class="isaacBackground" preferredHeight="400">
+            <VerticalLayout childForceExpandHeight="false" childForceExpandWidth="false" childAlignment="UpperCenter" padding="40 40 20 20">
+                <GridLayout childAlignment="UpperCenter" constraint="FixedColumnCount" constraintCount="2" cellSize="200 150">
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Turn Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" interactable="true" id="White_CAMERA_MOVE" preferredHeight="25" onValueChanged="78c676/UI_toggleCameraMovement">Move Camera at Start</Toggle>
+                        <Toggle class="isaacColor" id="White_AutoLoot" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLoot">Looting at Turn Start</Toggle>
+                        <Toggle isOn="true" class="isaacColor" id="White_AutoActivation" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoActivation">Item Activation at Start</Toggle>
+                        <Toggle isOn="true" class="isaacColor" id="White_AutoHealing" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoHealing">Healing at Turn End</Toggle>
+                    </VerticalLayout>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">General Automations</Text>
+                        <Toggle isOn="true" class="isaacColor" id="White_AutoRewarding" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoRewarding">Auto-Rewarding</Toggle>
+                        <Toggle class="isaacColor" id="White_DeathDetection" preferredHeight="25" onValueChanged="78c676/UI_toggleDeathDetection">Death-Detection</Toggle>
+                        <Toggle class="isaacColor" interactable="false" id="White_LOOT_ZONE" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoLootZone">Auto-Loot Zone</Toggle>
+                        <Toggle class="isaacColor" interactable="false" id="White_SHOP_PAY" preferredHeight="25" onValueChanged="78c676/UI_toggleAutoShopPay">Auto-Shop-Pay</Toggle>
+                    </VerticalLayout>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Graphics of Buttons</Text>
+                        <Toggle isOn="true" class="isaacColor" id="White_DARK" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Dark</Toggle>
+                        <Toggle class="isaacColor" id="White_LIGHT" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Light</Toggle>
+                        <Toggle class="isaacColor" id="White_FANCY" preferredHeight="25" onValueChanged="78c676/UI_selectButtonTheme">Fancy</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                    <ToggleGroup>
+                    <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false">
+                        <Text class="isaacColor" fontSize="20" minHeight="30" fontStyle="bold">Spy-Zone position</Text>
+                        <Toggle isOn="true" class="isaacColor" id="White_SIDE" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">Next to Hand-Zone</Toggle>
+                        <Toggle class="isaacColor" id="White_FRONT" preferredHeight="25" onValueChanged="78c676/UI_selectSpyZonePosition">In front of Hand-Zone</Toggle>
+                    </VerticalLayout>
+                    </ToggleGroup>
+                </GridLayout>
+                <Button
+                    id="White_OpitionsDone"
                     minHeight="40"
                     preferredWidth="400"
                     alignment="LowerCenter"

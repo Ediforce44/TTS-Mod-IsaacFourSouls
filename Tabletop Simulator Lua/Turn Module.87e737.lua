@@ -12,22 +12,28 @@ ON_TURN_EVENTS = {
 TURN_SETTINGS = {
     Red = {camera = true, looting = false, playerHealing = true, itemActivation = true},
     Blue = {camera = true, looting = false, playerHealing = true, itemActivation = true},
+    Purple = {camera = true, looting = false, playerHealing = true, itemActivation = true},
     Green = {camera = true, looting = false, playerHealing = true, itemActivation = true},
-    Yellow = {camera = true, looting = false, playerHealing = true, itemActivation = true}
+    Yellow = {camera = true, looting = false, playerHealing = true, itemActivation = true},
+    White = {camera = true, looting = false, playerHealing = true, itemActivation = true}
 }
 
 TURN_ORDER = {
     Red = "Blue",
-    Blue = "Green",
+    Blue = "Purple",
+    Purple = "Green",
     Green = "Yellow",
-    Yellow = "Red"
+    Yellow = "White",
+    White = "Red"
 }
 
 PLAYER_ZONE_OVERLAY_GUID = {
     Red = "956a87",
     Blue = "690e90",
+    Purple = "543cb9",
     Green = "2d3a54",
-    Yellow = "0342ed"
+    Yellow = "0342ed",
+    White = "b5ca96"
 }
 
 TURN_SYSTEM_STARTED = false
@@ -38,14 +44,18 @@ HAND_INFO = {
     Red = {index = 1, owner = "Red", guid = "b000d8", hotseat = false},
     Blue = {index = 1, owner = "Blue", guid = "29f1f6", hotseat = false},
     Green = {index = 1, owner = "Green", guid = "489f26", hotseat = false},
-    Yellow = {index = 1, owner = "Yellow", guid = "e2e2d1", hotseat = false}
+    Yellow = {index = 1, owner = "Yellow", guid = "e2e2d1", hotseat = false},
+    Purple = {index = 1, owner = "Purple", guid = "afb137", hotseat = false},
+    White = {index = 1, owner = "White", guid = "97c837", hotseat = false}
 }
 
 SPY_INFO = {
     Red = {index = 2, owner = "Red", guid = "744c42"},
     Blue = {index = 2, owner = "Blue", guid = "32da79"},
     Green = {index = 2, owner = "Green", guid = "69a792"},
-    Yellow = {index = 2, owner = "Yellow", guid = "ad4169"}
+    Yellow = {index = 2, owner = "Yellow", guid = "ad4169"},
+    Purple = {index = 2, owner = "Purple", guid = "70aec4"},
+    White = {index = 2, owner = "White", guid = "208c20"}
 }
 
 function onLoad(saved_data)

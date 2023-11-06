@@ -6,11 +6,11 @@ local DECK_BUILDER_GUID = "69a80e"
 local FLEX_TABLE_CONTROL_GUID = "bd69bd"
 
 CUSTOM_BUTTONS = {
-    ROOM = {Red = "9db50a", Blue = "7bd88f", Green = "a20779", Yellow = "262f7e"},
-    LOOT = {Red = "95e43d", Blue = "b49d51", Green = "627744", Yellow = "e6381f"},
-    TREASURE = {Red = "7e0fae", Blue = "3871f8", Green = "5dda66", Yellow = "d6f240"},
-    MONSTER = {Red = "ec14c2", Blue = "ed7b2b", Green = "95994e", Yellow = "af1aec"},
-    OPTION = {Red = "ef5484", Blue = "be3671", Green = "9cd565", Yellow = "50938c"}
+    ROOM = {Red = "9db50a", Blue = "7bd88f", Purple = "ede923", Green = "a20779", Yellow = "262f7e", White = "77eb19"},
+    LOOT = {Red = "95e43d", Blue = "b49d51", Purple = "4b5f8b", Green = "627744", Yellow = "e6381f", White = "8f8fed"},
+    TREASURE = {Red = "7e0fae", Blue = "3871f8", Purple = "688b59", Green = "5dda66", Yellow = "d6f240", White = "dd76fe"},
+    MONSTER = {Red = "ec14c2", Blue = "ed7b2b", Purple = "7491b6", Green = "95994e", Yellow = "af1aec", White = "f63be7"},
+    OPTION = {Red = "ef5484", Blue = "be3671", Purple = "7342ae", Green = "9cd565", Yellow = "50938c", White = "76f600"}
 }
 
 local LINK_BUTTONS = {
@@ -20,15 +20,17 @@ local LINK_BUTTONS = {
 }
 
 local GENERAL_BUTTONS = {
-    MUTE = "d625a5",
-    DECKBUILDING = "e16ce7",
-    TABLE_CHANGE = "a58e57"
+    MUTE = "ea4e1c",
+    DECKBUILDING = "e16ce7"
 }
 
 local CUSTOM_BUTTON_THEME = {
-    DARK = {state = 1, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Green = {0, 0, 180}, Yellow = {0, 0, 180}}},
-    LIGHT = {state = 2, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Green = {0, 0, 180}, Yellow = {0, 0, 180}}},
-    FANCY = {state = 2, rotation = {Red = {0, 180, 0}, Blue = {0, 180, 0}, Green = {0, 0, 0}, Yellow = {0, 0, 0}}}
+    DARK = {state = 1, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Purple = {0, 270, 180}
+        , Green = {0, 0, 180}, Yellow = {0, 0, 180}, White = {0, 90, 180}}},
+    LIGHT = {state = 2, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Purple = {0, 270, 180}
+        , Green = {0, 0, 180}, Yellow = {0, 0, 180}, White = {0, 90, 180}}},
+    FANCY = {state = 2, rotation = {Red = {0, 180, 0}, Blue = {0, 180, 0}, Purple = {0, 270, 0}
+        , Green = {0, 0, 0}, Yellow = {0, 0, 0}, White = {0, 90, 0}}}
 }
 
 local BUTTON_TOOLTIPS = {
@@ -38,14 +40,14 @@ local BUTTON_TOOLTIPS = {
     MONSTER = "[b]Spy on Monster Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards",
     OPTION = "[i]Open Player-Options",
     LINK_SLIM = "[b]Workshop Link to the simple version of this Mod",
-    LINK_NORMAL = "[b]Workshop Link to this Mod",
-    LINK_XL = "[b]Workshop Link to the 6 Player version of this Mod",
+    LINK_NORMAL = "[b]Workshop Link to the 4 Player version of this Mod",
+    LINK_XL = "[b]Workshop Link to this Mod",
     MUTE = "[b]Mute or unmute Sound Effects",
     DECKBUILDING = "[b]Manual Deckbuilding[/b][i]\nIf you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks.",
     TABLE_CHANGE = "[b]Change Table Mat[/b][i]\nYou can change the Table Mat or load custom images as Table Mat."
 }
 
-local SPY_ZONE_GUIDS = {Red = nil, Blue = nil, Green = nil, Yellow = nil}
+local SPY_ZONE_GUIDS = {Red = nil, Blue = nil, Purple = nil, Green = nil, Yellow = nil, White = nil}
 
 local cardsInSpyZones = {}
 
@@ -323,10 +325,12 @@ end
 --------------------------------------------------- Spy Zone -----------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 local SPY_ZONE_POSITIONS = {
-    Red = {SIDE = {35.16, 4, -20.5}, FRONT = {18.5, 4, -12}},
-    Blue = {SIDE = {-8.26, 4, -20.5}, FRONT = {-25, 4, -12}},
-    Green = {SIDE = {-41.72, 4, 20.5}, FRONT = {-25, 4, 12}},
-    Yellow = {SIDE = {1.71, 4, 20.5}, FRONT = {18.5, 4, 12}}
+    Red = {SIDE = {40.5, 4, -25}, FRONT = {23, 4, -16.5}},
+    Blue = {SIDE = {-4.25, 4, -25}, FRONT = {-21.7, 4, -16.5}},
+    Purple = {SIDE = {-60, 4, -18}, FRONT = {-51.3, 4, -0.4}},
+    Green = {SIDE = {-40.5, 4, 25}, FRONT = {-23, 4, 16.5}},
+    Yellow = {SIDE = {4.25, 4, 25}, FRONT = {21.7, 4, 16.5}},
+    White = {SIDE = {60, 4, 17.3}, FRONT = {51.3, 4, -0.3}}
 }
 
 function getButtonXML(spyZoneOwnerColor, object)
@@ -549,6 +553,16 @@ local OPTION_TABLE = {
         BUTTON_THEME = "DARK",
         SPY_ZONE_POS = "SIDE"
     },
+    Purple = {
+        CAMERA_MOVEMENT = true,
+        AUTO_LOOT = false,
+        AUTO_ACTIVATION = true,
+        AUTO_HEALING = true,
+        AUTO_REWARDING = true,
+        DEATH_DETECTION = false,
+        BUTTON_THEME = "DARK",
+        SPY_ZONE_POS = "SIDE"
+    },
     Green = {
         CAMERA_MOVEMENT = true,
         AUTO_LOOT = false,
@@ -560,6 +574,16 @@ local OPTION_TABLE = {
         SPY_ZONE_POS = "SIDE"
     },
     Yellow = {
+        CAMERA_MOVEMENT = true,
+        AUTO_LOOT = false,
+        AUTO_ACTIVATION = true,
+        AUTO_HEALING = true,
+        AUTO_REWARDING = true,
+        DEATH_DETECTION = false,
+        BUTTON_THEME = "DARK",
+        SPY_ZONE_POS = "SIDE"
+    },
+    White = {
         CAMERA_MOVEMENT = true,
         AUTO_LOOT = false,
         AUTO_ACTIVATION = true,
