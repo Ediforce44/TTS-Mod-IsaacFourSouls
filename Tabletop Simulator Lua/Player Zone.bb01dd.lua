@@ -301,6 +301,7 @@ function onLoad(saved_data)
     calculateZoneEdges()
     initIndexTables()
     calculateIndexTable()
+
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
         if loaded_data.playerAlive then
@@ -465,7 +466,7 @@ end
 
 function placeObjectInZone(params)
     if params.object == nil then
-        Global.call("printWarning", {text = "Wrong parameters in player zone function 'placeObjectInPlayerZone()'."})
+        Global.call("printWarning", {text = "Wrong parameters in player zone function 'placeObjectInZone()'."})
         return
     end
     local position = nil

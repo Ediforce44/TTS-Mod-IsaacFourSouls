@@ -160,7 +160,7 @@ end
 
 function placeObjectInZone(params)
     if params.object == nil then
-        Global.call("printWarning", {text = "Wrong parameters in player zone function 'placeObjectInPlayerZone()'."})
+        Global.call("printWarning", {text = "Wrong parameters in pill zone function 'placeObjectInZone()'."})
         return
     end
     local position = nil
