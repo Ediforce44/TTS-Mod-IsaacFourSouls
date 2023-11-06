@@ -80,6 +80,7 @@ function click_function_LootButton(zone, color, alt_click)
     local lootButton = getLootButton()
     if lootButton.label == LOOT_BUTTON_STATES.LOOT then
         local activePlayerColor = Global.getVar("activePlayerColor")
+        --If multi-char player uses button
         if Global.call("getHandInfo")[activePlayerColor].owner == color then
             dealLootCard({playerColor = activePlayerColor})
         else

@@ -254,44 +254,42 @@ end
 
 function click_function_PurchaseButton(zone, color, alt_click)
     local activePlayerColor = Global.getVar("activePlayerColor")
-    if activePlayerColor == color or Player[color].admin then
-        if alt_click then
-            resetPurchaseButton(zone)
-            return
+    if alt_click then
+        resetPurchaseButton(zone)
+        return
+    end
+    local purchaseButton = zone.getButtons()[zone.getVar("PURCHASE_BUTTON_INDEX") + 1]
+    if purchaseButton.label == PURCHASE_BUTTON_STATES.INACTIVE then
+        zone.call("activateZone")
+    elseif purchaseButton.label == PURCHASE_BUTTON_STATES.PURCHASE then
+        local playerColor = color
+        --If multi-char player uses button
+        if Global.call("getHandInfo")[activePlayerColor].owner == color then
+            playerColor = activePlayerColor
         end
-        local purchaseButton = zone.getButtons()[zone.getVar("PURCHASE_BUTTON_INDEX") + 1]
-        if purchaseButton.label == PURCHASE_BUTTON_STATES.INACTIVE then
-            zone.call("activateZone")
-        elseif purchaseButton.label == PURCHASE_BUTTON_STATES.PURCHASE then
-            local playerColor = color
-            if Global.call("getHandInfo")[activePlayerColor].owner == color then
-                playerColor = activePlayerColor
-            end
-            if purchaseShopItem(zone, playerColor) then
-                Wait.frames(function ()
-                        if not zone.call("containsDeckOrCard") then
-                            placeNewTreasureCard({zone = zone})
-                        end
-                    end, 60)
-            end
-        else
-            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(purchaseButton.label) .. "."})
+        if purchaseShopItem(zone, playerColor) then
+            Wait.frames(function ()
+                    if not zone.call("containsDeckOrCard") then
+                        placeNewTreasureCard({zone = zone})
+                    end
+                end, 60)
         end
+    else
+        Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(purchaseButton.label) .. "."})
     end
 end
 
 function click_function_ShopButton(zone, color, alt_click)
     local activePlayerColor = Global.getVar("activePlayerColor")
-    if activePlayerColor == color or Player[color].admin then
-        local shopButton = getShopButton()
-        if shopButton.label == SHOP_BUTTON_STATES.PURCHASE then
-            if Global.call("getHandInfo")[activePlayerColor].owner == color then
-                purchaseShopDeckItem(activePlayerColor)
-            else
-                purchaseShopDeckItem(color)
-            end
+    local shopButton = getShopButton()
+    if shopButton.label == SHOP_BUTTON_STATES.PURCHASE then
+        --If multi-char player uses button
+        if Global.call("getHandInfo")[activePlayerColor].owner == color then
+            purchaseShopDeckItem(activePlayerColor)
         else
-            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(shopButton.label) .. "."})
+            purchaseShopDeckItem(color)
         end
+    else
+        Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(shopButton.label) .. "."})
     end
 end
