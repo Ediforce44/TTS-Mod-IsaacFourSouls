@@ -50,7 +50,11 @@ SPY_INFO = {
 
 function onLoad(saved_data)
     for _, player in pairs(Player.getPlayers()) do
-        player.changeColor("Grey")
+        if player.host then
+            player.changeColor("Black")
+        else
+            player.changeColor("Grey")
+        end
     end
 
     if saved_data ~= "" then
