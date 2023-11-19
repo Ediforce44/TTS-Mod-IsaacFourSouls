@@ -5,9 +5,15 @@ INACTIVE_HEART_COLOR = {1, 1, 1}
 ACTIVE_HEART_COLOR = Global.getTable("REAL_PLAYER_COLOR_RGB")[owner_color]
 PLAYER_ZONE_GUID = Global.getTable("ZONE_GUID_PLAYER")[owner_color]
 
+COUNTER_MODULE = nil
+
 HEART_INDEX = 1
 
 isActive = false
+
+function onLoad()
+  COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+end
 
 function onPickUp()
   if isActive then
@@ -16,18 +22,20 @@ function onPickUp()
       sfxCube.call("playDeath")
     end
 
+    if Global.getTable("PLAYER_SETTINGS")[owner_color].deathDetection then
+      local playerZone = getObjectFromGUID(PLAYER_ZONE_GUID)
+      if playerZone then
+          playerZone.call("killPlayer")
+      end
+    end
+
+    COUNTER_MODULE.call("notifyDEATH", {player = owner_color, dif = 1})
+
     isActive = false
   end
 
   calcOtherHeartsState()
   changeColorByState()
-
-  if Global.getTable("PLAYER_SETTINGS")[owner_color].deathDetection then
-      local playerZone = getObjectFromGUID(PLAYER_ZONE_GUID)
-      if playerZone then
-          playerZone.call("killPlayer")
-      end
-  end
 
   stopPickUp()
 end

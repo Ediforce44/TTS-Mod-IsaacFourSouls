@@ -5,9 +5,11 @@ value = 0
 MIN_VALUE = 0
 MAX_VALUE = 999
 
+COUNTER_MODULE = nil
 SYNCED_COIN_COUNTER_GUIDS = {}
 
 function onload(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
     value = 0
 
     if saved_data ~= "" then
@@ -127,6 +129,8 @@ function updateValue()
             coinCounter.call("setCoins", {newValue = value})
         end
     end
+    
+    COUNTER_MODULE.call("notifyCOIN", {player = owner_color, value = value})
 end
 
 function reset_val()

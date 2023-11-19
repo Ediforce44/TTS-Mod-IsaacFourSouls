@@ -95,6 +95,7 @@ local challengeBag = nil
 local SCRIPT_MINION_ZONE =
 [[--- Written by Ediforce44
 HP_COUNTER_GUID = nil
+COUNTER_MODULE = nil
 
 altClickCounter = 0
 
@@ -150,6 +151,7 @@ function containsDeckOrCard()
 end
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
     BOSS_ZONE = getObjectFromGUID(Global.getVar("ZONE_GUID_BOSS"))
 
     ATTACK_BUTTON_STATES = BOSS_ZONE.getTable("ATTACK_BUTTON_STATES")
@@ -370,6 +372,9 @@ function finishMonster(params)
     if monsterCard == nil then
         return nil
     end
+
+    COUNTER_MODULE.call("notifyKILL", {player = activePlayerColor, dif = 1})
+
     if allowRewards and Global.getTable("PLAYER_SETTINGS")[activePlayerColor].rewarding then
         local rewarded = MONSTER_DECK_ZONE.call("payOutRewards", {playerColor = activePlayerColor, rewardTable = active_monster_reward})
         if rewarded then
@@ -491,6 +496,7 @@ MINION_SLOT_GUIDS = {}
 MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
 MONSTER_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").MONSTER
 MONSTER_DISCARD_ZONE_GUID = Global.getTable("ZONE_GUID_DISCARD").MONSTER
+COUNTER_MODULE = nil
 
 ONLY_MONSTER_MINIONS = true
 NO_MINION_REWARDS = false
@@ -1017,6 +1023,9 @@ function finishMonster(params)
     if monsterCard == nil then
         return nil
     end
+
+    COUNTER_MODULE.call("notifyKILL", {player = activePlayerColor, dif = 1})
+
     if Global.getTable("PLAYER_SETTINGS")[activePlayerColor].rewarding then
         local rewarded = monsterDeckZone.call("payOutRewards", {playerColor = activePlayerColor, rewardTable = active_monster_reward})
         if rewarded then
@@ -1049,6 +1058,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
     MINION_ZONE_INFO = Global.getTable("ZONE_INFO_MINION")
     ATTACK_BUTTON_STATES = getObjectFromGUID(MONSTER_DECK_ZONE_GUID).getTable("ATTACK_BUTTON_STATES")
     BOSS_BUTTON_STATES = ATTACK_BUTTON_STATES

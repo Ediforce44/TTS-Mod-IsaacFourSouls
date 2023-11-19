@@ -14,6 +14,8 @@ SHOP_BUTTON_STATES = {
 }
 SHOP_BUTTON_INDEX = nil
 
+COUNTER_MODULE = nil
+
 local function printBuyPhrase(itemName)
     local phrase = nil
     if itemName == "" then
@@ -69,6 +71,7 @@ local function purchaseShopItem(zone, playerColor)
         if printBuyPhrase(itemName) then
             local playerZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[playerColor])
             if playerZone then
+                COUNTER_MODULE.call("notifyTREASURE_GAIN", {player = playerColor, dif = 1})
                 playerZone.call("placeObjectInZone", {object = boughtCard})
             end
             return true
@@ -93,6 +96,7 @@ local function purchaseShopDeckItem(playerColor)
         Wait.frames(function () printBuyPhrase(boughtCard.getName()) end, 1)
         local playerZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[playerColor])
         if playerZone then
+            COUNTER_MODULE.call("notifyTREASURE_GAIN", {player = playerColor, dif = 1})
             playerZone.call("placeObjectInZone", {object = boughtCard})
         end
         return true
@@ -101,6 +105,8 @@ local function purchaseShopDeckItem(playerColor)
 end
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+
     if saved_data == "" then
         return
     end

@@ -3,6 +3,7 @@ owner_color = "Blue"
 value = 0
 --- Edited by Ediforce44
 LOOT_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").LOOT
+COUNTER_MODULE = nil
 
 --- Click delay time in seconds
 options = {["clickDelay"] = Global.getVar("CLICK_DELAY")}
@@ -20,6 +21,8 @@ function onSave()
 end
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+
     if saved_data == "" then
         setOwner(nil)
     else
@@ -75,6 +78,7 @@ function update()
     local newValue = #Player[handInfo.owner].getHandObjects(handInfo.index)
     if newValue ~= value then
         value = newValue
+        COUNTER_MODULE.call("notifyHANDCARD", {player = owner_color, value = value})
         self.editButton({index=0, label=value})
     end
 end

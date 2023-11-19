@@ -1,5 +1,6 @@
 --- Written by Ediforce44
 HP_COUNTER_GUID = Global.getTable("MONSTER_HP_COUNTER_GUID").FIVE
+COUNTER_MODULE = nil
 
 altClickCounter = 0
 
@@ -83,6 +84,7 @@ function placeNewMonsterIfEmpty()
 end
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
     ATTACK_BUTTON_STATES = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_STATES")
     ATTACK_BUTTON_COLORS = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_COLORS")
     EVENT_TYPES = MONSTER_DECK_ZONE.getTable("EVENT_TYPES")
@@ -257,6 +259,9 @@ function finishMonster(params)
     if monsterCard == nil then
         return nil
     end
+
+    COUNTER_MODULE.call("notifyKILL", {player = activePlayerColor, dif = 1})
+
     if Global.getTable("PLAYER_SETTINGS")[activePlayerColor].rewarding then
         local rewarded = MONSTER_DECK_ZONE.call("payOutRewards", {playerColor = activePlayerColor, rewardTable = active_monster_reward})
         if rewarded then

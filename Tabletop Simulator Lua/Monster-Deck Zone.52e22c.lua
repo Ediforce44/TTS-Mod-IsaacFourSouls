@@ -2,6 +2,8 @@
 MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
 BOSS_ZONE_GUID = nil
 
+COUNTER_MODULE = nil
+
 CHALLENGE_MODE = false
 
 ON_DIE_EVENTS = {}
@@ -394,6 +396,8 @@ end
 function onLoad(saved_data)
     BOSS_ZONE_GUID = Global.getVar("ZONE_GUID_BOSS")
     DISCARD_PILE_POSITION = Global.getTable("DISCARD_PILE_POSITION").MONSTER
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+
     if saved_data == "" then
         return
     end
@@ -451,11 +455,21 @@ local function payOutTreasures(playerColor, amount)
     end
     if amount > 1 then
         local cards = {}
-        for n = 1, amount do
-            cards[n] = treasureDeck.takeObject({flip = true})
+        if treasureDeck.type == "Card" then
+            amount = 1
+            cards = {treasureDeck}
+        else
+            if treasureDeck.getQuantity() < amount then
+                amount = treasureDeck.getQuantity()
+            end
+            for n = 1, amount do
+                cards[n] = treasureDeck.takeObject({flip = true})
+            end
         end
+        COUNTER_MODULE.call("notifyTREASURE_GAIN", {player = playerColor, dif = amount})
         Global.call("getActivePlayerZone").call("placeMultipleObjectsInZone", {objects = cards})
     elseif amount == 1 then
+        COUNTER_MODULE.call("notifyTREASURE_GAIN", {player = playerColor, dif = 1})
         Global.call("getActivePlayerZone").call("placeObjectInZone", {object = treasureDeck.takeObject({flip = true})})
     end
 end
