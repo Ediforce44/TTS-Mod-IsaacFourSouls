@@ -39,7 +39,7 @@ function setCoins(params)
         new_value = math.min(math.max(params.newValue, MIN_VALUE), MAX_VALUE)
         if value ~= new_value then
             value = new_value
-            updateVal()
+            updateValue()
         end
     end
 end
@@ -52,14 +52,11 @@ function modifyCoins(params)            -- EbyE44
 end
 
 function createAll()
-    s_color = {0.5, 0.5, 0.5, 95}
-    f_color = {1,1,1,95}
-
-    if self.getName() == "" then
-        ttText = value
-    else
-        ttText = value .. "\n" .. self.getName()
-    end
+    local ttText =
+[[Counter
+----------
+Left click - Increase
+Right click - Decrease]]
 
     self.createButton({
       label=tostring(value),
@@ -72,7 +69,7 @@ function createAll()
       alignment = 3,
       scale={x=1, y=1, z=1},
       font_size=700,
-      font_color=f_color,
+      font_color={1,1,1,95},
       color={0,0,0,0}
       })
 
@@ -88,11 +85,9 @@ function createAll()
         height = 320,
         font_size = 280,
         scale={x=1, y=1, z=1},
-        font_color= f_color,
+        font_color={1,1,1,95},
         color = {0,0,0,0}
         })
-
-    setTooltips()
 end
 
 function removeAll()
@@ -106,13 +101,10 @@ end
 function reloadAll()
     removeAll()
     createAll()
-    setTooltips()
-    updateSave()
 end
 
 function editName(_obj, _string, editValue)
     self.setName(editValue)
-    setTooltips()
 end
 
 function add_subtract(_obj, color, alt_click)
@@ -123,17 +115,12 @@ function add_subtract(_obj, color, alt_click)
     setCoins({newValue = value + mod})
 end
 
-function updateVal()
-    if self.getName() == "" then
-        ttText = value
-    else
-        ttText = value .. "\n" .. self.getName()
-    end
+function updateValue()
     self.editButton({
         index = 0,
         label = tostring(value),
-        tooltip = ttText
         })
+        
     for _, guid in pairs(SYNCED_COIN_COUNTER_GUIDS) do
         local coinCounter = getObjectFromGUID(guid)
         if coinCounter then
@@ -144,20 +131,7 @@ end
 
 function reset_val()
     value = 0
-    updateVal()
-end
-
-function setTooltips()
-    self.editInput({
-        index = 0,
-        value = self.getName(),
-        tooltip = ttText
-        })
-    self.editButton({
-        index = 0,
-        value = tostring(value),
-        tooltip = ttText
-        })
+    updateValue()
 end
 
 function onScriptingButtonDown(index, playerColor)
@@ -177,7 +151,7 @@ function onScriptingButtonDown(index, playerColor)
         end
         if value ~= new_value then
             value = new_value
-            updateVal()
+            updateValue()
         end
     end
 end

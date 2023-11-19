@@ -1,5 +1,6 @@
 --- Hand counter by Schokolabbi
 owner_color = "Green"
+value = 0
 --- Edited by Ediforce44
 LOOT_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").LOOT
 
@@ -15,7 +16,7 @@ doubleClickParameters = {
 }
 
 function onSave()
-    return JSON.encode({ownerColor = owner_color})
+    return JSON.encode({ownerColor = owner_color, value = value})
 end
 
 function onLoad(saved_data)
@@ -26,13 +27,23 @@ function onLoad(saved_data)
         if loaded_data.ownerColor then
             setOwner(loaded_data.ownerColor)
         end
+        if loaded_data.value then
+            value = loaded_data.value
+        end
     end
+
+    local ttText = 
+[[Counter
+----------
+Left click - Increase
+Right click - Decrease]]
 
     self.createInput({
         value = "Loot",
         input_function = "dummy",
         label = "Counter",
         function_owner = self,
+        tooltip = ttText,
         alignment = 3,
         position = {0,0.05,1},
         width = 1000,
@@ -42,13 +53,30 @@ function onLoad(saved_data)
         font_color= {255,255,255,100},
         color = {0,0,0,0}
         })
+
+    self.createButton({
+        label=tostring(value),
+        click_function="onClick",
+        function_owner=self,
+        tooltip=ttText,
+        position={0,0.05,0},
+        height=600,
+        width=1000,
+        font_size=700,
+        font_color={1,1,1,95},
+        scale={1,1,1},
+        color={0,0,0,0}
+    })
 end
 
 function update()
     if not owner_color then return end
     local handInfo = Global.call("getHandInfo")[owner_color]
-    objectCount = #Player[handInfo.owner].getHandObjects(handInfo.index)
-    self.editButton({index=0, label=objectCount, tooltip=objectCount .. "\nLoot"})
+    local newValue = #Player[handInfo.owner].getHandObjects(handInfo.index)
+    if newValue ~= value then
+        value = newValue
+        self.editButton({index=0, label=value})
+    end
 end
 
 function findOwner(color)
@@ -95,26 +123,19 @@ function isDoubleClick()
 end
 
 function setOwner(color)
-    local objectCount = 0
     if color then
         owner_color = color
         local handInfo = Global.call("getHandInfo")[owner_color]
-        objectCount = #Player[handInfo.owner].getHandObjects(handInfo.index)
-        --self.setName(objectCount)
+        value = #Player[handInfo.owner].getHandObjects(handInfo.index)
+        --self.setName(value)
     else
         owner_color = nil
         color = "Grey"
-        objectCount = 0
+        value = 0
         --self.setName("Card Counter - Click to claim!")
     end
     local rgbColorTable = stringColorToRGB(color)
     self.setColorTint(rgbColorTable)
-    self.clearButtons()
-    self.createButton({
-        label=tostring(objectCount), click_function="onClick", function_owner=self,
-        position={0,0.05,0}, height=600, width=1000; font_size=700, font_color={1,1,1,95}, scale={1,1,1},
-        color={0,0,0,0}
-    })
 end
 
 function dummy()
