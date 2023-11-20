@@ -23,7 +23,7 @@ active_monster_reward = {
 
 active = false
 
--- It is used for states which vary their behavior depending on the previous state
+-- It is used for states with behavior depending on the previous state
 LAST_STATE = nil
 
 MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
