@@ -352,7 +352,10 @@ function click_KillMonster(buttonObj)
     if type ~= 0 then
         buttonAnimation(buttonObj)
         local zone = getObjectFromGUID(Global.getTable("ZONE_GUID_MONSTER")[type])
-        zone.call("killMonster")
+        if zone then
+            --TODO: If zone state is already dead, finish him
+            zone.call("killMonster")
+        end
     end
 end
 
