@@ -25,6 +25,16 @@ local GENERAL_BUTTONS = {
     TABLE_CHANGE = "a58e57"
 }
 
+local KILL_BUTTONS = {
+    ONE     = "27d7f6",
+    TWO     = "5f7652",
+    THREE   = "385933",
+    FOUR    = "881682",
+    FIVE    = "420306",
+    SIX     = "f4a180",
+    SEVEN   = "21399e",
+}
+
 local CUSTOM_BUTTON_THEME = {
     DARK = {state = 1, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Green = {0, 0, 180}, Yellow = {0, 0, 180}}},
     LIGHT = {state = 2, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Green = {0, 0, 180}, Yellow = {0, 0, 180}}},
@@ -60,7 +70,8 @@ local BUTTON_FUNCTIONS = {
     LINK_XL = "click_ShowLinkXL",
     MUTE = "click_MuteSFX",
     DECKBUILDING = "click_ManualDeckbuilding",
-    TABLE_CHANGE = "click_ChangeTableMat"
+    TABLE_CHANGE = "click_ChangeTableMat",
+    KILL_MONSTER = "click_KillMonster"
 }
 
 local function buttonAnimation(buttonObj)
@@ -84,7 +95,9 @@ function unblockButton(params)
     blockedButtons[params.buttonObj.getGUID()] = false
 end
 
-local function createButtonsOnCustomButton(buttonObj, buttonType)
+local function createButtonsOnCustomButton(buttonObj, buttonType, scaleX, scaleY)
+    scaleX = scaleX or 1
+    scaleY = scaleY or 1
     if buttonObj then
         buttonObj.setPosition(buttonObj.getPosition():setAt('y', BUTTON_HIGHT))
         buttonObj.setLock(true)
@@ -95,8 +108,8 @@ local function createButtonsOnCustomButton(buttonObj, buttonType)
             tooltip=BUTTON_TOOLTIPS[buttonType] or "",
             function_owner=self,
             position={0,0.07, 0},
-            height=650,
-            width=650,
+            height=650*scaleY,
+            width=650*scaleX,
             font_color={0, 0, 0, 0},
             color={0,0,0,0}
         })
@@ -107,8 +120,8 @@ local function createButtonsOnCustomButton(buttonObj, buttonType)
             function_owner=self,
             position={0, -0.07, 0},
             rotation={180, 0, 0},
-            height=650,
-            width=650,
+            height=650*scaleY,
+            width=650*scaleX,
             font_color={0, 0, 0, 0},
             color={0,0,0,0}
         })
@@ -155,6 +168,11 @@ function onLoad(saved_data)
     for buttonType, buttonGUID in pairs(GENERAL_BUTTONS) do
         local buttonObj = getObjectFromGUID(buttonGUID)
         createButtonsOnCustomButton(buttonObj, buttonType)
+    end
+
+    for buttonType, buttonGUID in pairs(KILL_BUTTONS) do
+        local buttonObj = getObjectFromGUID(buttonGUID)
+        createButtonsOnCustomButton(buttonObj, "KILL_MONSTER", 2, 2)
     end
 end
 
@@ -319,6 +337,25 @@ function click_ChangeTableMat(buttonObj)
         flexTable.call("click_toggleControl")
     end
 end
+
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------- Kill Buttons ---------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+function click_KillMonster(buttonObj)
+    local type = 0
+    for buttonType, buttonGUID in pairs(KILL_BUTTONS) do
+        if buttonObj.getGUID() == buttonGUID then
+            type = buttonType
+            break
+        end
+    end
+    if type ~= 0 then
+        buttonAnimation(buttonObj)
+        local zone = getObjectFromGUID(Global.getTable("ZONE_GUID_MONSTER")[type])
+        zone.call("killMonster")
+    end
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------- Spy Zone -----------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
