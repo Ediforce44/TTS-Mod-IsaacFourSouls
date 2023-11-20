@@ -774,13 +774,18 @@ function findAttrsInScript(scriptString)
     local hpPattern = "([Hh][Pp]%s?=%s?%d+)"
     local atkPattern = "[Dd][Ii][Cc][Ee]%s?=%s?%d+"
     local dmgPattern = "[Aa][Tt][Kk]%s?=%s?%d+"
-    local attrPatterns = {HP = hpPattern, ATK = atkPattern, DMG = dmgPattern}
+    local eventPattern = "isEvent%s?=%s?[(true)(false)]"
+    local attrPatternsNumber = {HP = hpPattern, ATK = atkPattern, DMG = dmgPattern}
     for line in string.gmatch(scriptString,"[^\r\n]+") do -- for each line in the script
-        for attrName , pattern in pairs(attrPatterns) do
+        for attrName , pattern in pairs(attrPatternsNumber) do
             local attrString = string.match(line, pattern)
             if attrString ~= nil then
                 attrs[tostring(attrName)] = tonumber(string.match(attrString, "%d+"))
             end
+        end
+        local attrString = string.match(eventPattern)
+        if attrString ~= nil then
+            attrs[IS_EVENT] = (string.match(attrString, "true") ~= nil)
         end
     end
     return attrs
@@ -865,6 +870,7 @@ function onObjectEnterScriptingZone(zone, object)
                             newAttributes.ATK = object.getVar("dice")
                             newAttributes.DMG = object.getVar("atk")
                             newAttributes.INDOMITABLE = object.hasTag(MONSTER_TAGS.INDOMITABLE)
+                            newAttributes.IS_EVENT = object.getVar("isEvent")
                             -- Rewards
                             local rewards = object.getTable("rewards") or {}
 
@@ -913,6 +919,7 @@ function onObjectLeaveScriptingZone(zone, object)
                     newAttributes.ATK = topObjectInZone.getVar("dice")
                     newAttributes.DMG = topObjectInZone.getVar("atk")
                     newAttributes.INDOMITABLE = object.hasTag(MONSTER_TAGS.INDOMITABLE)
+                    newAttributes.IS_EVENT = topObjectInZone.getVar("isEvent")
                     -- Rewards
                     local rewards = topObjectInZone.getTable("rewards") or {}
 

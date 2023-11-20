@@ -10,7 +10,8 @@ active_monster_attrs = {
     HP          = 0,
     ATK         = 0,
     DMG         = 0,
-    INDOMITABLE = false
+    INDOMITABLE = false,
+    IS_EVENT    = false
 }
 
 active_monster_reward = {
@@ -113,6 +114,7 @@ function onLoad(saved_data)
         active_monster_attrs.ATK = loaded_data[3].ATK or 0
         active_monster_attrs.DMG = loaded_data[3].DMG or 0
         active_monster_attrs.INDOMITABLE = loaded_data[3].INDOMITABLE or false
+        active_monster_attrs.IS_EVENT = loaded_data[3].IS_EVENT or false
     end
     if loaded_data[4] then
         active_monster_reward.CENTS = loaded_data[4].CENTS or 0
@@ -213,6 +215,9 @@ function resetAttackButton()
 end
 
 function killMonster()
+    if active_monster_attrs.IS_EVENT then
+        return
+    end
     getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = 0})
     monsterDied()
 end
@@ -311,6 +316,7 @@ function updateAttributes(params)
         active_monster_attrs.ATK = params.ATK or -1
         active_monster_attrs.DMG = params.DMG or -1
         active_monster_attrs.INDOMITABLE = params.INDOMITABLE or false
+        active_monster_attrs.IS_EVENT = params.IS_EVENT or false
         getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = active_monster_attrs.HP})
     end
 end
