@@ -35,11 +35,7 @@ function onLoad(saved_data)
         end
     end
 
-    local ttText = 
-[[Counter
-----------
-Left click - Increase
-Right click - Decrease]]
+    local ttText = "[b]Handcard Counter[/b][i]\nLeft-Click: Increase\nRight-Click: Decrease[/i]"
 
     self.createInput({
         value = "Loot",

@@ -2,6 +2,11 @@
 owner_color = "Green"
 zone_guid = Global.getTable("ZONE_GUID_SOUL")[owner_color]       --EbyE44
 
+MIN_VALUE = 0
+MAX_VALUE = 10
+
+value = 0
+
 function deal_soul_token(object, color)         --EbyE44
     if not Global.call("isPlayerAuthorized", {playerColor = color, ownerColor = owner_color}) then
         return
@@ -11,10 +16,9 @@ end
 
 function onUpdate()
     local soulCount = getSoulCountInZone()
-    if soulCount ~= val then
-        val = soulCount
-        updateVal()
-        updateSave()
+    if soulCount ~= value then
+        value = soulCount
+        updateValue()
     end
 end
 
@@ -22,46 +26,11 @@ function getSoulCountInZone()
     return getObjectFromGUID(zone_guid).getVar("souls_in_this_zone") or 0
 end
 
-MIN_VALUE = 0
-MAX_VALUE = 10
-
-function onload(saved_data)
-    light_mode = false
-    val = 0
-
-    if saved_data ~= "" then
-        local loaded_data = JSON.decode(saved_data)
-        light_mode = loaded_data[1]
-        val = loaded_data[2]
-    end
-
-    createAll()
-end
-
-function updateSave()
-    local data_to_save = {light_mode, val}
-    saved_data = JSON.encode(data_to_save)
-    self.script_state = saved_data
-end
-
-function createAll()
-    s_color = {0.5, 0.5, 0.5, 95}
-
-    if light_mode then
-        f_color = {255,255,255,100}
-    else
-        f_color = {255,255,255,100}
-
-    end
-
-    if self.getName() == "" then
-        ttText = val
-    else
-        ttText = val .. "\n" .. self.getName()
-    end
+local function createAll()
+    local ttText = "[b]Soul Counter[/b][i]\nClick: Place Soul Token[/i]"
 
     self.createButton({
-      label=tostring(val),
+      label=tostring(value),
       click_function="deal_soul_token",
       tooltip=ttText,
       function_owner=self,
@@ -71,7 +40,7 @@ function createAll()
       alignment = 3,
       scale={x=1, y=1, z=1},
       font_size=820,
-      font_color=f_color,
+      font_color={255,255,255,100},
       color={0,0,0,0}
       })
 
@@ -87,118 +56,40 @@ function createAll()
         height = 350,
         font_size = 310,
         scale={x=1, y=1, z=1},
-        font_color= f_color,
+        font_color= {255,255,255,100},
         color = {0,0,0,0}
         })
+end
 
+function onLoad(saved_data)
 
-    if light_mode then
-        lightButtonText = ""
-    else
-        lightButtonText = ""
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        light_mode = loaded_data[1]
+        value = loaded_data[2]
     end
-    self.createButton({
-        label=lightButtonText,
-        tooltip=lightButtonText,
-        click_function="swap_fcolor",
-        function_owner=self,
-        position={0,-0.05,0.6},
-        rotation={180,180,0},
-        height=250,
-        width=1200,
-        scale={x=1, y=1, z=1},
-        font_size=250,
-        font_color=s_color,
-        color={0,0,0,0}
-        })
+
+    createAll()
+end
 
 
-    setTooltips()
+function onSave()
+    return JSON.encode({value = value})
 end
 
 function removeAll()
     self.removeInput(0)
-    self.removeInput(1)
     self.removeButton(0)
-    self.removeButton(1)
 end
 
 function reloadAll()
     removeAll()
     createAll()
-    setTooltips()
-    updateSave()
 end
 
-function swap_fcolor(_obj, _color, alt_click)
-    light_mode = not light_mode
-    reloadAll()
-end
-
-function swap_align(_obj, _color, alt_click)
-    center_mode = not center_mode
-    reloadAll()
-end
-
-function editName(_obj, _string, value)
-    self.setName(value)
-    setTooltips()
-end
-
-function add_subtract(_obj, _color, alt_click)
-    mod = alt_click and -1 or 1
-    new_value = math.min(math.max(val, MIN_VALUE), MAX_VALUE)
-    if val ~= new_value then
-        val = new_value
-        updateVal()
-        updateSave()
-    end
-end
-
-function updateVal()
-    if self.getName() == "" then
-        ttText = val
-    else
-        ttText = val .. "\n" .. self.getName()
-    end
+function updateValue()
     self.editButton({
         index = 0,
-        label = tostring(val),
-        tooltip = ttText
+        label = tostring(value),
     })
-end
-
-
-function setTooltips()
-    self.editInput({
-        index = 0,
-        value = self.getName(),
-        tooltip = ttText
-        })
-    self.editButton({
-        index = 0,
-        value = tostring(val),
-        tooltip = ttText
-        })
-end
-
-function null()
-end
-
-function keepSample(_obj, _string, value)
-    reloadAll()
-end
-
-function onScriptingButtonDown(index, playerColor)
-    if Player[playerColor].getHoverObject() == self then
-        new_value = index
-        if index == 10 then
-            new_value = 0
-        end
-        if val ~= new_value then
-            val = new_value
-            updateVal()
-            updateSave()
-        end
-    end
 end

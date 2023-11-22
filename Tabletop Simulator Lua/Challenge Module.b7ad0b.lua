@@ -721,7 +721,7 @@ local function createResurrectButton()
             font_size      = 200,
             color          = BOSS_BUTTON_COLORS.ACTIVE,
             font_color     = {1, 1, 1},
-            tooltip        = " - Left-Click: Add monster to Minion Zone"
+            tooltip        = "[i]Left-Click: Add monster to Minion Zone[/i]"
         })
         RESURRECT_BUTTON_INDEX = 0
     end
@@ -740,7 +740,7 @@ local function createPlayerResurrectButtons()
             font_size      = 240,
             color          = {0.6, 0, 0.1},
             font_color     = {1, 1, 1},
-            tooltip        = " - Left-Click: Add monster to Red Minion Zone"
+            tooltip        = "[i]Left-Click: Add monster to Red Minion Zone[/i]"
         })
         PLAYER_RESURRECT_BUTTON_INDICES["Red"] = 1
         self.createButton({
@@ -753,7 +753,7 @@ local function createPlayerResurrectButtons()
             font_size      = 240,
             color          = {0.1, 0, 0.6},
             font_color     = {1, 1, 1},
-            tooltip        = " - Left-Click: Add monster to Blue Minion Zone"
+            tooltip        = "[i]Left-Click: Add monster to Blue Minion Zone[/i]"
         })
         PLAYER_RESURRECT_BUTTON_INDICES["Blue"] = 2
     end
@@ -1176,13 +1176,13 @@ end
 -- If you want state depending tooltips, there you go :D
 function getAttackButtonTooltip(params)
     -- params.newState
-    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+    return "[i]Left-Click: Activate Zone[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
 end
 
 -- If you want state depending tooltips, there you go :D
 function getBossButtonTooltip(params)
     -- params.newState
-    return " - Double-Right-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+    return "[i]Double-Right-Click: Activate Zone[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
 end
 
 function changeMinionZoneState(params)
@@ -2271,7 +2271,7 @@ function activateSlotButton()
             font_size      = 200,
             color          = color,
             font_color     = {1, 1, 1},
-            tooltip        = " - Left-Click: Activate this button\n - Double-Right-Click: Deactivate this button"
+            tooltip        = "[i]Left-Click: Activate this button[/i]\n[i]Double-Right-Click: Deactivate this button[/i]"
         })
     end
 end
@@ -2571,7 +2571,7 @@ local function createExpansionButton()
         font_size      = 300,
         color          = {0.50, 0.59, 0.6, 100},
         font_color     = {0, 0, 0},
-        tooltip        = "Click this to activate the inactive part of the Challenge Zone.\n -- No way back --"
+        tooltip        = "[b]Click this to activate the inactive part of the Challenge Zone.[/b]\n[i]-- No way back --[/i]"
     })
 end
 

@@ -54,11 +54,7 @@ function modifyCoins(params)            -- EbyE44
 end
 
 function createAll()
-    local ttText =
-[[Counter
-----------
-Left click - Increase
-Right click - Decrease]]
+    local ttText = "[b]Coin Counter[/b][i]\nLeft-Click: Increase\nRight-Click: Decrease[/i]"
 
     self.createButton({
       label=tostring(value),

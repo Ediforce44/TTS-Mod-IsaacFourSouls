@@ -42,17 +42,18 @@ local CUSTOM_BUTTON_THEME = {
 }
 
 local BUTTON_TOOLTIPS = {
-    ROOM = "[b]Spy on Room Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards",
-    LOOT = "[b]Spy on Loot Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards",
-    TREASURE = "[b]Spy on Treasure Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards",
-    MONSTER = "[b]Spy on Monster Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards",
-    OPTION = "[i]Open Player-Options",
-    LINK_SLIM = "[b]Workshop Link to the simple version of this Mod",
-    LINK_NORMAL = "[b]Workshop Link to this Mod",
-    LINK_XL = "[b]Workshop Link to the 6 Player version of this Mod",
-    MUTE = "[b]Mute or unmute Sound Effects",
-    DECKBUILDING = "[b]Manual Deckbuilding[/b][i]\nIf you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks.",
-    TABLE_CHANGE = "[b]Change Table Mat[/b][i]\nYou can change the Table Mat or load custom images as Table Mat."
+    ROOM = "[b]Spy on Room Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards[/i]",
+    LOOT = "[b]Spy on Loot Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards[/i]",
+    TREASURE = "[b]Spy on Treasure Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards[/i]",
+    MONSTER = "[b]Spy on Monster Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards[/i]",
+    OPTION = "[b]Open Player-Options[/b]",
+    LINK_SLIM = "[b]Workshop Link to the simple version of this Mod[/b]",
+    LINK_NORMAL = "[b]Workshop Link to this Mod[/b]",
+    LINK_XL = "[b]Workshop Link to the 6 Player version of this Mod[/b]",
+    MUTE = "[b]Mute or unmute Sound Effects[/b]",
+    DECKBUILDING = "[b]Manual Deckbuilding[/b][i]\nIf you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks.[/i]",
+    TABLE_CHANGE = "[b]Change Table Mat[/b][i]\nYou can change the Table Mat or load custom images as Table Mat.[/i]",
+    KILL_MONSTER = "[b]Kill[/b]",
 }
 
 local SPY_ZONE_GUIDS = {Red = nil, Blue = nil, Green = nil, Yellow = nil}

@@ -200,12 +200,12 @@ end
 -- If you want state depending tooltips, there you go :D
 function getPurchaseButtonTooltip(params)
     -- params.newState
-    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+    return "[i]Left-Click: Activate Zone[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
 end
 
 function getShopButtonTooltip(params)
     -- params.newState
-    return ""
+    return "[b]Gain top card[/b]"
 end
 
 function deactivateShopButton()

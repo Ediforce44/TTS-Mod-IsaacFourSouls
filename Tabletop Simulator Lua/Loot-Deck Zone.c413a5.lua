@@ -66,7 +66,7 @@ end
 
 function getLootButtonTooltip(params)
     -- params.newState
-    return ""
+    return "[b]Loot[/b]"
 end
 
 function deactivateLootButton()
