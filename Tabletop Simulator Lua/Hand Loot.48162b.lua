@@ -68,14 +68,27 @@ function onLoad(saved_data)
     })
 end
 
-function update()
-    if not owner_color then return end
+function onObjectEnterZone(zone)
     local handInfo = Global.call("getHandInfo")[owner_color]
-    local newValue = #Player[handInfo.owner].getHandObjects(handInfo.index)
-    if newValue ~= value then
-        value = newValue
-        COUNTER_MODULE.call("notifyHANDCARD", {player = owner_color, value = value})
-        self.editButton({index=0, label=value})
+    if zone.getGUID() == handInfo.guid then
+        local newValue = #Player[handInfo.owner].getHandObjects(handInfo.index)
+        if newValue ~= value then
+            value = newValue
+            COUNTER_MODULE.call("notifyHANDCARD", {player = owner_color, value = value})
+            self.editButton({index=0, label=value})
+        end
+    end
+end
+
+function onObjectLeaveZone(zone)
+    local handInfo = Global.call("getHandInfo")[owner_color]
+    if zone.getGUID() == handInfo.guid then
+        local newValue = #Player[handInfo.owner].getHandObjects(handInfo.index)
+        if newValue ~= value then
+            value = newValue
+            COUNTER_MODULE.call("notifyHANDCARD", {player = owner_color, value = value})
+            self.editButton({index=0, label=value})
+        end
     end
 end
 
