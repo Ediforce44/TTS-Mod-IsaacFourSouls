@@ -2,6 +2,7 @@ MIN_VALUE = -99
 MAX_VALUE = 999
 
 value = 0
+manual_mod = 0
 
 local function updateValue()
     self.editButton({
@@ -11,11 +12,7 @@ local function updateValue()
 end
 
 local function createAll()
-    local ttText = 
-[[Counter
-----------
-Left click - Increase
-Right click - Decrease]]
+    local ttText = "[b]Counter[/b]\n[i]Left click: Increase[/i]\n[i]Right click: Decrease[/i]"
 
     self.createButton({
       label=tostring(value),
@@ -50,6 +47,7 @@ end
 
 function add_subtract(_obj, _color, alt_click)
     mod = alt_click and -1 or 1
+    manual_mod = manual_mod + mod
     new_value = math.min(math.max(value + mod, MIN_VALUE), MAX_VALUE)
     if value ~= new_value then
         value = new_value
@@ -64,6 +62,9 @@ function onLoad(saved_data)
             if loaded_data.value then
                 value = loaded_data.value
             end
+            if loaded_data.manualMod then
+                manual_mod = loaded_data.manualMod
+            end
         end
     end
 
@@ -71,7 +72,7 @@ function onLoad(saved_data)
 end
 
 function onSave()
-    return JSON.encode({value = value})
+    return JSON.encode({value = value, manualMod = manual_mod})
 end
 
 function dummy()
@@ -96,7 +97,7 @@ function setCounter(params)
         Global.call("printWarning", {text = "Wrong parameters in coin counter function 'setCounter()'."})
         return
     end
-    new_value = math.min(math.max(params.value, MIN_VALUE), MAX_VALUE)
+    new_value = math.min(math.max(params.value + manual_mod, MIN_VALUE), MAX_VALUE)
     if value ~= new_value then
         value = new_value
         updateValue()
@@ -104,7 +105,7 @@ function setCounter(params)
 end
 
 function changeName(params)
-    if params.name then
+    if (not params) or (not params.name) then
         return
     end
 
@@ -112,7 +113,8 @@ function changeName(params)
     self.setName(newName)
     self.editInput({
         index = 0,
-        value = newName
+        value = newName,
+        tooltip = "[b]" .. newName .. "[/b]\n[i]Left click - Increase[/i]\n[i]Right click - Decrease[/i]"
     })
 end
 
