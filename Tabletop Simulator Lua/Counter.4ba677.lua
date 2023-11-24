@@ -110,11 +110,17 @@ function changeName(params)
     end
 
     local newName = tostring(params.name)
+    local ttText = "[b]" .. string.gsub(newName, "\n", " ") .. "[/b]\n[i]Left click - Increase[/i]\n[i]Right click - Decrease[/i]"
     self.setName(newName)
+
     self.editInput({
         index = 0,
         value = newName,
-        tooltip = "[b]" .. newName .. "[/b]\n[i]Left click - Increase[/i]\n[i]Right click - Decrease[/i]"
+        tooltip = ttText
+    })
+    self.editButton({
+        index = 0,
+        tooltip = ttText
     })
 end
 

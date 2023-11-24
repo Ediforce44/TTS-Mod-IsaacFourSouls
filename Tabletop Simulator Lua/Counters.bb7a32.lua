@@ -242,14 +242,15 @@ function getCounter(params)
 
     local newCounter = self.takeObject()
 
-    if params.name then
-        newCounter.setName(params.name)
-    else
-        newCounter.setName(getCounterName(type, range, mode))
-    end
-
     attach({type = type, range = range, mode = mode, object = newCounter})
-    Wait.frames(function() initCounter(type, range, mode, newCounter) end)
+    Wait.frames(function()
+        initCounter(type, range, mode, newCounter)
+        if params.name then
+            newCounter.call("changeName", {name = params.name})
+        else
+            newCounter.call("changeName", {name = getCounterName(type, range, mode)})
+        end
+    end)
     return newCounter
 end
 
