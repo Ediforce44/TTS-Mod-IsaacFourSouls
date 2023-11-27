@@ -126,7 +126,7 @@ function updateValue()
         end
     end
     
-    COUNTER_MODULE.call("notifyCOIN", {player = owner_color, value = value})
+    COUNTER_MODULE.call("notifyCENT", {player = owner_color, value = value})
 end
 
 function reset_val()

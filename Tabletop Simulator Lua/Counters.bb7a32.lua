@@ -14,7 +14,7 @@ COUNTER_TYPE = {
     ITEM        = "ITEM",
     DEATH       = "DEATH",
     KILL        = "KILL",
-    COIN        = "COIN",
+    CENT        = "CENT",
     HANDCARD    = "HANDCARD",
     TREASURE_GAIN = "TREASURE_GAIN",
 }
@@ -39,7 +39,7 @@ local TYPE_TO_NAME = {
     ITEM        = "Items",
     DEATH       = "Deaths",
     KILL        = "Kills",
-    COIN        = "Coins",
+    CENT        = "Cents",
     HANDCARD    = "Handcards",
     TREASURE_GAIN = "Treasures gained",
 }
