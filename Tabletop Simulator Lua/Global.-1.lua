@@ -804,7 +804,7 @@ function pickColor(falseInput)
 end
 
 function colorPicker_attach(params)
-    if params.afterPickFunction and params.functionOwner then
+    if params.afterPickFunction then
         table.insert(colorPickerAttachment, {picker = params.picker or getHandInfo()[activePlayerColor].owner
             , afterPickFunction = params.afterPickFunction, functionOwner = params.functionOwner
             , reason = params.reason or "Unknown", functionParams = params.functionParams or {}})
