@@ -29,11 +29,14 @@ function onSave()
 end
 
 function syncCounter(syncedCounterGuids)
+    local syncedColors = {owner_color}
     for color, guid in pairs(syncedCounterGuids) do
         if getObjectFromGUID(guid) and (guid ~= self.getGUID()) then
+            table.insert(syncedColors, color)
             SYNCED_COIN_COUNTER_GUIDS[color] = guid
         end
     end
+    COUNTER_MODULE.call("syncCounterRanges", {subType="CENT", rangesToSync=syncedColors})
 end
 
 function setCoins(params)
