@@ -1035,7 +1035,7 @@ MONSTER_HP_COUNTER_GUID = {
 }
 
 COUNTER_BAGS_GUID = {
-    NORMAL = "bb7a32",
+    NUMBER = "bb7a32",
     GOLD = "a0915e",
     EGG = "71e1f7",
     POOP = "9977a0",
@@ -1043,11 +1043,20 @@ COUNTER_BAGS_GUID = {
     GUT = "8abd1b"
 }
 
+COUNTER_TYPE = {
+    NUMBER  = "NUMBER",
+    GOLD    = "GOLD",
+    EGG     = "EGG",
+    POOP    = "POOP",
+    SPIDER  = "SPIDER",
+    GUT     = "GUT",
+}
+
 SFX_CUBE_GUID = "ca024f"
 
 TURN_MODULE_GUID = "87e737"
 DECK_BUILDER_MODULE_GUID = "69a80e"
-COUNTER_MODULE_GUID = "bb7a32"
+COUNTER_MODULE_GUID = COUNTER_BAGS_GUID.NUMBER
 
 --Initialised in onLoad
 DISCARD_PILE_POSITION = {
@@ -1467,21 +1476,35 @@ function placeCounter(params)
         printWarning({text = "Wrong parameters in global function 'placeCounter()'."})
         return
     end
+
+    local position = params.position
     local rotation = params.rotation or Vector(0, 180, 0)
 
+    if params.object then
+        local object = params.object
+        if (object.type == "Card") or (object.type == "Deck") then
+            position = object.getPosition() + Vector(0, 3, 0)
+            rotation = object.getRotation():setAt('z', 0)
+        end
+    end
+
     if params.counter then
-        params.counter.setPositionSmooth(params.position, false)
+        params.counter.setPositionSmooth(position, false)
         params.counter.setRotationSmooth(rotation)
     else
-        local counterType = params.type
-        local counterBag = getObjectFromGUID(COUNTER_BAGS_GUID[counterType])
+        local counterBag = getObjectFromGUID(COUNTER_BAGS_GUID[params.type])
         local amount = params.amount or 1
 
-        local position = params.position
         for i = 1, amount do
-            local counter = counterBag.takeObject()
+            local counter = nil
+            if params.type == COUNTER_TYPE.NUMBER then
+                counter = counterBag.call("getCounter", params)
+            else
+                counter = counterBag.takeObject()
+            end
+
             counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
-            counter.setRotationSmooth(rotation)
+            counter.setRotation(rotation, false)
         end
     end
 end
