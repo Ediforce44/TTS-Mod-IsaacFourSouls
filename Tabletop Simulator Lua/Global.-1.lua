@@ -753,6 +753,39 @@ function getRandomPlayerColor()
     return allActivePlayerColors[math.random(#allActivePlayerColors)]
 end
 
+local pingEventAttachment = {}
+
+function pingEvent_attach(params)
+    if params.afterPingFunction then
+        table.insert(pingEventAttachment, {playerColor = params.playerColor or getHandInfo()[activePlayerColor].owner
+            , afterPingFunction = params.afterPingFunction, functionOwner = params.functionOwner
+            , functionParams = params.functionParams or {}})
+        return true
+    end
+    return false
+end
+
+function onPlayerPing(player, position, pingedObject)
+    if #pingEventAttachment == 0 then
+        return
+    end
+
+    local nextEntry = pingEventAttachment[1]
+    if nextEntry.playerColor == player.color then
+        table.remove(pingEventAttachment, 1)
+
+        local functionParams = nextEntry.functionParams or {}
+        functionParams.playerColor = nextEntry.playerColor
+        functionParams.position = position
+        functionParams.object = pingedObject
+        if not nextEntry.functionOwner then
+            Global.call(nextEntry.afterPingFunction, functionParams)
+        else
+            nextEntry.functionOwner.call(nextEntry.afterPingFunction, functionParams)
+        end
+    end
+end
+
 local colorPickerAttachment = {}
 
 function pickColor(falseInput)
