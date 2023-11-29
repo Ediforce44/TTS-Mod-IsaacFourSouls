@@ -354,7 +354,15 @@ function click_KillMonster(buttonObj)
         buttonAnimation(buttonObj)
         local zone = getObjectFromGUID(Global.getTable("ZONE_GUID_MONSTER")[type])
         if zone then
-            --TODO: If zone state is already dead, finish him
+            local monsterDeckZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
+            if monsterDeckZone then
+                local attackButtonStates = monsterDeckZone.getTable("ATTACK_BUTTON_STATES")
+                if zone.call("getState") == attackButtonStates.DIED then
+                    zone.call("finishMonster")
+                    monsterDeckZone.call("changeZoneState", {zone = zone, newState = attackButtonStates.ATTACK})
+                    return
+                end
+            end
             zone.call("killMonster")
         end
     end
