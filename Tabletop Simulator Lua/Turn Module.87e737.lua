@@ -59,6 +59,12 @@ function onLoad(saved_data)
 
     if saved_data ~= "" then
         local loaded_data = JSON.decode(saved_data)
+        if loaded_data.handInfo then
+            HAND_INFO = loaded_data.handInfo
+        end
+        if loaded_data.spyInfo then
+            SPY_INFO = loaded_data.spyInfo
+        end
         if loaded_data.onTurnEvents then
             ON_TURN_EVENTS = loaded_data.onTurnEvents
         end
@@ -78,9 +84,9 @@ function onLoad(saved_data)
         end
     end
 end
-
+    
 function onSave()
-    return JSON.encode({onTurnEvents = ON_TURN_EVENTS, turnSettings = TURN_SETTINGS, turnSystemStarted = TURN_SYSTEM_STARTED
+    return JSON.encode({handInfo = HAND_INFO, spyInfo = SPY_INFO, onTurnEvents = ON_TURN_EVENTS, turnSettings = TURN_SETTINGS, turnSystemStarted = TURN_SYSTEM_STARTED
         , startPlayerColor = START_PLAYER_COLOR, activePlayerColor = Global.getVar("activePlayerColor")})
 end
 
