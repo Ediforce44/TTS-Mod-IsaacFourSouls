@@ -1,7 +1,7 @@
 --- Edited by Ediforce44
 owner_color = "Green"
 HEARTS_GUID = Global.getTable("HEART_TOKENS_GUID")[owner_color]
-INACTIVE_HEART_COLOR = {0, 0, 0}
+INACTIVE_HEART_COLOR = {0.04, 0.15, 0.04}
 ACTIVE_HEART_COLOR = Global.getTable("REAL_PLAYER_COLOR_RGB")[owner_color]
 PLAYER_ZONE_GUID = Global.getTable("ZONE_GUID_PLAYER")[owner_color]
 

@@ -38,10 +38,10 @@ function getRoomButtonTooltip(params)
     --end
     if params then
         if params.newState == ROOM_BUTTON_STATES.DISCARD then
-            return " - Left-Click: Discard active Room - Double-Right-Click: Deactivate Zone"
+            return "[i]Left-Click: Discard active Room[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
         end
     end
-    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+    return "[i]Left-Click: Activate Zone[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
 end
 
 function placeNewRoomCard(params)

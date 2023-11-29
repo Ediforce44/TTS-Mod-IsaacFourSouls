@@ -95,6 +95,7 @@ local challengeBag = nil
 local SCRIPT_MINION_ZONE =
 [[--- Written by Ediforce44
 HP_COUNTER_GUID = nil
+COUNTER_MODULE = nil
 
 altClickCounter = 0
 
@@ -150,6 +151,7 @@ function containsDeckOrCard()
 end
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
     BOSS_ZONE = getObjectFromGUID(Global.getVar("ZONE_GUID_BOSS"))
 
     ATTACK_BUTTON_STATES = BOSS_ZONE.getTable("ATTACK_BUTTON_STATES")
@@ -370,6 +372,9 @@ function finishMonster(params)
     if monsterCard == nil then
         return nil
     end
+
+    COUNTER_MODULE.call("notifyKILL", {player = activePlayerColor, dif = 1})
+
     if allowRewards and Global.getTable("PLAYER_SETTINGS")[activePlayerColor].rewarding then
         local rewarded = MONSTER_DECK_ZONE.call("payOutRewards", {playerColor = activePlayerColor, rewardTable = active_monster_reward})
         if rewarded then
@@ -491,6 +496,7 @@ MINION_SLOT_GUIDS = {}
 MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
 MONSTER_DECK_ZONE_GUID = Global.getTable("ZONE_GUID_DECK").MONSTER
 MONSTER_DISCARD_ZONE_GUID = Global.getTable("ZONE_GUID_DISCARD").MONSTER
+COUNTER_MODULE = nil
 
 ONLY_MONSTER_MINIONS = true
 NO_MINION_REWARDS = false
@@ -715,7 +721,7 @@ local function createResurrectButton()
             font_size      = 200,
             color          = BOSS_BUTTON_COLORS.ACTIVE,
             font_color     = {1, 1, 1},
-            tooltip        = " - Left-Click: Add monster to Minion Zone"
+            tooltip        = "[i]Left-Click: Add monster to Minion Zone[/i]"
         })
         RESURRECT_BUTTON_INDEX = 0
     end
@@ -734,7 +740,7 @@ local function createPlayerResurrectButtons()
             font_size      = 240,
             color          = {0.6, 0, 0.1},
             font_color     = {1, 1, 1},
-            tooltip        = " - Left-Click: Add monster to Red Minion Zone"
+            tooltip        = "[i]Left-Click: Add monster to Red Minion Zone[/i]"
         })
         PLAYER_RESURRECT_BUTTON_INDICES["Red"] = 1
         self.createButton({
@@ -747,7 +753,7 @@ local function createPlayerResurrectButtons()
             font_size      = 240,
             color          = {0.1, 0, 0.6},
             font_color     = {1, 1, 1},
-            tooltip        = " - Left-Click: Add monster to Blue Minion Zone"
+            tooltip        = "[i]Left-Click: Add monster to Blue Minion Zone[/i]"
         })
         PLAYER_RESURRECT_BUTTON_INDICES["Blue"] = 2
     end
@@ -1017,6 +1023,9 @@ function finishMonster(params)
     if monsterCard == nil then
         return nil
     end
+
+    COUNTER_MODULE.call("notifyKILL", {player = activePlayerColor, dif = 1})
+
     if Global.getTable("PLAYER_SETTINGS")[activePlayerColor].rewarding then
         local rewarded = monsterDeckZone.call("payOutRewards", {playerColor = activePlayerColor, rewardTable = active_monster_reward})
         if rewarded then
@@ -1049,6 +1058,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
     MINION_ZONE_INFO = Global.getTable("ZONE_INFO_MINION")
     ATTACK_BUTTON_STATES = getObjectFromGUID(MONSTER_DECK_ZONE_GUID).getTable("ATTACK_BUTTON_STATES")
     BOSS_BUTTON_STATES = ATTACK_BUTTON_STATES
@@ -1166,13 +1176,13 @@ end
 -- If you want state depending tooltips, there you go :D
 function getAttackButtonTooltip(params)
     -- params.newState
-    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+    return "[i]Left-Click: Activate Zone[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
 end
 
 -- If you want state depending tooltips, there you go :D
 function getBossButtonTooltip(params)
     -- params.newState
-    return " - Double-Right-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+    return "[i]Double-Right-Click: Activate Zone[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
 end
 
 function changeMinionZoneState(params)
@@ -2261,7 +2271,7 @@ function activateSlotButton()
             font_size      = 200,
             color          = color,
             font_color     = {1, 1, 1},
-            tooltip        = " - Left-Click: Activate this button\n - Double-Right-Click: Deactivate this button"
+            tooltip        = "[i]Left-Click: Activate this button[/i]\n[i]Double-Right-Click: Deactivate this button[/i]"
         })
     end
 end
@@ -2561,7 +2571,7 @@ local function createExpansionButton()
         font_size      = 300,
         color          = {0.50, 0.59, 0.6, 100},
         font_color     = {0, 0, 0},
-        tooltip        = "Click this to activate the inactive part of the Challenge Zone.\n -- No way back --"
+        tooltip        = "[b]Click this to activate the inactive part of the Challenge Zone.[/b]\n[i]-- No way back --[/i]"
     })
 end
 

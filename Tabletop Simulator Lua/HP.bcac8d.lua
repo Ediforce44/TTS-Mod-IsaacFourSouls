@@ -9,8 +9,7 @@ function updateHP(params)
     local newValue = params.HP
     if newValue ~= nil and newValue >= MIN_VALUE and newValue <= MAX_VALUE then
         value = newValue
-        updateVal()
-        updateSave()
+        updateValue()
     end
 end
 
@@ -25,43 +24,12 @@ function reset()
     --Only resets HP-Counter, if the active monster has a HP attribute
     if zone.getTable("active_monster_attrs").HP ~= 0 then
         value = zone.getTable("active_monster_attrs").HP
-        updateVal()
-        updateSave()
+        updateValue()
     end
 end
 
-function onload(saved_data)
-    light_mode = false
-    value = 0
-
-    if saved_data ~= "" then
-        local loaded_data = JSON.decode(saved_data)
-        light_mode = loaded_data[1]
-        value = loaded_data[2]
-    end
-    createAll()
-end
-
-function updateSave()
-    local data_to_save = {light_mode, value}
-    saved_data = JSON.encode(data_to_save)
-    self.script_state = saved_data
-end
-
-function createAll()
-    s_color = {0.5, 0.5, 0.5, 95}
-
-    if light_mode then
-        f_color = {1,1,1,95}
-    else
-        f_color = {0,0,0,100}
-    end
-
-    if self.getName() == "" then
-        ttText = value
-    else
-        ttText = value .. "\n" .. self.getName()
-    end
+local function createAll()
+    local ttText = "[b]HP Counter[/b][i]\nLeft-Click: Increase\nRight-Click: Decrease[/i]"
 
     self.createButton({
       label=tostring(value),
@@ -74,13 +42,13 @@ function createAll()
       alignment = 3,
       scale={x=1.5, y=1.5, z=1.5},
       font_size=600,
-      font_color=f_color,
+      font_color={1,1,1,95},
       color={0,0,0,0}
       })
 
     self.createInput({
         value = self.getName(),
-        input_function = "editName",
+        input_function = "dummy",
         tooltip=ttText,
         label = "Counter",
         function_owner = self,
@@ -90,77 +58,34 @@ function createAll()
         height = 1000,
         font_size = 400,
         scale={x=1, y=1, z=1},
-        font_color= f_color,
+        font_color={1,1,1,95},
         color = {0,0,0,0}
         })
+end
 
-
-    if light_mode then
-        lightButtonText = "[Set dark]"
-    else
-        lightButtonText = "[Set light]"
+function onLoad(saved_data)
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        if loaded_data.value then
+            value = loaded_data.value
+        end
     end
-    self.createButton({
-        label=lightButtonText,
-        tooltip=lightButtonText,
-        click_function="swap_fcolor",
-        function_owner=self,
-        position={0,-0.05,0.6},
-        rotation={180,180,0},
-        height=250,
-        width=1200,
-        scale={x=1, y=1, z=1},
-        font_size=250,
-        font_color=s_color,
-        color={0,0,0,0}
-        })
 
-    self.createInput({
-        value = "#",
-        label = "...",
-        input_function = "keepSample",
-        function_owner = self,
-        alignment = 3,
-        position={0,-0.05,-0.5},
-        rotation={180,180,0},
-        width = 600,
-        height = 800,
-        font_size = 1200,
-        scale={x=1, y=1, z=1},
-        font_color=f_color,
-        color = {0,0,0,0}
-        })
+    createAll()
+end
 
-    setTooltips()
+function onSave()
+    return JSON.encode({value = value})
 end
 
 function removeAll()
     self.removeInput(0)
-    self.removeInput(1)
     self.removeButton(0)
-    self.removeButton(1)
 end
 
 function reloadAll()
     removeAll()
     createAll()
-    setTooltips()
-    updateSave()
-end
-
-function swap_fcolor(_obj, _color, alt_click)
-    light_mode = not light_mode
-    reloadAll()
-end
-
-function swap_align(_obj, _color, alt_click)
-    center_mode = not center_mode
-    reloadAll()
-end
-
-function editName(_obj, _string, newName)
-    self.setName(newName)
-    setTooltips()
 end
 
 function add_subtract(_obj, _color, alt_click)
@@ -176,60 +101,21 @@ function add_subtract(_obj, _color, alt_click)
         if new_value == 0 then
             zone.call("monsterDied")
         end
-        updateVal()
-        updateSave()
+        updateValue()
     end
 end
 
-function updateVal()
-    if self.getName() == "" then
-        ttText = value
-    else
-        ttText = value .. "\n" .. self.getName()
-    end
+function updateValue()
     self.editButton({
         index = 0,
         label = tostring(value),
-        tooltip = ttText
         })
 end
 
 function reset_val()
     value = 0
-    updateVal()
-    updateSave()
+    updateValue()
 end
 
-function setTooltips()
-    self.editInput({
-        index = 0,
-        value = self.getName(),
-        tooltip = ttText
-        })
-    self.editButton({
-        index = 0,
-        value = tostring(value),
-        tooltip = ttText
-        })
-end
-
-function null()
-end
-
-function keepSample(_obj, _string, _)
-    reloadAll()
-end
-
-function onScriptingButtonDown(index, playerColor)
-    if Player[playerColor].getHoverObject() == self then
-        new_value = index
-        if index == 10 then
-            new_value = 0
-        end
-        if value ~= new_value then
-            value = new_value
-            updateVal()
-            updateSave()
-        end
-    end
+function dummy()
 end

@@ -384,13 +384,13 @@ function createSurfaceInput()
     self.createInput({
         label="Nickname", input_function="none", function_owner=self,
         alignment=3, position={0,0,3}, height=224, width=4000,
-        font_size=200, tooltip="Enter nickname for table image (only used for save)",
+        font_size=200, tooltip="[b]Enter nickname for table image (only used for save)[/b]",
         value=nickname, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     self.createInput({
         label="URL", input_function="none", function_owner=self,
         alignment=3, position={0,0,4}, height=224, width=4000,
-        font_size=200, tooltip="Enter URL for tabletop image",
+        font_size=200, tooltip="[b]Enter URL for tabletop image[/b]",
         value=currentURL, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
 end
@@ -404,12 +404,12 @@ function createSurfaceButtons()
     --Functional
     self.createButton({
         label="Apply Image\nTo Table", click_function="click_applySurface",
-        function_owner=self, tooltip="Apply URL as table image",
+        function_owner=self, tooltip="[b]Apply URL as table image[/b]",
         position={2,0,5}, height=440, width=1400, font_size=200, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     self.createButton({
         label="Save Image\nTo Memory", click_function="click_saveSurface",
-        function_owner=self, tooltip="Record URL into memory (requires nickname)",
+        function_owner=self, tooltip="[b]Record URL into memory (requires nickname)[/b]",
         position={-2,0,5}, height=440, width=1400, font_size=200, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     --Label
@@ -445,13 +445,13 @@ function createScaleInput()
     self.createInput({
         label=string.char(8644), input_function="none", function_owner=self,
         alignment=3, position={-8.5,0,3}, height=224, width=400,
-        font_size=200, tooltip="Table Width",
+        font_size=200, tooltip="[b]Table Width[/b]",
         value=round(obj_side_top.getScale().x, 1), font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     self.createInput({
         label=string.char(8645), input_function="none", function_owner=self,
         alignment=3, position={-7.5,0,3}, height=224, width=400,
-        font_size=200, tooltip="Table Depth",
+        font_size=200, tooltip="[b]Table Depth[/b]",
         value=round(obj_side_lef.getScale().x, 1), font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
 end
@@ -483,7 +483,7 @@ function createScaleButtons()
     if checkData.move == true then label = string.char(10008) end
     self.createButton({
         label=label, click_function="click_checkMove",
-        function_owner=self, tooltip="Check to move hands when table is rescaled",
+        function_owner=self, tooltip="[b]Check to move hands when table is rescaled[/b]",
         position={-6.8,0,4}, height=224, width=224, font_size=200, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
     --[[
@@ -491,14 +491,14 @@ function createScaleButtons()
     if checkData.scale == true then label = string.char(10008) end
     self.createButton({
         label=label, click_function="click_checkScale",
-        function_owner=self, tooltip="Check to scale the width of hands when table is rescaled",
+        function_owner=self, tooltip="[b]Check to scale the width of hands when table is rescaled[/b]",
         position={-6.8,0,4}, height=224, width=224, font_size=200,
     })
     ]]
     --Apply button
     self.createButton({
         label="Apply Scale", click_function="click_applyScale",
-        function_owner=self, tooltip="Apply width/depth to table",
+        function_owner=self, tooltip="[b]Apply width/depth to table[/b]",
         position={-8,0,5}, height=440, width=1400, font_size=200, font_color= {1,1,1}, color = {0.1,0.1,0.1}
     })
 end

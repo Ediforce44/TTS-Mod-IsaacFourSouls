@@ -1,5 +1,6 @@
 --- Written by Ediforce44
 HP_COUNTER_GUID = Global.getTable("MONSTER_HP_COUNTER_GUID").FOUR
+COUNTER_MODULE = nil
 
 altClickCounter = 0
 
@@ -9,7 +10,8 @@ active_monster_attrs = {
     HP          = 0,
     ATK         = 0,
     DMG         = 0,
-    INDOMITABLE = false
+    INDOMITABLE = false,
+    IS_EVENT    = false
 }
 
 active_monster_reward = {
@@ -21,7 +23,7 @@ active_monster_reward = {
 
 active = false
 
--- It is used for states which vary their behavior depending on the previous state
+-- It is used for states with behavior depending on the previous state
 LAST_STATE = nil
 
 MONSTER_DECK_ZONE = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
@@ -83,6 +85,7 @@ function placeNewMonsterIfEmpty()
 end
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
     ATTACK_BUTTON_STATES = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_STATES")
     ATTACK_BUTTON_COLORS = MONSTER_DECK_ZONE.getTable("ATTACK_BUTTON_COLORS")
     EVENT_TYPES = MONSTER_DECK_ZONE.getTable("EVENT_TYPES")
@@ -111,6 +114,7 @@ function onLoad(saved_data)
         active_monster_attrs.ATK = loaded_data[3].ATK or 0
         active_monster_attrs.DMG = loaded_data[3].DMG or 0
         active_monster_attrs.INDOMITABLE = loaded_data[3].INDOMITABLE or false
+        active_monster_attrs.IS_EVENT = loaded_data[3].IS_EVENT or false
     end
     if loaded_data[4] then
         active_monster_reward.CENTS = loaded_data[4].CENTS or 0
@@ -211,6 +215,9 @@ function resetAttackButton()
 end
 
 function killMonster()
+    if active_monster_attrs.IS_EVENT then
+        return
+    end
     getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = 0})
     monsterDied()
 end
@@ -257,6 +264,9 @@ function finishMonster(params)
     if monsterCard == nil then
         return nil
     end
+
+    COUNTER_MODULE.call("notifyKILL", {player = activePlayerColor, dif = 1})
+
     if Global.getTable("PLAYER_SETTINGS")[activePlayerColor].rewarding then
         local rewarded = MONSTER_DECK_ZONE.call("payOutRewards", {playerColor = activePlayerColor, rewardTable = active_monster_reward})
         if rewarded then
@@ -306,6 +316,7 @@ function updateAttributes(params)
         active_monster_attrs.ATK = params.ATK or -1
         active_monster_attrs.DMG = params.DMG or -1
         active_monster_attrs.INDOMITABLE = params.INDOMITABLE or false
+        active_monster_attrs.IS_EVENT = params.IS_EVENT or false
         getObjectFromGUID(HP_COUNTER_GUID).call("updateHP", {HP = active_monster_attrs.HP})
     end
 end

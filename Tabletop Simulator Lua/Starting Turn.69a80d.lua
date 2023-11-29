@@ -19,7 +19,7 @@ local function createTurnButtons()
       width          = 300,
       height         = 300,
       color          = {0.85, 0.1, 0.09},
-      tooltip        = "Red Turn"
+      tooltip        = "[b]Red Turn[/b]"
     })
     self.createButton({
       click_function = "onClickBlueBtn",
@@ -29,7 +29,7 @@ local function createTurnButtons()
       width          = 300,
       height         = 300,
       color          = {0.12, 0.53, 1},
-      tooltip        = "Blue Turn"
+      tooltip        = "[b]Blue Turn[/b]"
     })
     self.createButton({
       click_function = "onClickGreenBtn",
@@ -39,7 +39,7 @@ local function createTurnButtons()
       width          = 300,
       height         = 300,
       color          = {0.19, 0.7, 0.16},
-      tooltip        = "Green Turn"
+      tooltip        = "[b]Green Turn[/b]"
     })
     self.createButton({
       click_function = "onClickYellowBtn",
@@ -49,7 +49,7 @@ local function createTurnButtons()
       width          = 300,
       height         = 300,
       color          = {0.9, 0.89, 0.17},
-      tooltip        = "Yellow Turn"
+      tooltip        = "[b]Yellow Turn[/b]"
     })
 
     self.createButton({
@@ -61,7 +61,7 @@ local function createTurnButtons()
       width          = 300,
       height         = 300,
       color          = {0.85, 0.1, 0.09},
-      tooltip        = "Red Turn"
+      tooltip        = "[b]Red Turn[/b]"
     })
     self.createButton({
       click_function = "onClickBlueBtn",
@@ -72,7 +72,7 @@ local function createTurnButtons()
       width          = 300,
       height         = 300,
       color          = {0.12, 0.53, 1},
-      tooltip        = "Blue Turn"
+      tooltip        = "[b]Blue Turn[/b]"
     })
     self.createButton({
       click_function = "onClickGreenBtn",
@@ -83,7 +83,7 @@ local function createTurnButtons()
       width          = 300,
       height         = 300,
       color          = {0.19, 0.7, 0.16},
-      tooltip        = "Green Turn"
+      tooltip        = "[b]Green Turn[/b]"
     })
     self.createButton({
       click_function = "onClickYellowBtn",
@@ -94,7 +94,7 @@ local function createTurnButtons()
       width          = 300,
       height         = 300,
       color          = {0.9, 0.89, 0.17},
-      tooltip        = "Yellow Turn"
+      tooltip        = "[b]Yellow Turn[/b]"
     })
     self.createInput({
         input_function = "dummy",

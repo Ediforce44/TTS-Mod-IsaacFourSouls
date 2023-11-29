@@ -3,6 +3,8 @@ owner_color = "Yellow"
 
 souls_in_this_zone = 0
 
+COUNTER_MODULE = nil
+
 ZONE_EDGES = {
     {x=0, z=0},     -- 1 = |""  ""| = 3
     {x=0, z=0},     -- 2 = |__  __| = 4
@@ -123,6 +125,8 @@ local function placeObject(object, position)
 end
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+
     calculateZoneEdges()
     initIndexTable()
     calculateIndexTable()
@@ -157,7 +161,9 @@ function onObjectEnterZone(zone, enteringObject)
                 if attachedObjects[enteringObject.guid] then
                     local soulAmountEarned = enteringObject.getVar("soul") or 0
                     if soulAmountEarned > 0 then
-                        souls_in_this_zone = getSoulCount()
+                        local newSoulCount = getSoulCount()
+                        souls_in_this_zone = newSoulCount
+                        COUNTER_MODULE.call("notifySOUL", {player = owner_color, value = souls_in_this_zone})
 
                         local soulAmount = "Souls"
                         if soulAmountEarned == 0 then
@@ -189,7 +195,11 @@ function onObjectLeaveZone(zone, leavingObject)
     if zone.getGUID() == self.guid then
         if leavingObject.tag == "Card" then
             detachObject(leavingObject)
-            souls_in_this_zone = getSoulCount()
+            local newSoulCount = getSoulCount()
+            if newSoulCount ~= souls_in_this_zone then
+                souls_in_this_zone = newSoulCount
+                COUNTER_MODULE.call("notifySOUL", {player = owner_color, value = souls_in_this_zone})
+            end
         end
     end
 end

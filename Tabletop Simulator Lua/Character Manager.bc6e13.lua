@@ -212,7 +212,7 @@ function initButtons()
     position       = {5.7, 1, 0},
     width          = 1800,
     height         = 350,
-    tooltip        = "Store or extract surplus Character Packs",
+    tooltip        = "[b]Store or extract surplus Character Packs[/b]",
     font_size      = 230,
     font_color= {1,1,1},
     color = {0.1,0.1,0.1}
