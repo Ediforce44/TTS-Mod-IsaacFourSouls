@@ -1472,20 +1472,28 @@ function placePlayerCounterInPlayerZone(params)
 end
 
 function placeCounter(params)
-    if (params.counter == nil) and (params.type == nil) or (params.position == nil) then
+    if (params.counter == nil) and (params.type == nil) then
         printWarning({text = "Wrong parameters in global function 'placeCounter()'."})
         return
     end
 
-    local position = params.position
-    local rotation = params.rotation or Vector(0, 180, 0)
+    local position = nil
+    local rotation = nil
 
-    if params.object then
-        local object = params.object
-        if (object.type == "Card") or (object.type == "Deck") then
-            position = object.getPosition() + Vector(0, 3, 0)
-            rotation = object.getRotation():setAt('z', 0)
+    if params.position == nil then
+        if params.object == nil then
+            printWarning({text = "Wrong parameters in global function 'placeCounter()' [2]."})
+            return
+        else
+            local object = params.object
+            if (object.type == "Card") or (object.type == "Deck") then
+                position = object.getPosition() + Vector(0, 3, 0)
+                rotation = object.getRotation():setAt('z', 0)
+            end
         end
+    else
+        position = params.position
+        rotation = params.rotation or Vector(0, 180, 0)
     end
 
     if params.counter then
