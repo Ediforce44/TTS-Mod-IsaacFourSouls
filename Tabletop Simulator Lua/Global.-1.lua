@@ -803,7 +803,11 @@ function UI_colorPicked(player, _, idValue)
     local nextEntry = colorPickerAttachment[1]
     local functionParams = nextEntry.functionParams or {}
     functionParams.pickedColor = pickedColor
-    nextEntry.functionOwner.call(nextEntry.afterPickFunction, functionParams)
+    if not nextEntry.functionOwner then
+        Global.call(nextEntry.afterPickFunction, functionParams)
+    else
+        nextEntry.functionOwner.call(nextEntry.afterPickFunction, functionParams)
+    end
     table.remove(colorPickerAttachment, 1)
     UI.hide("colorPicker")
     if #colorPickerAttachment > 0 then
