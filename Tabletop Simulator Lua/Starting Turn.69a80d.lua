@@ -52,7 +52,7 @@ local function createTurnButtons()
             width          = 300,
             height         = 300,
             color          = Global.getTable("REAL_PLAYER_COLOR_RGB")[playerColor],
-            tooltip        = playerColor .. "'s Turn"
+            tooltip        = "[b]" .. playerColor .. "'s Turn[/b]"
         })
         buttonCount = buttonCount + 1
         TURN_BUTTON_INDICES[playerColor][1] = buttonCount
@@ -65,7 +65,7 @@ local function createTurnButtons()
             width          = 300,
             height         = 300,
             color          = Global.getTable("REAL_PLAYER_COLOR_RGB")[playerColor],
-            tooltip        = playerColor .. "'s Turn"
+            tooltip        = "[b]" .. playerColor .. "'s Turn[/b]"
         })
         buttonCount = buttonCount + 1
         TURN_BUTTON_INDICES[playerColor][2] = buttonCount

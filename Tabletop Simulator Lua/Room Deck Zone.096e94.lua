@@ -38,10 +38,10 @@ function getRoomButtonTooltip(params)
     --end
     if params then
         if params.newState == ROOM_BUTTON_STATES.DISCARD then
-            return " - Left-Click: Discard active Room - Double-Right-Click: Deactivate Zone"
+            return "[i]Left-Click: Discard active Room[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
         end
     end
-    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+    return "[i]Left-Click: Activate Zone[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
 end
 
 function placeNewRoomCard(params)
@@ -67,30 +67,26 @@ function placeNewRoomCard(params)
 end
 
 function click_function_RoomButton(zone, color, alt_click)
-    if Global.getVar("activePlayerColor") == color or Player[color].admin then
-        if alt_click then
-            resetRoomButton(zone)
-            return
-        end
-        local roomButton = zone.getButtons()[zone.getVar("ROOM_BUTTON_INDEX") + 1]
-        if roomButton.label == ROOM_BUTTON_STATES.INACTIVE then
-            zone.call("activateZone")
-        elseif roomButton.label == ROOM_BUTTON_STATES.CHANGE then
-            placeNewRoomCard({zone = zone})
-        else
-            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(attackButton.label) .. "."})
-        end
+    if alt_click then
+        resetRoomButton(zone)
+        return
+    end
+    local roomButton = zone.getButtons()[zone.getVar("ROOM_BUTTON_INDEX") + 1]
+    if roomButton.label == ROOM_BUTTON_STATES.INACTIVE then
+        zone.call("activateZone")
+    elseif roomButton.label == ROOM_BUTTON_STATES.CHANGE then
+        placeNewRoomCard({zone = zone})
+    else
+        Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(attackButton.label) .. "."})
     end
 end
 
 function click_function_RoomButtonDiscard(zone, color, alt_click)
-    if Global.getVar("activePlayerColor") == color or Player[color].admin then
-        if alt_click then
-            resetRoomButton(zone)
-            return
-        end
-        if zone.getVar("active") then
-            zone.call("discardRoom")
-        end
+    if alt_click then
+        resetRoomButton(zone)
+        return
+    end
+    if zone.getVar("active") then
+        zone.call("discardRoom")
     end
 end

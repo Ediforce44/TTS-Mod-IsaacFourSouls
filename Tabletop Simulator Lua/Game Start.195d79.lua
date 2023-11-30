@@ -343,7 +343,7 @@ function onLoad()
     self.createButton({
     click_function = "onStart",
     label = "Start",
-    tooltip = "Click here to start!",
+    tooltip = "[b]Click here to start![/b]",
     function_owner = self,
     position = {0, 0.11, -1},
     rotation = {0, 0, 0},

@@ -24,6 +24,16 @@ local GENERAL_BUTTONS = {
     DECKBUILDING = "e16ce7"
 }
 
+local KILL_BUTTONS = {
+    ONE     = "27d7f6",
+    TWO     = "5f7652",
+    THREE   = "385933",
+    FOUR    = "881682",
+    FIVE    = "420306",
+    SIX     = "f4a180",
+    SEVEN   = "21399e",
+}
+
 local CUSTOM_BUTTON_THEME = {
     DARK = {state = 1, rotation = {Red = {0, 180, 180}, Blue = {0, 180, 180}, Purple = {0, 270, 180}
         , Green = {0, 0, 180}, Yellow = {0, 0, 180}, White = {0, 90, 180}}},
@@ -34,17 +44,17 @@ local CUSTOM_BUTTON_THEME = {
 }
 
 local BUTTON_TOOLTIPS = {
-    ROOM = "[b]Spy on Room Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards",
-    LOOT = "[b]Spy on Loot Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards",
-    TREASURE = "[b]Spy on Treasure Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards",
-    MONSTER = "[b]Spy on Monster Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards",
-    OPTION = "[i]Open Player-Options",
-    LINK_SLIM = "[b]Workshop Link to the simple version of this Mod",
-    LINK_NORMAL = "[b]Workshop Link to the 4 Player version of this Mod",
-    LINK_XL = "[b]Workshop Link to this Mod",
-    MUTE = "[b]Mute or unmute Sound Effects",
-    DECKBUILDING = "[b]Manual Deckbuilding[/b][i]\nIf you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks.",
-    TABLE_CHANGE = "[b]Change Table Mat[/b][i]\nYou can change the Table Mat or load custom images as Table Mat."
+    ROOM = "[b]Spy on Room Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards[/i]",
+    LOOT = "[b]Spy on Loot Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards[/i]",
+    TREASURE = "[b]Spy on Treasure Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards[/i]",
+    MONSTER = "[b]Spy on Monster Deck[/b][i]\nLeft-Click: Top Card\nRight-Click: Top 5 Cards[/i]",
+    OPTION = "[b]Open Player-Options[/b]",
+    LINK_SLIM = "[b]Workshop Link to the simple version of this Mod[/b]",
+    LINK_NORMAL = "[b]Workshop Link to the 4 Player version of this Mod[/b]",
+    LINK_XL = "[b]Workshop Link to this Mod[/b]",
+    MUTE = "[b]Mute or unmute Sound Effects[/b]",
+    DECKBUILDING = "[b]Manual Deckbuilding[/b][i]\nIf you press this button there is no way back!\nAll playable cards will be placed on the table and you can build your own decks.[/i]",
+    KILL_MONSTER = "[b]Kill[/b]",
 }
 
 local SPY_ZONE_GUIDS = {Red = nil, Blue = nil, Purple = nil, Green = nil, Yellow = nil, White = nil}
@@ -62,7 +72,7 @@ local BUTTON_FUNCTIONS = {
     LINK_XL = "click_ShowLinkXL",
     MUTE = "click_MuteSFX",
     DECKBUILDING = "click_ManualDeckbuilding",
-    TABLE_CHANGE = "click_ChangeTableMat"
+    KILL_MONSTER = "click_KillMonster"
 }
 
 local function buttonAnimation(buttonObj)
@@ -86,7 +96,9 @@ function unblockButton(params)
     blockedButtons[params.buttonObj.getGUID()] = false
 end
 
-local function createButtonsOnCustomButton(buttonObj, buttonType)
+local function createButtonsOnCustomButton(buttonObj, buttonType, scaleX, scaleY)
+    scaleX = scaleX or 1
+    scaleY = scaleY or 1
     if buttonObj then
         buttonObj.setPosition(buttonObj.getPosition():setAt('y', BUTTON_HIGHT))
         buttonObj.setLock(true)
@@ -97,8 +109,8 @@ local function createButtonsOnCustomButton(buttonObj, buttonType)
             tooltip=BUTTON_TOOLTIPS[buttonType] or "",
             function_owner=self,
             position={0,0.07, 0},
-            height=650,
-            width=650,
+            height=650*scaleY,
+            width=650*scaleX,
             font_color={0, 0, 0, 0},
             color={0,0,0,0}
         })
@@ -109,8 +121,8 @@ local function createButtonsOnCustomButton(buttonObj, buttonType)
             function_owner=self,
             position={0, -0.07, 0},
             rotation={180, 0, 0},
-            height=650,
-            width=650,
+            height=650*scaleY,
+            width=650*scaleX,
             font_color={0, 0, 0, 0},
             color={0,0,0,0}
         })
@@ -157,6 +169,11 @@ function onLoad(saved_data)
     for buttonType, buttonGUID in pairs(GENERAL_BUTTONS) do
         local buttonObj = getObjectFromGUID(buttonGUID)
         createButtonsOnCustomButton(buttonObj, buttonType)
+    end
+
+    for buttonType, buttonGUID in pairs(KILL_BUTTONS) do
+        local buttonObj = getObjectFromGUID(buttonGUID)
+        createButtonsOnCustomButton(buttonObj, "KILL_MONSTER", 2, 2)
     end
 end
 
@@ -321,6 +338,36 @@ function click_ChangeTableMat(buttonObj)
         flexTable.call("click_toggleControl")
     end
 end
+
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------- Kill Buttons ---------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+function click_KillMonster(buttonObj)
+    local type = 0
+    for buttonType, buttonGUID in pairs(KILL_BUTTONS) do
+        if buttonObj.getGUID() == buttonGUID then
+            type = buttonType
+            break
+        end
+    end
+    if type ~= 0 then
+        buttonAnimation(buttonObj)
+        local zone = getObjectFromGUID(Global.getTable("ZONE_GUID_MONSTER")[type])
+        if zone then
+            local monsterDeckZone = getObjectFromGUID(Global.getTable("ZONE_GUID_DECK").MONSTER)
+            if monsterDeckZone then
+                local attackButtonStates = monsterDeckZone.getTable("ATTACK_BUTTON_STATES")
+                if zone.call("getState") == attackButtonStates.DIED then
+                    zone.call("finishMonster")
+                    monsterDeckZone.call("changeZoneState", {zone = zone, newState = attackButtonStates.ATTACK})
+                    return
+                end
+            end
+            zone.call("killMonster")
+        end
+    end
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------- Spy Zone -----------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------

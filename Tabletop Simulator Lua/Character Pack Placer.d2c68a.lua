@@ -60,7 +60,7 @@ characterBagJSON = [[{
     "MeshIndex": -1,
     "CustomMesh": {
         "MeshURL": "http://pastebin.com/raw/PqfGKtKR",
-        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/1686018145360846214/B3E843F10E2B4E8203FD8AB038574832C643DB65/",
+        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/2260305562237727127/C0EC7B56073FD9603994F4BC5B3732903E128F7A/",
         "NormalURL": "http://cloud-3.steamusercontent.com/ugc/861734852198391028/D75480247FA058266F0D423501D867407458666D/",
         "ColliderURL": "",
         "Convex": true,
@@ -68,9 +68,9 @@ characterBagJSON = [[{
         "TypeIndex": 6,
         "CustomShader": {
           "SpecularColor": {
-            "r": 1.0,
-            "g": 1.0,
-            "b": 1.0
+            "r": 0.231,
+            "g": 0.231,
+            "b": 0.231
           },
           "SpecularIntensity": 0.5,
           "SpecularSharpness": 5.000001,
@@ -121,7 +121,7 @@ function initButton()
     click_function = "placeChestCharactersCallback",
     function_owner = self,
     label          = "Place characters (Chest)",
-    tooltip        = "Places every character put inside this chest.",
+    tooltip        = "[b]Places every character put inside this chest.[/b]",
     position       = {0, 0.2, 2},
     width          = 2200,
     height         = 300,
@@ -144,7 +144,7 @@ function initButton()
     click_function = "placePlayingAreaCharactersCallback",
     function_owner = self,
     label          = "Place characters (Playing area)",
-    tooltip        = "Places every character from every expansions you draged and dropped into the playing area.",
+    tooltip        = "[b]Places every character from every expansions you draged and dropped into the playing area.[/b]",
     position       = {0, 0.2, 2.8},
     width          = 2700,
     height         = 300,

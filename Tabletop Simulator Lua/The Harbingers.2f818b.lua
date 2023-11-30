@@ -26,7 +26,7 @@ function onDie(params)
     if counter ~= nil then
         counter.setPositionSmooth(zonePosition, false)
         counter.call("modifyCounter", {modifier = 1})
-        if counter.getVar("val") == 4 then
+        if counter.getVar("value") == 4 then
             counter.destruct()
             self.setState(2).setPositionSmooth(zonePosition)    --activate The Beast!
         end

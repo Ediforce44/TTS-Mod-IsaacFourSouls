@@ -4,6 +4,7 @@ zone_color = "White"
 active = false
 
 HP_GUIDS = Global.getTable("HEART_TOKENS_GUID")[zone_color]
+COUNTER_MODULE = nil
 
 ZONE_EDGES = {
     {x=0, z=0},       -- 1 = |""  ""| = 3
@@ -298,6 +299,8 @@ local function getHPs(zone)
 end
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+
     calculateZoneEdges()
     initIndexTables()
     calculateIndexTable()
@@ -335,6 +338,7 @@ function onObjectEnterZone(zone, enteringObject)
     if zone.getGUID() == self.guid then
         if enteringObject.type == "Card" then
             attachCard(enteringObject)
+            COUNTER_MODULE.call("notifyITEM", {player = zone_color, value = #getItems()})
         elseif enteringObject.hasTag("Counter") then
             attachCounter(enteringObject)
         end
@@ -345,6 +349,7 @@ function onObjectLeaveZone(zone, leavingObject)
     if zone.getGUID() == self.guid then
         if leavingObject.type == "Card" then
             detachCard(leavingObject)
+            COUNTER_MODULE.call("notifyITEM", {player = zone_color, value = #getItems()})
         elseif leavingObject.hasTag("Counter") then
             detachCounter(leavingObject)
         end
@@ -408,6 +413,24 @@ function getPlayerHP()
         end
     end
     return (#HP_GUIDS - 1)
+end
+
+function getItems(params)
+    local cardGUIDS = {}
+    if params and params.onlyDestroyable then
+        for cardGUID, infoTable in pairs(attachedObjects.CARDS) do
+            if infoTable.IsItem and not infoTable.Ethernal then
+                table.insert(cardGUIDS, cardGUID)
+            end
+        end
+    else
+        for cardGUID, infoTable in pairs(attachedObjects.CARDS) do
+            if infoTable.IsItem then
+                table.insert(cardGUIDS, cardGUID)
+            end
+        end
+    end
+    return cardGUIDS
 end
 
 function healPlayer(params)

@@ -28,6 +28,9 @@
     <Toggle class="confSeedDecks" onValueChanged="UI_toggleSeedDeck" />
     <Toggle class="multiChar" onValueChanged="UI_multiCharChanged"/>
     <Button class="hotSeat" onClick="UI_toggleHotSeat" tooltip="Activate Hot Seat Mode for this Player" tooltipPosition="Above"/>
+    <Toggle class="counterType" onValueChanged="bb7a32/UI_selectCounterType"/>
+    <Toggle class="counterMode" onValueChanged="bb7a32/UI_selectCounterMode"/>
+    <Toggle class="counterRange" onValueChanged="bb7a32/UI_setCounterRange"/>
 
     <InputField class="confRatios" onEndEdit="UI_setRatio" lineType="SingleLine" placeholder="?"
         characterValidation="Integer" characterLimit="2"
@@ -1129,6 +1132,95 @@
                     alignment="LowerCenter"
                     text="Done" fontSize="30"
                     onClick="78c676/UI_optionsDone"
+                    class="isaacColor"
+                    textColor="black"
+                    fontStyle="Bold">
+                </Button>
+            </VerticalLayout>
+        </Panel>
+    </VerticalLayout>
+</Panel>
+
+<Panel
+    id="counterCreation"
+    active="false"
+    height="600"
+    width="500"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -80"
+    showAnimation="FadeIn"
+    hideAnimation="FadeOut"
+    animationDuration="0.3"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="Black">
+    <VerticalLayout>
+        <Panel class="isaacBackground" rectAlignment="UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" preferredHeight="200">
+            <Image height="80%" image="logo_with_o" preserveAspect="true" offsetXY="0 20" onClick="UI_hiddenButton"></Image>
+            <VerticalLayout childAlignment = "UpperCenter" childForceExpandWidth="false" childForceExpandHeight="false" height="30%" offsetXY="0 -85">
+                <Text class="isaacColor">Configure, reset and place Auto-Counters.</Text>
+                <Text class="isaacColor">To place a Counter press 'Place' and 'Ping' on the table!</Text>
+            </VerticalLayout>
+        </Panel>
+        <Panel class="isaacBackground" preferredHeight="400">
+            <VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false" childForceExpandWidth="false" padding="40 40 20 20" spacing="30">
+                <TableLayout cellBackgroundColor="rgba(0, 0, 0, 0)" columnWidths="150 100 110" preferredWidth="360" preferredHeight="270">
+                    <Row><Cell><VerticalLayout  childAlignment="UpperCenter" childForceExpandHeight="false" spacing="15">
+                    <Text class="isaacColor" fontSize="20" fontStyle="Bold">Type</Text>
+                    <ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="140 25">
+                        <Toggle isOn="true" class="isaacColor counterType" id="HANDCARD_TYPE">Loot</Toggle>
+                        <Toggle class="isaacColor counterType" id="CENT_TYPE">Cents</Toggle>
+                        <Toggle class="isaacColor counterType" id="SOUL_TYPE">Souls</Toggle>
+                        <Toggle class="isaacColor counterType" id="ITEM_TYPE">Items</Toggle>
+                        <Toggle class="isaacColor counterType" id="TREASURE-GAIN_TPYE">Treasures gained</Toggle>
+                        <Toggle class="isaacColor counterType" id="KILL_TYPE">Kills</Toggle>
+                        <Toggle class="isaacColor counterType" id="DEATH_TYPE">Deaths</Toggle>
+                    </GridLayout></ToggleGroup>
+                    </VerticalLayout></Cell>
+                    <Cell><VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false" spacing="15">
+                    <Text class="isaacColor" fontSize="20" fontStyle="Bold">Mode</Text>
+                    <ToggleGroup><GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="80 25">
+                        <Toggle isOn="true" class="isaacColor counterMode" id="MOST_MODE">Most</Toggle>
+                        <Toggle class="isaacColor counterMode" id="LEAST_MODE">Least</Toggle>
+                        <Toggle class="isaacColor counterMode" id="SUM_MODE">Sum</Toggle>
+                    </GridLayout></ToggleGroup>
+                    </VerticalLayout></Cell>
+                    <Cell><VerticalLayout childAlignment="UpperCenter" childForceExpandHeight="false" spacing="15">
+                    <Text class="isaacColor" fontSize="20" fontStyle="Bold">Range</Text>
+                    <GridLayout constraint="FixedColumnCount" constraintCount="1" cellSize="100 25">
+                        <Toggle isOn="true" class="isaacColor counterRange" id="Red_RANGE">Red</Toggle>
+                        <Toggle isOn="true" class="isaacColor counterRange" id="Blue_RANGE">Blue</Toggle>
+                        <Toggle isOn="true" class="isaacColor counterRange" id="Purple_RANGE">Purple</Toggle>
+                        <Toggle isOn="true" class="isaacColor counterRange" id="Green_RANGE">Green</Toggle>
+                        <Toggle isOn="true" class="isaacColor counterRange" id="Yellow_RANGE">Yellow</Toggle>
+                        <Toggle isOn="true" class="isaacColor counterRange" id="White_RANGE">White</Toggle>
+                    </GridLayout>
+                    </VerticalLayout></Cell></Row>
+                </TableLayout>
+                <TableLayout cellBackgroundColor="rgba(0, 0, 0, 0)" columnWidths="200 200" cellSpacing="20" preferredWidth="400" preferredHeight="80">
+                    <Row preferredHeight="80"><Cell>
+                        <VerticalLayout childAlignment="MiddleCenter" childForceExpandWidth="false" childForceExpandHeight="false" spacing="10">
+                        <Text class="isaacColor" fontSize="20" fontStyle="Bold">Place</Text>
+                        <Button id="ButtonCounterPlace" icon="place" class="isaacColor" preferredHeight="35" preferredWidth="35" onClick="bb7a32/UI_placeCounter"
+                            tooltip="Press this button and ping on the position&#10;you want to place the counter." tooltipPosition="Above"></Button>
+                        </VerticalLayout></Cell><Cell>
+                        <VerticalLayout childAlignment = "MiddleCenter" childForceExpandWidth="false" childForceExpandHeight="false" spacing="10">
+                            <Text class="isaacColor" fontSize="20" fontStyle="Bold">Reset</Text>
+                            <HorizontalLayout childAlignment = "MiddleCenter" childForceExpandWidth="false" childForceExpandHeight="false" spacing="5">
+                            <Button id="ButtonCounterReset" icon="reset" class="isaacColor" preferredHeight="35" preferredWidth="35" onClick="bb7a32/UI_resetCounter"
+                                tooltip="Reset the counting of the current type" tooltipPosition="Above"></Button>
+                            <Toggle id="ToggleResetAll" class="isaacColor" onValueChanged="bb7a32/UI_toggleResetAll">Reset all types</Toggle>
+                            </HorizontalLayout>
+                        </VerticalLayout>
+                    </Cell></Row>
+                </TableLayout>
+                <Button
+                    id="counter_done"
+                    minHeight="40"
+                    preferredWidth="380"
+                    alignment="LowerCenter"
+                    text="Done" fontSize="30"
+                    onClick="bb7a32/UI_closeWindow"
                     class="isaacColor"
                     textColor="black"
                     fontStyle="Bold">

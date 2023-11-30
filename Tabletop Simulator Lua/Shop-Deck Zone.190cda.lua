@@ -14,6 +14,8 @@ SHOP_BUTTON_STATES = {
 }
 SHOP_BUTTON_INDEX = nil
 
+COUNTER_MODULE = nil
+
 local function printBuyPhrase(itemName)
     local phrase = nil
     if itemName == "" then
@@ -69,6 +71,7 @@ local function purchaseShopItem(zone, playerColor)
         if printBuyPhrase(itemName) then
             local playerZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[playerColor])
             if playerZone then
+                COUNTER_MODULE.call("notifyTREASURE_GAIN", {player = playerColor, dif = 1})
                 playerZone.call("placeObjectInZone", {object = boughtCard})
             end
             return true
@@ -93,6 +96,7 @@ local function purchaseShopDeckItem(playerColor)
         Wait.frames(function () printBuyPhrase(boughtCard.getName()) end, 1)
         local playerZone = getObjectFromGUID(Global.getTable("ZONE_GUID_PLAYER")[playerColor])
         if playerZone then
+            COUNTER_MODULE.call("notifyTREASURE_GAIN", {player = playerColor, dif = 1})
             playerZone.call("placeObjectInZone", {object = boughtCard})
         end
         return true
@@ -101,6 +105,8 @@ local function purchaseShopDeckItem(playerColor)
 end
 
 function onLoad(saved_data)
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+
     if saved_data == "" then
         return
     end
@@ -194,12 +200,12 @@ end
 -- If you want state depending tooltips, there you go :D
 function getPurchaseButtonTooltip(params)
     -- params.newState
-    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+    return "[i]Left-Click: Activate Zone[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
 end
 
 function getShopButtonTooltip(params)
     -- params.newState
-    return ""
+    return "[b]Gain top card[/b]"
 end
 
 function deactivateShopButton()
@@ -254,44 +260,42 @@ end
 
 function click_function_PurchaseButton(zone, color, alt_click)
     local activePlayerColor = Global.getVar("activePlayerColor")
-    if activePlayerColor == color or Player[color].admin then
-        if alt_click then
-            resetPurchaseButton(zone)
-            return
+    if alt_click then
+        resetPurchaseButton(zone)
+        return
+    end
+    local purchaseButton = zone.getButtons()[zone.getVar("PURCHASE_BUTTON_INDEX") + 1]
+    if purchaseButton.label == PURCHASE_BUTTON_STATES.INACTIVE then
+        zone.call("activateZone")
+    elseif purchaseButton.label == PURCHASE_BUTTON_STATES.PURCHASE then
+        local playerColor = color
+        --If multi-char player uses button
+        if Global.call("getHandInfo")[activePlayerColor].owner == color then
+            playerColor = activePlayerColor
         end
-        local purchaseButton = zone.getButtons()[zone.getVar("PURCHASE_BUTTON_INDEX") + 1]
-        if purchaseButton.label == PURCHASE_BUTTON_STATES.INACTIVE then
-            zone.call("activateZone")
-        elseif purchaseButton.label == PURCHASE_BUTTON_STATES.PURCHASE then
-            local playerColor = color
-            if Global.call("getHandInfo")[activePlayerColor].owner == color then
-                playerColor = activePlayerColor
-            end
-            if purchaseShopItem(zone, playerColor) then
-                Wait.frames(function ()
-                        if not zone.call("containsDeckOrCard") then
-                            placeNewTreasureCard({zone = zone})
-                        end
-                    end, 60)
-            end
-        else
-            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(purchaseButton.label) .. "."})
+        if purchaseShopItem(zone, playerColor) then
+            Wait.frames(function ()
+                    if not zone.call("containsDeckOrCard") then
+                        placeNewTreasureCard({zone = zone})
+                    end
+                end, 60)
         end
+    else
+        Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(purchaseButton.label) .. "."})
     end
 end
 
 function click_function_ShopButton(zone, color, alt_click)
     local activePlayerColor = Global.getVar("activePlayerColor")
-    if activePlayerColor == color or Player[color].admin then
-        local shopButton = getShopButton()
-        if shopButton.label == SHOP_BUTTON_STATES.PURCHASE then
-            if Global.call("getHandInfo")[activePlayerColor].owner == color then
-                purchaseShopDeckItem(activePlayerColor)
-            else
-                purchaseShopDeckItem(color)
-            end
+    local shopButton = getShopButton()
+    if shopButton.label == SHOP_BUTTON_STATES.PURCHASE then
+        --If multi-char player uses button
+        if Global.call("getHandInfo")[activePlayerColor].owner == color then
+            purchaseShopDeckItem(activePlayerColor)
         else
-            Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(shopButton.label) .. "."})
+            purchaseShopDeckItem(color)
         end
+    else
+        Global.call("printWarning", {text = "Unknown shop button state: " .. tostring(shopButton.label) .. "."})
     end
 end

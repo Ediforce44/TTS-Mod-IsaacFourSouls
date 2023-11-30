@@ -2,6 +2,8 @@
 MONSTER_ZONE_GUIDS = Global.getTable("ZONE_GUID_MONSTER")
 BOSS_ZONE_GUID = nil
 
+COUNTER_MODULE = nil
+
 CHALLENGE_MODE = false
 
 ON_DIE_EVENTS = {}
@@ -394,6 +396,8 @@ end
 function onLoad(saved_data)
     BOSS_ZONE_GUID = Global.getVar("ZONE_GUID_BOSS")
     DISCARD_PILE_POSITION = Global.getTable("DISCARD_PILE_POSITION").MONSTER
+    COUNTER_MODULE = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+
     if saved_data == "" then
         return
     end
@@ -451,11 +455,21 @@ local function payOutTreasures(playerColor, amount)
     end
     if amount > 1 then
         local cards = {}
-        for n = 1, amount do
-            cards[n] = treasureDeck.takeObject({flip = true})
+        if treasureDeck.type == "Card" then
+            amount = 1
+            cards = {treasureDeck}
+        else
+            if treasureDeck.getQuantity() < amount then
+                amount = treasureDeck.getQuantity()
+            end
+            for n = 1, amount do
+                cards[n] = treasureDeck.takeObject({flip = true})
+            end
         end
+        COUNTER_MODULE.call("notifyTREASURE_GAIN", {player = playerColor, dif = amount})
         Global.call("getActivePlayerZone").call("placeMultipleObjectsInZone", {objects = cards})
     elseif amount == 1 then
+        COUNTER_MODULE.call("notifyTREASURE_GAIN", {player = playerColor, dif = 1})
         Global.call("getActivePlayerZone").call("placeObjectInZone", {object = treasureDeck.takeObject({flip = true})})
     end
 end
@@ -587,12 +601,12 @@ end
 -- If you want state depending tooltips, there you go :D
 function getAttackButtonTooltip(params)
     -- params.newState
-    return " - Left-Click: Activate Zone\n - Double-Right-Click: Deactivate Zone"
+    return "[i]Left-Click: Activate Zone[/i]\n[i]Double-Right-Click: Deactivate Zone[/i]"
 end
 
 function getChooseButtonTooltip(params)
     -- params.newState
-    return ""
+    return "[b]Attack top card[/b]"
 end
 
 function deactivateChooseButton()
@@ -760,13 +774,18 @@ function findAttrsInScript(scriptString)
     local hpPattern = "([Hh][Pp]%s?=%s?%d+)"
     local atkPattern = "[Dd][Ii][Cc][Ee]%s?=%s?%d+"
     local dmgPattern = "[Aa][Tt][Kk]%s?=%s?%d+"
-    local attrPatterns = {HP = hpPattern, ATK = atkPattern, DMG = dmgPattern}
+    local eventPattern = "isEvent%s?=%s?[(true)(false)]"
+    local attrPatternsNumber = {HP = hpPattern, ATK = atkPattern, DMG = dmgPattern}
     for line in string.gmatch(scriptString,"[^\r\n]+") do -- for each line in the script
-        for attrName , pattern in pairs(attrPatterns) do
+        for attrName , pattern in pairs(attrPatternsNumber) do
             local attrString = string.match(line, pattern)
             if attrString ~= nil then
                 attrs[tostring(attrName)] = tonumber(string.match(attrString, "%d+"))
             end
+        end
+        local attrString = string.match(eventPattern)
+        if attrString ~= nil then
+            attrs[IS_EVENT] = (string.match(attrString, "true") ~= nil)
         end
     end
     return attrs
@@ -851,6 +870,7 @@ function onObjectEnterScriptingZone(zone, object)
                             newAttributes.ATK = object.getVar("dice")
                             newAttributes.DMG = object.getVar("atk")
                             newAttributes.INDOMITABLE = object.hasTag(MONSTER_TAGS.INDOMITABLE)
+                            newAttributes.IS_EVENT = object.getVar("isEvent")
                             -- Rewards
                             local rewards = object.getTable("rewards") or {}
 
@@ -899,6 +919,7 @@ function onObjectLeaveScriptingZone(zone, object)
                     newAttributes.ATK = topObjectInZone.getVar("dice")
                     newAttributes.DMG = topObjectInZone.getVar("atk")
                     newAttributes.INDOMITABLE = object.hasTag(MONSTER_TAGS.INDOMITABLE)
+                    newAttributes.IS_EVENT = topObjectInZone.getVar("isEvent")
                     -- Rewards
                     local rewards = topObjectInZone.getTable("rewards") or {}
 
