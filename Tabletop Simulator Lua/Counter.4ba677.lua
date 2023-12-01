@@ -133,3 +133,10 @@ function reloadAll()
     removeAll()
     createAll()
 end
+
+function onDestroy()
+    local counterModule = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+    if counterModule then
+        counterModule.call("removeCounter", {guid = self.getGUID()})
+    end
+end
