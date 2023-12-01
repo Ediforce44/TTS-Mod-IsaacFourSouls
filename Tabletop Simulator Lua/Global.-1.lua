@@ -1480,20 +1480,18 @@ function placeCounter(params)
     local position = nil
     local rotation = nil
 
-    if params.position == nil then
-        if params.object == nil then
+    if (params.object) and ((params.object.type == "Card") or (params.object.type == "Deck")) then
+        local object = params.object
+        position = object.getPosition() + Vector(0, 3, 0)
+        rotation = object.getRotation():setAt('z', 0)
+    else
+        if params.position == nil then
             printWarning({text = "Wrong parameters in global function 'placeCounter()' [2]."})
             return
         else
-            local object = params.object
-            if (object.type == "Card") or (object.type == "Deck") then
-                position = object.getPosition() + Vector(0, 3, 0)
-                rotation = object.getRotation():setAt('z', 0)
-            end
+            position = params.position
+            rotation = params.rotation or Vector(0, 180, 0)
         end
-    else
-        position = params.position
-        rotation = params.rotation or Vector(0, 180, 0)
     end
 
     if params.counter then
