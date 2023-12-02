@@ -218,7 +218,7 @@ function onLoad(saved_data)
         width          = 1000,
         height         = 300,
         font_size      = 200,
-        color          = {0.39, 0.46, 0.48},
+        color          = {0.15, 0.17, 0.18},
         font_color     = {1, 1, 1},
         tooltip        = "[b]Get Auto Counter[/b]"
     })
@@ -230,7 +230,7 @@ function onLoad(saved_data)
         width          = 1000,
         height         = 300,
         font_size      = 200,
-        color          = {0.39, 0.46, 0.48},
+        color          = {0.15, 0.17, 0.18},
         font_color     = {1, 1, 1},
         tooltip        = "[b]Get Auto Counter[/b]"
     })
