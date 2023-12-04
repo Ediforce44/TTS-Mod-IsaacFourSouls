@@ -1,5 +1,6 @@
 COUNTER_TYPE = "SPIDER"
 claimed = false
+claimerColor = nil
 placeCounterEventID = nil
 
 function onLoad()

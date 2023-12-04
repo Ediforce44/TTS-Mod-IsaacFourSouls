@@ -1,5 +1,6 @@
 COUNTER_TYPE = "GUT"
 claimed = false
+claimerColor = nil
 placeCounterEventID = nil
 
 function onLoad()

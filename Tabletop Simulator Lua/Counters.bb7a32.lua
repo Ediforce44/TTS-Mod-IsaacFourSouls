@@ -523,15 +523,18 @@ local function claimCounterBag(counterBag, playerColor)
     local placeCounterEventID = 
         Global.call("pingEvent_attach", {playerColor=realPlayerColor, afterPingFunction="placeCounter_Event", functionOwner=self, functionParams=functionParams})
     counterBag.setVar("placeCounterEventID", placeCounterEventID)
+    counterBag.setVar("claimerColor", realPlayerColor)
     counterBag.setVar("claimed", true)
 end
 
 local function unclaimCounterBag(counterBag, playerColor)
     local placeCounterEventID = counterBag.getVar("placeCounterEventID")
     if placeCounterEventID then
-        counterBag.setColorTint(counterBag.getVar("UNCLAIMED_COLOR") or UNCLAIMED_COLOR)
-        Global.call("pingEvent_detach", {eventID = placeCounterEventID})
-        counterBag.setVar("claimed", false)
+        if Player[playerColor].admin or (Global.call("getHandInfo")[counterBag.getVar("claimerColor")].owner == playerColor) then
+            counterBag.setColorTint(counterBag.getVar("UNCLAIMED_COLOR") or UNCLAIMED_COLOR)
+            Global.call("pingEvent_detach", {eventID = placeCounterEventID})
+            counterBag.setVar("claimed", false)
+        end
     end
 end
 
@@ -753,7 +756,7 @@ function getAllCountersOnCard(params)
     for _, counter in pairs(allCounters) do
         if math.abs(counter.getPosition().x - cardPosition.x) < xThreshold then
             if math.abs(counter.getPosition().z - cardPosition.z) < zThreshold then
-                if (counter.getPosition().y - cardPosition.y) < 3 then
+                if math.abs(counter.getPosition().y - cardPosition.y) < 2 then
                     table.insert(countersOnCard, counter)
                 end
             end
@@ -818,9 +821,10 @@ function placeCounter(params)
             else
                 counter = counterBag.takeObject()
             end
-
-            counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
-            counter.setRotation(rotation, false)
+            if counter then
+                counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
+                counter.setRotation(rotation, false)
+            end
         end
     end
 
@@ -830,7 +834,7 @@ end
 function placeCounterInZone(params)
     if (params.counter == nil) and (params.type == nil) or (params.zone == nil) then
         Global.call("printWarning", {text = "Wrong parameters in global function 'placeCounterInZone()'."})
-        return
+        return nil
     end
     local amount = params.amount or 1
     local endAmount = amount

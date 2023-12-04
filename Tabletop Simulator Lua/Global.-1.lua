@@ -1283,15 +1283,17 @@ end
 function getAllCountersOnCard(params)
     local counterModule = getObjectFromGUID(COUNTER_MODULE_GUID)
     if counterModule then
-        counterModule.call("getAllCountersOnCard", params)
+        return counterModule.call("getAllCountersOnCard", params)
     end
+    return {}
 end
 
 function getAllCountersInZone(params)
     local counterModule = getObjectFromGUID(COUNTER_MODULE_GUID)
     if counterModule then
-        counterModule.call("getAllCountersInZone", params)
+        return counterModule.call("getAllCountersInZone", params)
     end
+    return {}
 end
 
 --Thank you Bone White in discord for this <3       --Edited by Ediforce44
@@ -1491,14 +1493,16 @@ end
 function placeCounter(params)
     local counterModule = getObjectFromGUID(COUNTER_MODULE_GUID)
     if counterModule then
-        counterModule.call("placeCounter", params)
+        return counterModule.call("placeCounter", params)
     end
+    return nil
 end
 
 function placeCounterInZone(params)
     local counterModule = getObjectFromGUID(COUNTER_MODULE_GUID)
     if counterModule then
-        counterModule.call("placeCounterInZone", params)
+        return counterModule.call("placeCounterInZone", params)
     end
+    return nil
 end
 ------------------------------------------------------------------------------------------------------------------------

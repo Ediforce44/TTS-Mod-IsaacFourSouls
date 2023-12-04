@@ -1,5 +1,6 @@
 COUNTER_TYPE = "EGG"
 claimed = false
+claimerColor = nil
 placeCounterEventID = nil
 
 function onLoad()

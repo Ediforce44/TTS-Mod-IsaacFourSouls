@@ -1,5 +1,6 @@
 COUNTER_TYPE = "POOP"
 claimed = false
+claimerColor = nil
 placeCounterEventID = nil
 
 function onLoad()
