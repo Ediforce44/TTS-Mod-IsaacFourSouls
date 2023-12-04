@@ -22,8 +22,9 @@ function onDie(params)
     local zonePosition = {x = params.zone.getPosition().x, y = 3, z = params.zone.getPosition().z}
     self.setPositionSmooth(zonePosition)
 
-    local counter = Global.call("getCounterInZone", {zone = params.zone})
-    if counter ~= nil then
+    local counters = Global.call("getAllCountersOnCard", {card = self, type = "NUMBER"})
+    if counters then 
+        local counter = counters[1]
         counter.setPositionSmooth(zonePosition, false)
         counter.call("modifyCounter", {modifier = 1})
         if counter.getVar("value") == 4 then
