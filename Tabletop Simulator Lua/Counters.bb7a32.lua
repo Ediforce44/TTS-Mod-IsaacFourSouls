@@ -529,7 +529,7 @@ end
 local function unclaimCounterBag(counterBag, playerColor)
     local placeCounterEventID = counterBag.getVar("placeCounterEventID")
     if placeCounterEventID then
-        counterBag.setColorTint(Color(UNCLAIMED_COLOR))
+        counterBag.setColorTint(counterBag.getVar("UNCLAIMED_COLOR") or UNCLAIMED_COLOR)
         Global.call("pingEvent_detach", {eventID = placeCounterEventID})
         counterBag.setVar("claimed", false)
     end
@@ -699,7 +699,7 @@ function counterBag_attach(params)
             table.insert(COUNTER_BAGS, counterBag)
         end
 
-        counterBag.setColorTint(UNCLAIMED_COLOR)
+        counterBag.setColorTint(counterBag.getVar("UNCLAIMED_COLOR") or UNCLAIMED_COLOR)
 
         counterBag.createButton({
             click_function = "claimCounterButton",
