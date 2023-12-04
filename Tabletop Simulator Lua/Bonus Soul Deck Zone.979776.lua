@@ -8,7 +8,7 @@ function onLoad()
 end
 
 local function getPlaceCounterParams(zone, counterInfo, object)
-    local placeCounterParams = {type=counterInfo.type or Global.getTable("COUNTER_TYPE").NUMBER}
+    local placeCounterParams = {type=counterInfo.type or "NUMBER"}
     if counterInfo.subType then
         placeCounterParams.subType = counterInfo.subType
     end

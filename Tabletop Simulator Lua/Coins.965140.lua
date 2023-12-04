@@ -36,7 +36,7 @@ function syncCounter(syncedCounterGuids)
             SYNCED_COIN_COUNTER_GUIDS[color] = guid
         end
     end
-    COUNTER_MODULE.call("syncCounterRanges", {subType="CENT", rangesToSync=syncedColors})
+    COUNTER_MODULE.call("ac_syncCounterRanges", {subType="CENT", rangesToSync=syncedColors})
 end
 
 function setCoins(params)

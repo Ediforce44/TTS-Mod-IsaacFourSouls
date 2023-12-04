@@ -1,3 +1,16 @@
+COUNTER_TYPE = {
+    NUMBER  = "NUMBER",
+    GOLD    = "GOLD",
+    EGG     = "EGG",
+    POOP    = "POOP",
+    SPIDER  = "SPIDER",
+    GUT     = "GUT",
+}
+
+COUNTER_BAGS = {
+    NUMBER = {self}
+}
+
 COUNTER_SUBTYPE = {
     NORMAL      = "NORMAL",
     SOUL        = "SOUL",
@@ -26,7 +39,7 @@ local COUNTER_RANGES = 4
 
 local SYNCED_COUNTER_RANGES = {}
 
-local TYPE_TO_NAME = {
+local SUBTYPE_TO_NAME = {
     NORMAL      = "Normal\nCounter",
     SOUL        = "Souls",
     ITEM        = "Items",
@@ -55,6 +68,17 @@ local COUNTER_CREATION_INFO = {
     RANGE = {Red = true, Blue = true, Green = true, Yellow = true},
     RESET_ALL = false
 }
+
+local UNCLAIMED_COLOR = {r=0.44, g=0.44, b=0.44}
+
+local function getTypeFromCounter(counter)
+    local counterTags =  params.counter.getTags()
+    for _, tag in pairs(counterTags) do
+        if COUNTER_TYPE[tag] then
+            return tag
+        end
+    end
+end
 
 local function getUniqueCurrentValues(counterGUID, subType, range)
     local values = {current_values[subType][range]}
@@ -100,9 +124,9 @@ end
 local function getCounterName(subType, rangeTable, mode)
     local name = ""
     if subType == COUNTER_SUBTYPE.NORMAL then
-        name = TYPE_TO_NAME.NORMAL
+        name = SUBTYPE_TO_NAME.NORMAL
     else
-        name = MODE_TO_NAME[mode] .. "\n" .. TYPE_TO_NAME[subType]
+        name = MODE_TO_NAME[mode] .. "\n" .. SUBTYPE_TO_NAME[subType]
         if #rangeTable < COUNTER_RANGES then
             name = name .. "\n" .. "of"
             for _, range in pairs(rangeTable) do
@@ -152,6 +176,8 @@ local function resetCounting_intern(subTypeToReset)
 end
 
 function onLoad(saved_data)
+    self.setColorTint(UNCLAIMED_COLOR)
+
     for _, subType in pairs(COUNTER_SUBTYPE) do
         COUNTERS[subType] = {}
         for _, range in pairs(COUNTER_RANGE) do
@@ -451,7 +477,7 @@ end
 
 function UI_placeCounter(player)
     local functionParams = {}
-    functionParams.type = Global.getTable("COUNTER_TYPE").NUMBER
+    functionParams.type = COUNTER_TYPE.NUMBER
     functionParams.subType = COUNTER_CREATION_INFO.TYPE
     functionParams.mode = COUNTER_CREATION_INFO.MODE
     functionParams.range = {}
@@ -461,7 +487,7 @@ function UI_placeCounter(player)
             table.insert(functionParams.range, color)
         end
     end
-    Global.call("pingEvent_attach", {playerColor=player.color, afterPingFunction="placeCounter", functionParams=functionParams})
+    Global.call("pingEvent_attach", {playerColor=player.color, afterPingFunction="placeCounter", functionOwner=self, functionParams=functionParams})
 end
 
 function UI_toggleResetAll(_, checked)
@@ -482,9 +508,54 @@ function UI_closeWindow()
 end
 
 ------------------------------------------------------------------------------------------------------------------------
--------------------------------------------------- Counter API ---------------------------------------------------------
+------------------------------------------------ Custom Counter --------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-function getCounter(params)
+local function claimCounterBag(counterBag, playerColor)
+    local activePlayerColor = Global.getVar("activePlayerColor")
+    local realPlayerColor = playerColor
+    if Global.call("getHandInfo")[activePlayerColor].owner == playerColor then
+        realPlayerColor = activePlayerColor
+    end
+
+    counterBag.setColorTint(realPlayerColor)
+
+    local functionParams = {type = counterBag.getVar("COUNTER_TYPE"), counterBag = counterBag}
+    local placeCounterEventID = 
+        Global.call("pingEvent_attach", {playerColor=realPlayerColor, afterPingFunction="placeCounter_Event", functionOwner=self, functionParams=functionParams})
+    counterBag.setVar("placeCounterEventID", placeCounterEventID)
+    counterBag.setVar("claimed", true)
+end
+
+local function unclaimCounterBag(counterBag, playerColor)
+    local placeCounterEventID = counterBag.getVar("placeCounterEventID")
+    if placeCounterEventID then
+        counterBag.setColorTint(Color(UNCLAIMED_COLOR))
+        Global.call("pingEvent_detach", {eventID = placeCounterEventID})
+        counterBag.setVar("claimed", false)
+    end
+end
+
+function claimCounterButton(counterBag, playerColor)
+    if counterBag.getVar("claimed") then
+        unclaimCounterBag(counterBag, playerColor)
+    else
+        claimCounterBag(counterBag, playerColor)
+    end
+end
+
+function placeCounter_Event(params)
+    local functionParams = {type = params.type, counterBag = params.counterBag}
+    local placeCounterEventID = 
+        Global.call("pingEvent_attach", {playerColor=params.playerColor, afterPingFunction="placeCounter_Event", functionOwner=self, functionParams=functionParams})
+    params.counterBag.setVar("placeCounterEventID", placeCounterEventID)
+
+    placeCounter(params)
+end
+
+------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------- AUTO Counter API -------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+function ac_getCounter(params)
     params = params or {}
     local subType = params.subType or COUNTER_SUBTYPE.NORMAL
     local mode = params.mode or COUNTER_MODE.SUM
@@ -500,7 +571,7 @@ function getCounter(params)
     TRUE_COUNTER_RANGE[newCounter.getGUID()] = rangeTable
 
     for _, range in pairs(rangeTable) do
-        attach({subType = subType, range = range, mode = mode, object = newCounter})
+        ac_attach({subType = subType, range = range, mode = mode, object = newCounter})
     end
     Wait.frames(function()
         if params.minValue then
@@ -520,9 +591,9 @@ function getCounter(params)
     return newCounter
 end
 
-function removeCounter(params)
+function ac_removeCounter(params)
     if not params.guid then
-        Global.call("printWarning", {text = "Wrong parameter in Counter function 'removeCounter()'."})
+        Global.call("printWarning", {text = "Wrong parameter in Counter function 'ac_removeCounter()'."})
         return
     end
     
@@ -533,7 +604,7 @@ function removeCounter(params)
             for mode, counterTable in pairs(rangeTable[range]) do
                 for _, counterGUID in pairs(counterTable) do
                     if counterGUID == counterToRemove then
-                        detach({subType = subType, range = range, mode = mode, guid = counterToRemove})
+                        ac_detach({subType = subType, range = range, mode = mode, guid = counterToRemove})
                     end
                 end
             end
@@ -541,7 +612,7 @@ function removeCounter(params)
     end
 end
 
-function resetCounting(params)
+function ac_resetCounting(params)
     if params and params.subType then
         local counterType = COUNTER_SUBTYPE[params.subType]
         if counterType then
@@ -552,16 +623,16 @@ function resetCounting(params)
     end
 end
 
-function attach(params)
+function ac_attach(params)
     if (params.subType == nil) or (params.range == nil) then
-        Global.call("printWarning", {text = "Wrong parameter in Counter function 'attach()'."})
+        Global.call("printWarning", {text = "Wrong parameter in Counter function 'ac_attach()'."})
         return
     end
 
     local guid = nil
     if params.guid == nil then
         if params.object == nil then
-            Global.call("printWarning", {text = "Wrong parameter in Counter function 'attach()'."})
+            Global.call("printWarning", {text = "Wrong parameter in Counter function 'ac_attach()'."})
             return
         else
             guid = params.object.getGUID()
@@ -574,14 +645,14 @@ function attach(params)
     table.insert(COUNTERS[params.subType][params.range][mode], guid)
 end
 
-function detach(params)
+function ac_detach(params)
     if (params.subType == nil) or (params.range == nil) or (params.mode == nil) then
-        Global.call("printWarning", {text = "Wrong parameter in Counter function 'detach()'."})
+        Global.call("printWarning", {text = "Wrong parameter in Counter function 'ac_detach()'."})
         return
     end
     if params.guid == nil then
         if params.object == nil then
-            Global.call("printWarning", {text = "Wrong parameter in Counter function 'detach()'."})
+            Global.call("printWarning", {text = "Wrong parameter in Counter function 'ac_detach()'."})
             return
         else
             removeCounter(params.subType, params.range, params.mode, params.object.getGUID())
@@ -592,9 +663,9 @@ function detach(params)
 end
 
 -- Merge ranges to one type of counter. !!! No way back !!!
-function syncCounterRanges(params)
+function ac_syncCounterRanges(params)
     if (not params) or (not params.rangesToSync) then
-        Global.call("printWarning", {text = "Wrong parameter in Counter function 'syncCounterRanges()'."})
+        Global.call("printWarning", {text = "Wrong parameter in Counter function 'ac_syncCounterRanges()'."})
         return
     end
 
@@ -609,4 +680,182 @@ function syncCounterRanges(params)
             end 
         end
     end
+end
+
+------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------- Counter API ---------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+function counterBag_attach(params)
+    if params.counterBag and params.type then
+        local counterBag = params.counterBag
+        local counterType = params.type
+
+        if not COUNTER_TYPE[counterType] then
+            COUNTER_TYPE[counterType] = counterType
+        end
+        if not COUNTER_BAGS[counterType] then
+            COUNTER_BAGS[counterType] = {counterBag}
+        else
+            table.insert(COUNTER_BAGS, counterBag)
+        end
+
+        counterBag.setColorTint(UNCLAIMED_COLOR)
+
+        counterBag.createButton({
+            click_function = "claimCounterButton",
+            function_owner = self,
+            label          = "Claim",
+            position       = params.position or {0, 1.7, -0.9},
+            rotation       = params.rotation or {135, 0, 180},
+            width          = 800,
+            height         = 300,
+            font_size      = 200,
+            color          = {0.1, 0.12, 0.12},
+            font_color     = {1, 1, 1},
+            tooltip        = "[b]Claim this counter[/b]"
+        })
+    end
+end
+
+function getAllCountersInZone(params)
+    if params.zone == nil then
+        Global.call("printWarning", {text = "Wrong parameters in Counter function 'getAllCountersInZone()'."})
+        return {}
+    else
+        local counters = {}
+        for _ , object in pairs(params.zone.getObjects()) do
+            if object.hasTag("Counter") then
+                table.insert(counters, object)
+            end
+        end
+        return counters
+    end
+end
+
+function getAllCountersOnCard(params)
+    local card = params.card
+    if card == nil then
+        if params.guid then
+            card = getObjectFromGUID(params.guid)
+        else
+            Global.call("printWarning", {text = "Wrong parameters in Counter function 'getAllCountersOnCard()'."})
+            return {}
+        end
+    end
+    local allCounters = params.type and getObjectsWithAllTags({"Counter", params.type}) or getObjectsWithTag("Counter")
+    local cardPosition = card.getPosition()
+    local modifiedAngle = card.getRotation().y % 180
+    modifiedAngle = (modifiedAngle < 45) and (modifiedAngle) or (180 - modifiedAngle)
+    local zThreshold = (modifiedAngle > -0.1 and modifiedAngle < 45.1) and (1.4 * card.getScale().z) or (1.1 * card.getScale().x)
+    local xThreshold = (modifiedAngle > -0.1 and modifiedAngle < 45.1) and (1.1 * card.getScale().x) or (1.4 * card.getScale().z)
+
+    local countersOnCard = {}
+    for _, counter in pairs(allCounters) do
+        if math.abs(counter.getPosition().x - cardPosition.x) < xThreshold then
+            if math.abs(counter.getPosition().z - cardPosition.z) < zThreshold then
+                if (counter.getPosition().y - cardPosition.y) < 3 then
+                    table.insert(countersOnCard, counter)
+                end
+            end
+        end
+    end
+    return countersOnCard
+end
+
+function placeCounter(params)
+    if (params.counter == nil) and (params.type == nil) then
+        Global.call("printWarning", {text = "Wrong parameters in Counter function 'placeCounter()'."})
+        return
+    end
+
+    local position = nil
+    local rotation = nil
+
+    if (params.object) and ((params.object.type == "Card") or (params.object.type == "Deck")) then
+        local object = params.object
+        local countersOnCard = getAllCountersOnCard({card = object, type = (params.type or getTypeFromCounter(params.counter))})
+        if #countersOnCard > 0 then
+            object = countersOnCard[1]
+        end
+
+        position = object.getPosition() + Vector(0, 3, 0)
+        rotation = object.getRotation():setAt('z', 0)
+    else
+        if params.position == nil then
+            Global.call("printWarning", {text = "Wrong parameters in Counter function 'placeCounter()' [2]."})
+            return
+        else
+            position = params.position
+            rotation = params.rotation      -- Watch out! It can be nil
+        end
+    end
+
+    if params.counter then
+        rotation = rotation or Vector(0, 180, 0)
+
+        params.counter.setPositionSmooth(position, false)
+        params.counter.setRotationSmooth(rotation)
+    else
+        local counterBag = params.counterBag
+        if not counterBag then
+            for _, bag in pairs(COUNTER_BAGS[params.type]) do
+                if bag then
+                    counterBag = bag
+                    break
+                end
+            end
+        end
+
+        rotation = rotation or (counterBag.getRotation() + Vector(0, 180, 0))
+
+        local amount = params.amount or 1
+        for i = 1, amount do
+            local counter = nil
+            if params.type == "NUMBER" then
+                counter = ac_getCounter(params)
+            else
+                counter = counterBag.takeObject()
+            end
+
+            counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
+            counter.setRotation(rotation, false)
+        end
+    end
+end
+
+function placeCounterInZone(params)
+    if (params.counter == nil) and (params.type == nil) or (params.zone == nil) then
+        Global.call("printWarning", {text = "Wrong parameters in global function 'placeCounterInZone()'."})
+        return
+    end
+    local amount = params.amount or 1
+    local endAmount = amount
+    local rotation = params.rotation or Vector(0, 180, 0)
+
+    local typeTag = params.type or getTypeFromCounter(params.counter)
+    if typeTag then
+        for _, obj in pairs(params.zone.getObjects()) do
+            if obj.hasTag(typeTag) then
+                if obj.getQuantity() == -1 then
+                    endAmount = endAmount + 1
+                else
+                    local counterObjectInZone = obj
+                    if params.counter then
+                        counterObjectInZone.putObject(params.counter)
+                    else
+                        local counterBag = getObjectFromGUID(COUNTER_BAGS_GUID[params.type])
+                        for i = 1, amount do
+                            local counter = counterBag.takeObject()
+                            Wait.frames(function() counterObjectInZone.putObject(counter) end)
+                        end
+                    end
+                    return obj.getQuantity() + amount
+                end
+            end
+        end
+    end
+
+    params["position"] = params.zone.getPosition():setAt('y', 3)
+    placeCounter(params)
+    return endAmount
 end

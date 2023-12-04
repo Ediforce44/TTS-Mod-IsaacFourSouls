@@ -1043,15 +1043,6 @@ COUNTER_BAGS_GUID = {
     GUT = "8abd1b"
 }
 
-COUNTER_TYPE = {
-    NUMBER  = "NUMBER",
-    GOLD    = "GOLD",
-    EGG     = "EGG",
-    POOP    = "POOP",
-    SPIDER  = "SPIDER",
-    GUT     = "GUT",
-}
-
 SFX_CUBE_GUID = "ca024f"
 
 TURN_MODULE_GUID = "87e737"
@@ -1245,35 +1236,17 @@ function changeDeathDetectionMode(params)
     PLAYER_SETTINGS[color].deathDetection = (params.active == true)
 end
 
-function getCounterInZone(params)
-    if params.zone == nil then
-        printWarning({text = "Wrong parameters in global function 'getCounterInZone()'."})
-    else
-        for _ , object in pairs(params.zone.getObjects()) do
-            if object.getName() == "Counter\n" or object.getName() == "Counter" then
-                return object
-            end
-        end
+function getAllCountersOnCard(params)
+    local counterModule = getObjectFromGUID(COUNTER_MODULE_GUID)
+    if counterModule then
+        counterModule.call("getAllCountersOnCard", params)
     end
 end
 
-function getCounterOnCard(params)
-    local card = params.card
-    if card == nil then
-        if params.guid then
-            card = getObjectFromGUID(params.guid)
-        else
-            printWarning({text = "Wrong parameters in global function 'getCounterOnCard()'."})
-        end
-    end
-    local allCounters = getObjectsWithAllTags({"Counter", "Number"})
-    local cardPosition = card.getPosition()
-    for _, counter in pairs(allCounters) do
-        if math.abs(counter.getPosition().x - cardPosition.x) < 1.5 then
-            if math.abs(counter.getPosition().z - cardPosition.z) < 2 then
-                return counter
-            end
-        end
+function getAllCountersInZone(params)
+    local counterModule = getObjectFromGUID(COUNTER_MODULE_GUID)
+    if counterModule then
+        counterModule.call("getAllCountersInZone", params)
     end
 end
 
@@ -1472,89 +1445,16 @@ function placePlayerCounterInPlayerZone(params)
 end
 
 function placeCounter(params)
-    if (params.counter == nil) and (params.type == nil) then
-        printWarning({text = "Wrong parameters in global function 'placeCounter()'."})
-        return
-    end
-
-    local position = nil
-    local rotation = nil
-
-    if (params.object) and ((params.object.type == "Card") or (params.object.type == "Deck")) then
-        local object = params.object
-        position = object.getPosition() + Vector(0, 3, 0)
-        rotation = object.getRotation():setAt('z', 0)
-    else
-        if params.position == nil then
-            printWarning({text = "Wrong parameters in global function 'placeCounter()' [2]."})
-            return
-        else
-            position = params.position
-            rotation = params.rotation or Vector(0, 180, 0)
-        end
-    end
-
-    if params.counter then
-        params.counter.setPositionSmooth(position, false)
-        params.counter.setRotationSmooth(rotation)
-    else
-        local counterBag = getObjectFromGUID(COUNTER_BAGS_GUID[params.type])
-        local amount = params.amount or 1
-
-        for i = 1, amount do
-            local counter = nil
-            if params.type == COUNTER_TYPE.NUMBER then
-                counter = counterBag.call("getCounter", params)
-            else
-                counter = counterBag.takeObject()
-            end
-
-            counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
-            counter.setRotation(rotation, false)
-        end
+    local counterModule = getObjectFromGUID(COUNTER_MODULE_GUID)
+    if counterModule then
+        counterModule.call("placeCounter", params)
     end
 end
 
 function placeCounterInZone(params)
-    if (params.counter == nil) and (params.type == nil) or (params.zone == nil) then
-        printWarning({text = "Wrong parameters in global function 'placeCounterInZone()'."})
-        return
+    local counterModule = getObjectFromGUID(COUNTER_MODULE_GUID)
+    if counterModule then
+        counterModule.call("placeCounterInZone", params)
     end
-    local amount = params.amount or 1
-    local endAmount = amount
-    local rotation = params.rotation or Vector(0, 180, 0)
-
-    local typeTag = params.type
-    if typeTag == nil then
-        local counterTags =  params.counter.getTags()
-        if #counterTags >= 2 then
-            typeTag = counterTags[2]
-        end
-    end
-    if typeTag then
-        for _, obj in pairs(params.zone.getObjects()) do
-            if obj.hasTag(typeTag) then
-                if obj.getQuantity() == -1 then
-                    endAmount = endAmount + 1
-                else
-                    local counterObjectInZone = obj
-                    if params.counter then
-                        counterObjectInZone.putObject(params.counter)
-                    else
-                        local counterBag = getObjectFromGUID(COUNTER_BAGS_GUID[params.type])
-                        for i = 1, amount do
-                            local counter = counterBag.takeObject()
-                            Wait.frames(function() counterObjectInZone.putObject(counter) end)
-                        end
-                    end
-                    return obj.getQuantity() + amount
-                end
-            end
-        end
-    end
-
-    params["position"] = params.zone.getPosition():setAt('y', 3)
-    placeCounter(params)
-    return endAmount
 end
 ------------------------------------------------------------------------------------------------------------------------
