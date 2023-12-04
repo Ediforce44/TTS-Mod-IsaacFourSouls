@@ -755,34 +755,78 @@ end
 
 local pingEventAttachment = {}
 
+local function getNextPingEventIndex(playerColor)
+    local nextIndex = 1
+    for index, event in ipairs(pingEventAttachment[playerColor]) do
+        if event.afterPingFunction then
+            nextIndex = index
+            break
+        end
+    end
+    return nextIndex
+end
+
+local function detachPingEvent(playerColor, index)
+    if pingEventAttachment[playerColor] then
+        pingEventAttachment[playerColor][index] = {}
+    end
+    for _, event in pairs(pingEventAttachment[playerColor]) do
+        if event.afterPingFunction then
+            return
+        end
+    end
+    pingEventAttachment[playerColor] = {}
+end
+
 function pingEvent_attach(params)
     if params.afterPingFunction then
-        table.insert(pingEventAttachment, {playerColor = params.playerColor or getHandInfo()[activePlayerColor].owner
+        local playerColor = params.playerColor or getHandInfo()[activePlayerColor].owner
+        if not pingEventAttachment[playerColor] then
+            pingEventAttachment[playerColor] = {}
+        end
+        table.insert(pingEventAttachment[playerColor], {playerColor = playerColor
             , afterPingFunction = params.afterPingFunction, functionOwner = params.functionOwner
             , functionParams = params.functionParams or {}})
-        return true
+        return playerColor .. "_" .. tostring(#pingEventAttachment[playerColor])
     end
-    return false
+    return nil
+end
+
+function pingEvent_detach(params)
+    if params.eventID then
+        local splitedID = string.gmatch(params.eventID, "(%w+)")
+        local playerColor = splitedID()
+        local index = splitedID()
+        detachPingEvent(playerColor, tonumber(index))
+    end
 end
 
 function onPlayerPing(player, position, pingedObject)
-    if #pingEventAttachment == 0 then
-        return
+    local playerColor = player.color
+    if getHandInfo()[activePlayerColor].owner == playerColor then
+        playerColor = activePlayerColor
     end
 
-    local nextEntry = pingEventAttachment[1]
-    if nextEntry.playerColor == player.color then
-        table.remove(pingEventAttachment, 1)
+    if (not pingEventAttachment[playerColor]) or (#pingEventAttachment[playerColor] == 0) then
+        playerColor = player.color
 
-        local functionParams = nextEntry.functionParams or {}
-        functionParams.playerColor = nextEntry.playerColor
-        functionParams.position = position
-        functionParams.object = pingedObject
-        if not nextEntry.functionOwner then
-            Global.call(nextEntry.afterPingFunction, functionParams)
-        else
-            nextEntry.functionOwner.call(nextEntry.afterPingFunction, functionParams)
+        if (not pingEventAttachment[playerColor]) or (#pingEventAttachment[playerColor] == 0) then
+            return
         end
+    end
+
+    local nextEntryIndex = getNextPingEventIndex(playerColor)
+    local nextEntry = pingEventAttachment[playerColor][nextEntryIndex]
+    detachPingEvent(playerColor, nextEntryIndex)
+
+    local functionParams = nextEntry.functionParams or {}
+    functionParams.playerColor = nextEntry.playerColor
+    functionParams.position = position
+    functionParams.object = pingedObject
+    if not nextEntry.functionOwner then
+        Global.call(nextEntry.afterPingFunction, functionParams)
+    else
+        nextEntry.functionOwner.call(nextEntry.afterPingFunction, functionParams)
     end
 end
 
