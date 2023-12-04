@@ -790,11 +790,14 @@ function placeCounter(params)
         end
     end
 
+    local counter = nil
+
     if params.counter then
+        counter = params.counter
         rotation = rotation or Vector(0, 180, 0)
 
-        params.counter.setPositionSmooth(position, false)
-        params.counter.setRotationSmooth(rotation)
+        counter.setPositionSmooth(position, false)
+        counter.setRotationSmooth(rotation)
     else
         local counterBag = params.counterBag
         if not counterBag then
@@ -810,7 +813,6 @@ function placeCounter(params)
 
         local amount = params.amount or 1
         for i = 1, amount do
-            local counter = nil
             if params.type == "NUMBER" then
                 counter = ac_getCounter(params)
             else
@@ -821,6 +823,8 @@ function placeCounter(params)
             counter.setRotation(rotation, false)
         end
     end
+
+    return counter
 end
 
 function placeCounterInZone(params)
