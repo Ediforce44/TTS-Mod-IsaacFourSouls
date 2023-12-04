@@ -819,12 +819,14 @@ function placeCounter(params)
             if params.type == "NUMBER" then
                 counter = ac_getCounter(params)
             else
+                if counterBag.getQuantity() == 0 then
+                    break
+                end
                 counter = counterBag.takeObject()
             end
-            if counter then
-                counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
-                counter.setRotation(rotation, false)
-            end
+            
+            counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
+            counter.setRotation(rotation, false)
         end
     end
 
