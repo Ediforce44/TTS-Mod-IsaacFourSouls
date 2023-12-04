@@ -7,10 +7,7 @@ rewards = {CENTS = 0, LOOT = 0, TREASURES = 1, SOULS = 0}
 
 function onReveal(params)
     if params.zone then
-        local spawnPosition = {params.zone.getPosition().x, 3, params.zone.getPosition().z}
-        local counter
-                = getObjectFromGUID(Global.getTable("COUNTER_BAGS_GUID").NORMAL).takeObject({position = spawnPosition})
-        counter.setRotationSmooth({0, 179, 0}, false)   -- 180 degree don't work?
+        local counter = Global.call("placeCounter", {type = "NUMBER", object = self})
     end
 end
 
