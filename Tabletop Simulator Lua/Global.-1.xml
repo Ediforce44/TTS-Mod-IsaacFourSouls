@@ -43,7 +43,7 @@
     <Text class="reminder" fontSize="13" alignment="UpperLeft" horizontalOverflow="Wrap"/>
     <Text class="reminderTitle" fontSize="15" alignment="UpperLeft" fontStyle="bold" horizontalOverflow="Wrap" color="red"/>
 
-    <Button class="trickOrTreat" colors="#D1CDC6|#F6F2ED|#C8C3BD|#8E8A86" textColor="black" onClick="cd7620/UI_voted"/>
+    <Button class="trickOrTreat" colors="#D1CDC6|#F6F2ED|#C8C3BD|#8E8A86" textColor="black" onClick="60cccb/UI_voted"/>
 </Defaults>
 
 <Panel
