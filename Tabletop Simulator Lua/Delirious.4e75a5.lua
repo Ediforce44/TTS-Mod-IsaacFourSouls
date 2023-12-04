@@ -15,13 +15,13 @@ local DIF_TO_STATE = {
         DIF_NORMAL = 1,
         DIF_HARD = 2,
         DIF_ULTRA = 3,
-        DIF_COMP = 3    --TODO it is 4
+        DIF_COMP = 4
     },
     RULE = {
         DIF_NORMAL = 1,
         DIF_HARD = 2,
         DIF_ULTRA = 3,
-        DIF_COMP = 3    --TODO it is 4
+        DIF_COMP = 4
     }
 }
 
