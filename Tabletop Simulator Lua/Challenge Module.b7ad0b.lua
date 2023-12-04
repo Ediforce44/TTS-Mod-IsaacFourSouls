@@ -1699,22 +1699,9 @@ function placeCounterOnBoss(params)
         return
     end
 
-    if params.counter then
-        params.counter.setPositionSmooth(BOSS_COUNTER_POSITION, false)
-        params.counter.setRotationSmooth(Vector(0, 180, 0))
-    else
-        local counterType = params.type
-        local counterBag = getObjectFromGUID(Global.getTable("COUNTER_BAGS_GUID")[counterType])
-        local amount = 1
-        if params.amount then
-            amount = params.amount
-        end
-        local position = BOSS_COUNTER_POSITION
-        for i = 1, amount do
-            local counter = counterBag.takeObject()
-            counter.setPositionSmooth(position + Vector(0, 0.5 * i, 0), false)
-            counter.setRotationSmooth(Vector(0, 180, 0))
-        end
+    if COUNTER_MODULE then
+        local functionParams = {counter = params.counter, type = params.type, amount = params.amount, position = BOSS_COUNTER_POSITION, rotation = Vector(0, 180, 0)}
+        COUNTER_MODULE.call("placeCounter", functionParams)
     end
 end]]
 

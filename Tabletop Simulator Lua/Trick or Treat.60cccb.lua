@@ -73,13 +73,6 @@ function presetupChallenge(params)
     RULE_CARD_GUID = extractedContent.RULE.getGUID()
     CHALLENGE_MODULE.call("placeChallengeContent", extractedContent)
     self.setPositionSmooth(Global.getTable("CHALLENGE_LEFTOVERS_POSITION"), false)
-
-    local counterBagGuids = Global.getTable("COUNTER_BAGS_GUID")
-    if params.difficulty ~= "DIF_COMP" then
-        counterBagGuids["TRICK"] = CONTENT_TABLE.COUNTER
-    end
-    counterBagGuids["FEAR"] = CONTENT_TABLE.COUNTER_TWO
-    Global.setTable("COUNTER_BAGS_GUID", counterBagGuids)
 end
 
 function setupChallengeZones(params)
@@ -223,7 +216,7 @@ function UI_voted(player, _, voteID)
                 if (vote == "TREAT") and (color ~= activePlayerColor) then
                     local soulCounter = getObjectFromGUID(Global.getTable("SOUL_COUNTER_GUID")[activePlayerColor])
                     if soulCounter then
-                        local soulAmount = soulCounter.getVar("val")
+                        local soulAmount = soulCounter.getVar("value")
                         Global.call("dealLootToColor", {color = color, amount = soulAmount})
                     end
                 end

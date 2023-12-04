@@ -123,10 +123,10 @@ function setupChallengeZones(params)
 end
 
 function setupChallenge(params)
-    local counterBag = getObjectFromGUID(Global.getTable("COUNTER_BAGS_GUID").NORMAL)
-    if counterBag then
+    local counterModule = getObjectFromGUID(Global.getVar("COUNTER_MODULE_GUID"))
+    if counterModule then
         for id, treasureSlot in pairs(TREASURE_SLOTS_PRESENT) do
-            local counter = counterBag.takeObject({position = treasureSlot.getPosition():setAt('y', 5), rotation = treasureSlot.getRotation()})
+            local counter = counterModule.call("placeCounter", {position = treasureSlot.getPosition():setAt('y', 5), rotation = treasureSlot.getRotation(), type="NUMBER"})
             Wait.frames(function() counter.call("modifyCounter", {modifier = DIF_TO_COUNTER_VALUES[params.difficulty][id]}) end)
         end
     end

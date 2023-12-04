@@ -97,10 +97,6 @@ function presetupChallenge(params)
         bossMaxHP = bossHP
     end)
 
-    local counterBagGuids = Global.getTable("COUNTER_BAGS_GUID")
-    counterBagGuids["FEAST"] = CONTENT_TABLE.COUNTER
-    Global.setTable("COUNTER_BAGS_GUID", counterBagGuids)
-
     MINION_SLOT_FATTY = CHALLENGE_MODULE.call("addMinionSlot", {name = "Fatties"})
 
     if (params.difficulty == "DIF_COMP") then
