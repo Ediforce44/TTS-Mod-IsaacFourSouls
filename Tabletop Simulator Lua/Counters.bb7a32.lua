@@ -689,7 +689,7 @@ end
 -------------------------------------------------- Counter API ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 function counterBag_attach(params)
-    if params.counterBag and params.type then
+    if params and params.counterBag and params.type then
         local counterBag = params.counterBag
         local counterType = params.type
 
@@ -704,12 +704,20 @@ function counterBag_attach(params)
 
         counterBag.setColorTint(counterBag.getVar("UNCLAIMED_COLOR") or UNCLAIMED_COLOR)
 
+        local buttonPosition = {0, 1.7, -0.9}
+        local buttonScale = {1, 1, 1}
+        if (counterBag.type == "Bag") then
+            buttonPosition = {0, 2.5, -1.4}
+            buttonScale = {1.3, 1.3, 1.3}
+        end
+
         counterBag.createButton({
             click_function = "claimCounterButton",
             function_owner = self,
             label          = "Claim",
-            position       = params.position or {0, 1.7, -0.9},
+            position       = params.position or buttonPosition,
             rotation       = params.rotation or {135, 0, 180},
+            scale          = params.scale or buttonScale,
             width          = 800,
             height         = 300,
             font_size      = 200,
